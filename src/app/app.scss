@@ -1,7 +1,20 @@
-.app-container {
-  min-height: 100vh;
+:host {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
   padding: 2rem;
   box-sizing: border-box;
   background: var(--p-content-background, #f8f9fa);
@@ -10,6 +23,7 @@
 .content-wrapper {
   width: 100%;
   max-width: 900px;
+  margin: 0 auto;
 }
 
 .header {

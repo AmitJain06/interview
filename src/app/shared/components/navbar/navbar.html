@@ -1,0 +1,27 @@
+<p-toolbar class="app-toolbar">
+  <ng-template #start>
+    <p-button
+      icon="pi pi-bars"
+      severity="secondary"
+      text
+      rounded
+      [ariaLabel]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      (onClick)="toggleSidebar.emit()"
+    />
+    <div class="brand">
+      <span class="brand-icon pi pi-briefcase"></span>
+      <span class="brand-name">Interview App</span>
+    </div>
+  </ng-template>
+
+  <ng-template #end>
+    <p-avatar label="A" shape="circle" />
+    <p-button
+      icon="pi pi-sign-out"
+      severity="secondary"
+      text
+      rounded
+      ariaLabel="Sign out"
+    />
+  </ng-template>
+</p-toolbar>

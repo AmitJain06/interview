@@ -1,0 +1,65 @@
+﻿<aside class="sidebar">
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-logo">
+      <i class="pi pi-microchip"></i>
+    </div>
+    <span class="brand-name">
+      Interview<span class="brand-accent">App</span>
+    </span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <span class="nav-section-label">Main</span>
+    <ul class="nav-list">
+      @for (item of mainItems; track item.routerLink) {
+        <li>
+          <a
+            class="nav-item"
+            [routerLink]="item.routerLink"
+            routerLinkActive="is-active"
+            [title]="collapsed() ? item.label : undefined"
+          >
+            <i class="nav-icon {{ item.icon }}"></i>
+            <span class="nav-label">{{ item.label }}</span>
+            @if (item.badge) {
+              <span class="nav-badge">{{ item.badge }}</span>
+            }
+            <span class="nav-glow"></span>
+          </a>
+        </li>
+      }
+    </ul>
+
+    <span class="nav-section-label">System</span>
+    <ul class="nav-list">
+      @for (item of secondaryItems; track item.routerLink) {
+        <li>
+          <a
+            class="nav-item"
+            [routerLink]="item.routerLink"
+            routerLinkActive="is-active"
+            [title]="collapsed() ? item.label : undefined"
+          >
+            <i class="nav-icon {{ item.icon }}"></i>
+            <span class="nav-label">{{ item.label }}</span>
+            <span class="nav-glow"></span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <!-- Footer / user card -->
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">AJ</div>
+      <div class="user-info">
+        <span class="user-name">Amit Jain</span>
+        <span class="user-role">Admin</span>
+      </div>
+      <i class="pi pi-sign-out user-action"></i>
+    </div>
+  </div>
+</aside>
