@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { Card } from 'primeng/card';
+import { Whiteboard } from '../../../shared/components/whiteboard/whiteboard';
 
 @Component({
   selector: 'app-system-design-round',
-  imports: [Card],
+  imports: [Whiteboard],
   templateUrl: './system-design.html',
   styleUrl: './system-design.scss',
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class SystemDesignRound {}
+

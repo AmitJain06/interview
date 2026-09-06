@@ -1,0 +1,232 @@
+<div class="wb">
+  <!-- Toolbar -->
+  <div class="wb-toolbar">
+    <div class="wb-group">
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('select')" (click)="setTool('select')" title="Select & move (V)" aria-label="Select">
+        <i class="pi pi-arrow-up-right"></i>
+      </button>
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('pen')" (click)="setTool('pen')" title="Pen (P)" aria-label="Pen">
+        <i class="pi pi-pencil"></i>
+      </button>
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('connector')" (click)="setTool('connector')" title="Connector (C)" aria-label="Connector">
+        <i class="pi pi-share-alt"></i>
+      </button>
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('text')" (click)="setTool('text')" title="Text (T)" aria-label="Text">
+        <span class="wb-btn-text">T</span>
+      </button>
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('eraser')" (click)="setTool('eraser')" title="Eraser (E)" aria-label="Eraser">
+        <i class="pi pi-eraser"></i>
+      </button>
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('pan')" (click)="setTool('pan')" title="Pan (H or hold Space)" aria-label="Pan">
+        <i class="pi pi-arrows-alt"></i>
+      </button>
+    </div>
+
+    <div class="wb-group" role="group" aria-label="Color">
+      @for (c of colors; track c.color) {
+        <button
+          type="button"
+          class="wb-swatch"
+          [style.background]="c.color"
+          [class.is-active]="activeColor() === c.color"
+          [title]="c.name"
+          (click)="setColor(c.color)"
+        ></button>
+      }
+    </div>
+
+    <div class="wb-group" role="group" aria-label="Stroke width">
+      @for (w of widths; track w) {
+        <button type="button" class="wb-width" [class.is-active]="strokeWidth() === w" (click)="setWidth(w)" [title]="'Stroke width ' + w">
+          <span class="wb-dot" [style.width.px]="5 + w * 2" [style.height.px]="5 + w * 2"></span>
+        </button>
+      }
+    </div>
+
+    <div class="wb-spacer"></div>
+
+    <div class="wb-group">
+      <button type="button" class="wb-btn" [disabled]="!canUndo()" (click)="undo()" title="Undo (Ctrl+Z)" aria-label="Undo">
+        <i class="pi pi-undo"></i>
+      </button>
+      <button type="button" class="wb-btn" [disabled]="!canRedo()" (click)="redo()" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">
+        <i class="pi pi-replay"></i>
+      </button>
+    </div>
+
+    <div class="wb-group wb-zoom">
+      <button type="button" class="wb-btn" (click)="zoomOut()" title="Zoom out (-)" aria-label="Zoom out">
+        <i class="pi pi-minus"></i>
+      </button>
+      <span class="wb-zoom-label">{{ zoom() }}%</span>
+      <button type="button" class="wb-btn" (click)="zoomIn()" title="Zoom in (+)" aria-label="Zoom in">
+        <i class="pi pi-plus"></i>
+      </button>
+      <button type="button" class="wb-btn" (click)="fitView()" title="Fit to content" aria-label="Fit to content">
+        <i class="pi pi-expand"></i>
+      </button>
+      <button type="button" class="wb-btn" (click)="resetView()" title="Reset view (100%)" aria-label="Reset view">
+        <i class="pi pi-compress"></i>
+      </button>
+    </div>
+
+    <div class="wb-group">
+      <button type="button" class="wb-btn" (click)="exportPng()" title="Export as PNG" aria-label="Export PNG">
+        <i class="pi pi-download"></i>
+      </button>
+      <button type="button" class="wb-btn" (click)="clearBoard()" title="Clear board" aria-label="Clear board">
+        <i class="pi pi-trash"></i>
+      </button>
+      <button
+        type="button"
+        class="wb-btn"
+        [class.is-active]="fullscreen()"
+        (click)="toggleFullscreen()"
+        [title]="fullscreen() ? 'Exit fullscreen (F)' : 'Fullscreen (F)'"
+        [attr.aria-label]="fullscreen() ? 'Exit fullscreen' : 'Enter fullscreen'"
+      >
+        @if (fullscreen()) {
+          <i class="pi pi-window-minimize"></i>
+        } @else {
+          <i class="pi pi-window-maximize"></i>
+        }
+      </button>
+      <button type="button" class="wb-btn" [class.is-active]="helpOpen()" (click)="toggleHelp()" title="Interview guide" aria-label="Interview guide">
+        <i class="pi pi-question-circle"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="wb-body">
+    <!-- Stencil palette -->
+    <aside class="wb-palette">
+      @for (group of stencilGroups; track group) {
+        <div class="wb-palette-group">
+          <span class="wb-palette-title">{{ group }}</span>
+          @for (st of stencilsFor(group); track st.id) {
+            <button
+              type="button"
+              class="wb-stencil"
+              [class.is-armed]="placing()?.id === st.id"
+              (click)="armStencil(st)"
+              [title]="'Place ' + st.label"
+            >
+              @switch (st.kind) {
+                @case ('rect') { <span class="wb-mini"></span> }
+                @case ('rounded') { <span class="wb-mini is-rounded"></span> }
+                @case ('ellipse') { <span class="wb-mini is-ellipse"></span> }
+                @case ('diamond') { <span class="wb-mini is-diamond"></span> }
+                @case ('note') { <span class="wb-mini is-note"></span> }
+                @case ('text') { <span class="wb-mini is-text">T</span> }
+                @case ('cylinder') { <span class="wb-mini is-cylinder"></span> }
+              }
+              <span class="wb-stencil-label">{{ st.label }}</span>
+            </button>
+          }
+        </div>
+      }
+    </aside>
+
+    <!-- Canvas -->
+    <div class="wb-canvas-wrap" #wrap>
+      <canvas #canvas></canvas>
+
+      @if (editing(); as ed) {
+        <textarea
+          #wbEditor
+          class="wb-editor"
+          (keydown)="onEditorKey($event)"
+          (blur)="onEditorBlur()"
+          [attr.aria-label]="ed.isLabel ? 'Connector label' : 'Shape text'"
+        ></textarea>
+      }
+
+      <!-- Floating toolbar for the selected arrow -->
+      @if (ctxConn(); as cc) {
+        <div class="wb-ctx" #ctxToolbar role="toolbar" aria-label="Arrow options">
+          <button
+            type="button"
+            class="wb-btn"
+            [class.is-active]="cc.bidirectional"
+            (click)="toggleBidirectional()"
+            title="Two-way arrow (B)"
+            aria-label="Toggle two-way arrow"
+          >
+            <i class="pi pi-arrows-h"></i>
+          </button>
+          <button
+            type="button"
+            class="wb-btn"
+            [class.is-active]="cc.dashed"
+            (click)="toggleConnectorDashed()"
+            title="Dashed line"
+            aria-label="Toggle dashed line"
+          >
+            <i class="pi pi-ellipsis-h"></i>
+          </button>
+          <button
+            type="button"
+            class="wb-btn"
+            (click)="editConnectorLabel()"
+            title="Edit label"
+            aria-label="Edit arrow label"
+          >
+            <i class="pi pi-pencil"></i>
+          </button>
+          <button
+            type="button"
+            class="wb-btn wb-ctx-danger"
+            (click)="deleteSelection()"
+            title="Delete (Del)"
+            aria-label="Delete arrow"
+          >
+            <i class="pi pi-trash"></i>
+          </button>
+        </div>
+      }
+
+      @if (helpOpen()) {
+        <div class="wb-help" role="dialog" aria-label="System design interview guide">
+          <div class="wb-help-head">
+            <strong>How to run the round</strong>
+            <button type="button" class="wb-btn wb-help-close" (click)="toggleHelp()" aria-label="Close guide">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+          <ol class="wb-help-steps">
+            <li><strong>Requirements</strong> — sticky note with functional & non-functional reqs.</li>
+            <li><strong>Estimation</strong> — text box with DAU, QPS, storage math.</li>
+            <li><strong>API design</strong> — list the key endpoints as text.</li>
+            <li><strong>High-level design</strong> — place Client → CDN → LB → Gateway → Services → Cache → DB → Queue, connect with arrows, drag an arrow's end handles later to re-attach it, double-click an arrow to label it.</li>
+            <li><strong>Data model</strong> — rectangles as tables/collections with fields.</li>
+            <li><strong>Bottlenecks</strong> — red notes for SPOFs and hot spots; discuss sharding, replication, caching.</li>
+          </ol>
+          <div class="wb-help-keys">
+            <span>Ctrl+Z / Ctrl+Shift+Z undo / redo</span>
+            <span>Ctrl+D duplicate</span>
+            <span>Ctrl+A select all</span>
+            <span>Del delete</span>
+            <span>Shift+click multi-select</span>
+            <span>Drag arrow ends to re-attach</span>
+            <span>B toggle two-way arrow</span>
+            <span>Arrows nudge</span>
+            <span>Space+drag pan</span>
+            <span>Scroll zoom</span>
+            <span>F fullscreen</span>
+            <span>V/P/C/T/E/H tools</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <footer class="wb-status">
+    <span class="wb-hint">{{ hint() }}</span>
+    <span class="wb-status-right">
+      <span>{{ selectionCount() ? selectionCount() + ' selected · ' : '' }}{{ itemCount() }} elements</span>
+      <span class="wb-saved">{{ saved() ? 'Saved' : 'Saving…' }}</span>
+    </span>
+  </footer>
+</div>

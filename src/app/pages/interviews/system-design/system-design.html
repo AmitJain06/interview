@@ -1,9 +1,11 @@
-<p-card>
-  <ng-template #content>
-    <div class="page-empty">
-      <i class="pi pi-sitemap"></i>
-      <h2>System Design Round</h2>
-      <p>Design exercises, trade-off discussions, and scoring rubrics will appear here.</p>
+<div class="round-wrap">
+  <header class="round-header">
+    <div class="round-icon"><i class="pi pi-sitemap"></i></div>
+    <div>
+      <h1>System Design Round</h1>
+      <p>Run the interview on a live board — capture requirements, sketch the architecture, and discuss trade-offs.</p>
     </div>
-  </ng-template>
-</p-card>
+  </header>
+
+  <app-whiteboard storageKey="interview-system-design-round" />
+</div>
