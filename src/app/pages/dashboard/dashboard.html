@@ -1,0 +1,35 @@
+<div class="content-wrapper">
+  <div class="header">
+    <h1>{{ title() }}</h1>
+    <p>Angular 22 + PrimeNG {{ count() }} Integration</p>
+  </div>
+
+  <div class="demo-grid">
+    <p-card header="PrimeNG Card Component" subheader="Using the Aura theme">
+      <ng-template #content>
+        <p>
+          This card is rendered using PrimeNG's Card component with the Aura theme preset.
+          Click the button below to interact with the signal-based state.
+        </p>
+
+        <div class="demo-actions">
+          <p-button label="Increment" icon="pi pi-plus" (onClick)="increment()" />
+          <p-button label="Reset" icon="pi pi-refresh" severity="secondary" (onClick)="reset()" />
+        </div>
+      </ng-template>
+      <ng-template #footer>
+        <div class="status-row">
+          <p-tag [value]="'Count: ' + count()" severity="info" />
+          <p-tag [value]="'Progress: ' + progress() + '%'" [severity]="progress() >= 100 ? 'success' : 'warn'" />
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Progress Bar">
+      <ng-template #content>
+        <p-progressbar [value]="progress()" [showValue]="true" />
+        <p class="progress-note">Progress updates as you click the increment button.</p>
+      </ng-template>
+    </p-card>
+  </div>
+</div>

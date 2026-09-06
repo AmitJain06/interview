@@ -1,0 +1,42 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/coding"><i class="pi pi-arrow-left"></i> All problems</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-code"></i></div>
+    <div>
+      <h1>All Nodes Distance K in Binary Tree</h1>
+      <p>LeetCode 863 · Tree · DFS · BFS</p>
+    </div>
+    <p-tag class="header-tag" value="Medium" severity="warn" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="Problem">
+      <ng-template #content>
+        <p>
+          Given the root of a binary tree, the value of a target node, and an integer k, return an
+          array of the values of all nodes that have a distance k from the target node.
+        </p>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Approach">
+      <ng-template #content>
+        <ol class="steps">
+          <li>Treat the tree as an undirected graph: store each node's parent while running an initial DFS.</li>
+          <li>Start a BFS from the target node, marking visited nodes so we never walk back up.</li>
+          <li>Collect the values of every node reached at exactly level k.</li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Complexity">
+      <ng-template #content>
+        <div class="status-row">
+          <p-tag icon="pi pi-clock" value="Time: O(n)" severity="info" />
+          <p-tag icon="pi pi-database" value="Space: O(n)" severity="info" />
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

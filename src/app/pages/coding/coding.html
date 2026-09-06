@@ -1,0 +1,28 @@
+@if (onIndexPage()) {
+  <div class="content-wrapper">
+    <header class="page-header">
+      <div class="page-icon"><i class="pi pi-code"></i></div>
+      <div>
+        <h1>Coding</h1>
+        <p>Practice data structures and algorithms for interview rounds.</p>
+      </div>
+    </header>
+
+    <div class="problem-grid">
+      @for (problem of problems; track problem.route) {
+        <a class="problem-card" [routerLink]="problem.route">
+          <p-card [header]="problem.title">
+            <ng-template #content>
+              <p>{{ problem.description }}</p>
+            </ng-template>
+            <ng-template #footer>
+              <p-tag [value]="problem.difficulty" [severity]="problem.severity" />
+            </ng-template>
+          </p-card>
+        </a>
+      }
+    </div>
+  </div>
+}
+
+<router-outlet />

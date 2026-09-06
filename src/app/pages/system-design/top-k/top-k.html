@@ -1,0 +1,44 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-sitemap"></i></div>
+    <div>
+      <h1>Top-K Elements</h1>
+      <p>Continuously surface the K highest-ranked items from a large stream.</p>
+    </div>
+    <p-tag class="header-tag" value="Medium" severity="warn" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="Problem">
+      <ng-template #content>
+        <p>
+          Design a service that tracks millions of events per minute (searches, plays, votes) and
+          answers "what are the current top-K items?" with low latency.
+        </p>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Approach">
+      <ng-template #content>
+        <ol class="steps">
+          <li>Count frequencies with hash counters, or approximate them with a Count-Min Sketch when the keyspace is huge.</li>
+          <li>Maintain a min-heap of size K — push new candidates and pop the smallest to keep the heap at K elements.</li>
+          <li>Use bucket sort when counts are bounded, giving near O(n) selection instead of O(n log k).</li>
+          <li>At scale, compute per-shard top-K sets and merge them at a coordinator node (map-reduce style).</li>
+          <li>Cache hot result sets with a short TTL and serve slightly stale data while recomputing.</li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Complexity">
+      <ng-template #content>
+        <div class="status-row">
+          <p-tag icon="pi pi-clock" value="Time: O(n log k)" severity="info" />
+          <p-tag icon="pi pi-database" value="Space: O(k)" severity="info" />
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

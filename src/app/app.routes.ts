@@ -1,16 +1,69 @@
-﻿import { Routes } from '@angular/router';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
-
-@Component({
-  selector: 'app-placeholder-page',
-  template: `<h1>Coming soon</h1><p>This page is a placeholder for the demo.</p>`,
-  changeDetection: ChangeDetectionStrategy.Eager,
-})
-export class PlaceholderPage {}
+import { Routes } from '@angular/router';
+import { Dashboard } from './pages/dashboard/dashboard';
 
 export const routes: Routes = [
-  { path: 'interviews', component: PlaceholderPage },
-  { path: 'candidates', component: PlaceholderPage },
-  { path: 'reports', component: PlaceholderPage },
-  { path: 'settings', component: PlaceholderPage },
+  { path: '', component: Dashboard, title: 'Interview App | Dashboard' },
+  {
+    path: 'interviews',
+    loadComponent: () => import('./pages/interviews/interviews').then((m) => m.Interviews),
+    title: 'Interview App | Interviews',
+    children: [
+      { path: '', redirectTo: 'coding', pathMatch: 'full' },
+      {
+        path: 'coding',
+        loadComponent: () => import('./pages/interviews/coding/coding').then((m) => m.CodingRound),
+        title: 'Interview App | Coding Round',
+      },
+      {
+        path: 'system-design',
+        loadComponent: () => import('./pages/interviews/system-design/system-design').then((m) => m.SystemDesignRound),
+        title: 'Interview App | System Design Round',
+      },
+    ],
+  },
+  {
+    path: 'coding',
+    loadComponent: () => import('./pages/coding/coding').then((m) => m.Coding),
+    title: 'Interview App | Coding',
+    children: [
+      {
+        path: 'leet-code-863',
+        loadComponent: () => import('./pages/coding/leet-code-863/leet-code-863').then((m) => m.LeetCode863),
+        title: 'Interview App | LeetCode 863',
+      },
+    ],
+  },
+  {
+    path: 'system-design',
+    loadComponent: () => import('./pages/system-design/system-design').then((m) => m.SystemDesign),
+    title: 'Interview App | System Design',
+    children: [
+      {
+        path: 'top-k',
+        loadComponent: () => import('./pages/system-design/top-k/top-k').then((m) => m.TopK),
+        title: 'Interview App | Top-K',
+      },
+      {
+        path: 'uber',
+        loadComponent: () => import('./pages/system-design/uber/uber').then((m) => m.Uber),
+        title: 'Interview App | Uber',
+      },
+    ],
+  },
+  {
+    path: 'candidates',
+    loadComponent: () => import('./pages/candidates/candidates').then((m) => m.Candidates),
+    title: 'Interview App | Candidates',
+  },
+  {
+    path: 'reports',
+    loadComponent: () => import('./pages/reports/reports').then((m) => m.Reports),
+    title: 'Interview App | Reports',
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings),
+    title: 'Interview App | Settings',
+  },
+  { path: '**', redirectTo: '' },
 ];

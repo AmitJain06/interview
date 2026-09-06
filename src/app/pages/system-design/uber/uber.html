@@ -1,0 +1,58 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-sitemap"></i></div>
+    <div>
+      <h1>Uber — Ride Hailing</h1>
+      <p>Match riders with nearby drivers and track rides in real time.</p>
+    </div>
+    <p-tag class="header-tag" value="Hard" severity="danger" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="Functional Requirements">
+      <ng-template #content>
+        <ul class="points">
+          <li>Riders can request a ride, see a fare estimate, and track their driver.</li>
+          <li>Nearby drivers are matched to a rider within seconds.</li>
+          <li>Drivers can accept trips and push their location continuously.</li>
+          <li>Both parties can rate each other after the trip.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Non-Functional Requirements">
+      <ng-template #content>
+        <ul class="points">
+          <li>Low matching latency (sub-second) for a good user experience.</li>
+          <li>High availability — the system tolerates individual node failures.</li>
+          <li>Eventual consistency is fine for driver locations; matching must be strongly consistent to avoid double-booking.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="High-Level Design">
+      <ng-template #content>
+        <ul class="points">
+          <li>Geospatial index (geohash or quadtree) to resolve nearby drivers from constant location pings.</li>
+          <li>Matching service pairs a rider with the best driver by distance and rating.</li>
+          <li>WebSockets push live driver locations and trip state to clients.</li>
+          <li>Event streaming (e.g., Kafka) carries trip and location events to analytics and pricing.</li>
+          <li>Surge pricing service adjusts fares from demand heat maps.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Scaling & Bottlenecks">
+      <ng-template #content>
+        <ul class="points">
+          <li>Shard by city or geohash region so each matcher handles a bounded area.</li>
+          <li>Keep driver locations in memory (Redis geospatial) rather than a relational store.</li>
+          <li>Throttle location pings and batch writes to keep write throughput manageable.</li>
+          <li>Use leader election per region so exactly one matcher owns a trip lifecycle.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+  </div>
+</article>
