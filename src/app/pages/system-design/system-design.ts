@@ -38,6 +38,13 @@ export class SystemDesign {
       difficulty: 'Hard',
       severity: 'danger',
     },
+    {
+      title: 'Database Sharding',
+      route: '/system-design/sharding',
+      description: 'Split one database across many nodes so writes, reads, and storage scale horizontally.',
+      difficulty: 'Medium',
+      severity: 'warn',
+    },
   ];
 
   protected readonly onIndexPage = toSignal(

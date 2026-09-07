@@ -48,6 +48,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/system-design/uber/uber').then((m) => m.Uber),
         title: 'Interview App | Uber',
       },
+      {
+        path: 'sharding',
+        loadComponent: () => import('./pages/system-design/sharding/sharding').then((m) => m.Sharding),
+        title: 'Interview App | Sharding',
+      },
     ],
   },
   {
