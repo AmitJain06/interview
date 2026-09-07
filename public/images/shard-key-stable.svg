@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 310" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="aR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+  <rect width="880" height="310" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Stable / immutable: the key never changes</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">changing it - physically moving the row between shards, expensive and not worth it</text>
+
+  <rect x="24" y="86" width="400" height="208" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="44" y="104" width="96" height="26" rx="13" fill="#16a34a"/>
+  <text x="92" y="121" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">STABLE</text>
+
+  <path d="M 54 150 L 54 238 A 35 10 0 0 0 124 238 L 124 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="89" cy="150" rx="35" ry="10" fill="#f0fdf4"/>
+  <path d="M 144 150 L 144 238 A 35 10 0 0 0 214 238 L 214 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="179" cy="150" rx="35" ry="10" fill="#f0fdf4"/>
+  <rect x="163" y="186" width="32" height="18" rx="3" fill="#ffffff" stroke="#6366f1" stroke-width="2"/>
+  <path d="M 234 150 L 234 238 A 35 10 0 0 0 304 238 L 304 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="269" cy="150" rx="35" ry="10" fill="#f0fdf4"/>
+  <path d="M 324 150 L 324 238 A 35 10 0 0 0 394 238 L 394 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="359" cy="150" rx="35" ry="10" fill="#f0fdf4"/>
+
+  <text x="224" y="272" font-size="13" font-weight="600" fill="#15803d" text-anchor="middle">user_id never changes - row stays put on shard 2</text>
+
+  <rect x="456" y="86" width="400" height="208" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="476" y="104" width="110" height="26" rx="13" fill="#dc2626"/>
+  <text x="531" y="121" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">CHANGED</text>
+
+  <path d="M 486 150 L 486 238 A 35 10 0 0 0 556 238 L 556 150 Z" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="521" cy="150" rx="35" ry="10" fill="#fef2f2"/>
+  <path d="M 576 150 L 576 238 A 35 10 0 0 0 646 238 L 646 150 Z" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="611" cy="150" rx="35" ry="10" fill="#fef2f2"/>
+  <rect x="595" y="186" width="32" height="18" rx="3" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+  <path d="M 666 150 L 666 238 A 35 10 0 0 0 736 238 L 736 150 Z" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="701" cy="150" rx="35" ry="10" fill="#fef2f2"/>
+  <path d="M 756 150 L 756 238 A 35 10 0 0 0 826 238 L 826 150 Z" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="791" cy="150" rx="35" ry="10" fill="#fef2f2"/>
+  <rect x="775" y="186" width="32" height="18" rx="3" fill="#ffffff" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="791" y="180" font-size="16" font-weight="700" fill="#dc2626" text-anchor="middle">!</text>
+
+  <line x1="611" y1="195" x2="756" y2="195" stroke="#dc2626" stroke-width="3" marker-end="url(#aR)"/>
+  <text x="683" y="188" font-size="13" font-weight="700" fill="#dc2626" text-anchor="middle">MOVE</text>
+
+  <text x="656" y="272" font-size="12.5" font-weight="600" fill="#dc2626" text-anchor="middle">key change - row rebuilt on shard 4, copy + reindex + risk</text>
+</svg>

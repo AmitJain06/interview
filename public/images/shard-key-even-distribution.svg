@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <rect width="880" height="340" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Even distribution: no value 10x more common</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">a 10x-more-common value becomes a hot shard that drags everyone down</text>
+
+  <rect x="24" y="86" width="400" height="230" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="44" y="104" width="104" height="26" rx="13" fill="#dc2626"/>
+  <text x="96" y="121" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">SKEWED</text>
+  <text x="44" y="160" font-size="13" font-weight="700" fill="#dc2626">one value = 90% of traffic</text>
+
+  <rect x="68" y="90" width="40" height="200" rx="8" fill="#dc2626"/>
+  <rect x="148" y="232" width="40" height="58" rx="8" fill="#cbd5e1"/>
+  <rect x="228" y="242" width="40" height="48" rx="8" fill="#cbd5e1"/>
+  <rect x="308" y="252" width="40" height="38" rx="8" fill="#cbd5e1"/>
+
+  <text x="88" y="308" font-size="12" font-weight="700" fill="#dc2626" text-anchor="middle">90%</text>
+  <text x="168" y="308" font-size="12" fill="#94a3b8" text-anchor="middle">5%</text>
+  <text x="248" y="308" font-size="12" fill="#94a3b8" text-anchor="middle">3%</text>
+  <text x="328" y="308" font-size="12" fill="#94a3b8" text-anchor="middle">2%</text>
+
+  <rect x="456" y="86" width="400" height="230" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="476" y="104" width="104" height="26" rx="13" fill="#16a34a"/>
+  <text x="528" y="121" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">EVEN</text>
+  <text x="476" y="160" font-size="13" font-weight="700" fill="#15803d">every value ~ equally common</text>
+
+  <rect x="500" y="150" width="40" height="140" rx="8" fill="#22c55e"/>
+  <rect x="580" y="150" width="40" height="140" rx="8" fill="#22c55e"/>
+  <rect x="660" y="150" width="40" height="140" rx="8" fill="#22c55e"/>
+  <rect x="740" y="150" width="40" height="140" rx="8" fill="#22c55e"/>
+
+  <text x="520" y="308" font-size="12" font-weight="600" fill="#15803d" text-anchor="middle">25%</text>
+  <text x="600" y="308" font-size="12" font-weight="600" fill="#15803d" text-anchor="middle">25%</text>
+  <text x="680" y="308" font-size="12" font-weight="600" fill="#15803d" text-anchor="middle">25%</text>
+  <text x="760" y="308" font-size="12" font-weight="600" fill="#15803d" text-anchor="middle">25%</text>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="360" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="42" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">The box hits its limit at ~20k writes/s</text>
+  <text x="440" y="66" font-size="14" fill="#6b7280" text-anchor="middle">now we have to choose a way to grow</text>
+
+  <path d="M 355 95 L 355 200 A 85 14 0 0 0 525 200 L 525 95 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <ellipse cx="440" cy="95" rx="85" ry="14" fill="#fffbeb"/>
+  <text x="440" y="142" font-size="16" font-weight="700" fill="#92400e" text-anchor="middle">One Postgres</text>
+  <text x="440" y="172" font-size="13" font-weight="600" fill="#b45309" text-anchor="middle">at capacity — CPU 100%</text>
+
+  <line x1="440" y1="208" x2="240" y2="232" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="440" y1="208" x2="640" y2="232" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="24" y="240" width="400" height="102" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="44" y="266" font-size="16" font-weight="700" fill="#6366f1">Option A — Scale vertically</text>
+  <text x="44" y="288" font-size="12.5" fill="#6b7280">one bigger box — more RAM / CPU / NVMe</text>
+  <circle cx="44" cy="306" r="5" fill="#22c55e"/>
+  <text x="58" y="311" font-size="13" fill="#334155">+ no app changes, trivially simple to run</text>
+  <circle cx="44" cy="326" r="5" fill="#dc2626"/>
+  <text x="58" y="331" font-size="13" fill="#334155">− hardware ceiling, still a single point of failure</text>
+
+  <rect x="456" y="240" width="400" height="102" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="476" y="266" font-size="16" font-weight="700" fill="#6366f1">Option B — Scale out (sharding</text>
+  <text x="476" y="288" font-size="12.5" fill="#6b7280">many Postgres nodes — each holds a slice</text>
+  <circle cx="476" cy="306" r="5" fill="#22c55e"/>
+  <text x="490" y="311" font-size="13" fill="#334155">+ throughput and storage scale linearly with nodes</text>
+  <circle cx="476" cy="326" r="5" fill="#dc2626"/>
+  <text x="490" y="331" font-size="13" fill="#334155">− needs routing, shard map, resharding, hot keys</text>
+</svg>

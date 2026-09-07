@@ -16,7 +16,11 @@ describe('Sharding', () => {
   it('renders the Database Sharding page', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Database Sharding');
-    expect(text).toContain('v7');
+    expect(text).toContain('Visual Walkthrough');
+    expect(text).toContain('How to Choose a Shard Key');
+    expect(text).toContain('Twitter at 100M+ users');
     expect(fixture.nativeElement.querySelectorAll('p-card').length).toBeGreaterThan(0);
+    expect(fixture.nativeElement.querySelectorAll('figure.visual-figure').length).toBeGreaterThan(0);
+    expect(fixture.nativeElement.querySelectorAll('ul.points').length).toBeGreaterThan(0);
   });
 });

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 330" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <rect width="880" height="330" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">High cardinality: millions of distinct values</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">a few thousand values is not enough: few values pile up on one shard</text>
+
+  <rect x="24" y="86" width="400" height="220" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="44" y="104" width="86" height="26" rx="13" fill="#dc2626"/>
+  <text x="87" y="121" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">LOW</text>
+  <text x="404" y="122" font-size="13" font-weight="700" fill="#dc2626" text-anchor="end">few values ~ 50 distinct</text>
+
+  <path d="M 56 168 L 56 268 A 46 12 0 0 0 148 268 L 148 168 Z" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="102" cy="168" rx="46" ry="12" fill="#fef2f2"/>
+  <path d="M 170 168 L 170 232 A 28 10 0 0 0 226 232 L 226 168 Z" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <ellipse cx="198" cy="168" rx="28" ry="10" fill="#f8fafc"/>
+  <path d="M 248 168 L 248 232 A 28 10 0 0 0 304 232 L 304 168 Z" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <ellipse cx="276" cy="168" rx="28" ry="10" fill="#f8fafc"/>
+  <path d="M 326 168 L 326 232 A 28 10 0 0 0 382 232 L 382 168 Z" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <ellipse cx="354" cy="168" rx="28" ry="10" fill="#f8fafc"/>
+
+  <text x="102" y="288" font-size="13" font-weight="700" fill="#dc2626" text-anchor="middle">99% of rows</text>
+  <text x="198" y="250" font-size="12" fill="#94a3b8" text-anchor="middle">idle</text>
+  <text x="276" y="250" font-size="12" fill="#94a3b8" text-anchor="middle">idle</text>
+  <text x="354" y="250" font-size="12" fill="#94a3b8" text-anchor="middle">idle</text>
+
+  <rect x="456" y="86" width="400" height="220" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="476" y="104" width="86" height="26" rx="13" fill="#16a34a"/>
+  <text x="519" y="121" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">HIGH</text>
+  <text x="836" y="122" font-size="13" font-weight="700" fill="#16a34a" text-anchor="end">millions of values</text>
+
+  <path d="M 480 168 L 480 252 A 17 8 0 0 0 514 252 L 514 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="497" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 528 168 L 528 252 A 17 8 0 0 0 562 252 L 562 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="545" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 576 168 L 576 252 A 17 8 0 0 0 610 252 L 610 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="593" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 624 168 L 624 252 A 17 8 0 0 0 658 252 L 658 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="641" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 672 168 L 672 252 A 17 8 0 0 0 706 252 L 706 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="689" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 720 168 L 720 252 A 17 8 0 0 0 754 252 L 754 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="737" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 768 168 L 768 252 A 17 8 0 0 0 802 252 L 802 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="785" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+  <path d="M 816 168 L 816 252 A 17 8 0 0 0 850 252 L 850 168 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="833" cy="168" rx="17" ry="8" fill="#f0fdf4"/>
+
+  <text x="656" y="288" font-size="13" font-weight="600" fill="#15803d" text-anchor="middle">evenly loaded - no single hot shard</text>
+</svg>

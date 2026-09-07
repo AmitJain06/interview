@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="340" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Option B: scale out — shard the database</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">hash(user_id) → N nodes; every node carries a slice of data and writes</text>
+
+  <rect x="24" y="86" width="300" height="214" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="44" y="106" width="80" height="24" rx="12" fill="#6366f1"/>
+  <text x="84" y="123" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">BEFORE</text>
+  <path d="M 110 140 L 110 240 A 65 11 0 0 0 240 240 L  240 140 Z" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+  <ellipse cx="175" cy="140" rx="65" ry="11" fill="#eef2ff"/>
+  <text x="175" y="184" font-size="14" font-weight="700" fill="#3730a3" text-anchor="middle">1 Postgres</text>
+  <text x="175" y="208" font-size="12" fill="#6b7280" text-anchor="middle">100% of the writes</text>
+  <text x="175" y="228" font-size="12" fill="#6b7280" text-anchor="middle">~4 TB · one box</text>
+
+  <line x1="340" y1="185" x2="444" y2="185" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="392" y="172" font-size="12" font-weight="700" fill="#6366f1" text-anchor="middle">shard by user_id</text>
+  <text x="392" y="212" font-size="12" fill="#6b7280" text-anchor="middle">scale out</text>
+
+  <rect x="460" y="86" width="400" height="214" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="480" y="106" width="76" height="24" rx="12" fill="#22c55e"/>
+  <text x="518" y="123" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">AFTER</text>
+  <path d="M 480 150 L 480 225 A 40 8 0 0 0 560 225 L  560 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="520" cy="150" rx="40" ry="8" fill="#f0fdf4"/>
+  <text x="520" y="182" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">S0</text>
+  <path d="M 570 150 L  570 225 A 40 8 0 0 0  650 225 L  650 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="610" cy="150" rx="40" ry="8" fill="#f0fdf4"/>
+  <text x="610" y="182" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">S1</text>
+  <path d="M 660 150 L 660 225 A  40 8 0 0 0  740 225 L  740 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="700" cy="150" rx="40" ry="8" fill="#f0fdf4"/>
+  <text x="700" y="182" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">S2</text>
+  <path d="M 750 150 L 750 225 A 40 8 0 0 0  830 225 L  830 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="790" cy="150" rx="40" ry="8" fill="#f0fdf4"/>
+  <text x="790" y="182" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">S3</text>
+  <text x="480" y="256" font-size="13" font-weight="700" fill="#15803d">each shard ≈ 25% of writes and data</text>
+  <text x="480" y="278" font-size="12" fill="#6b7280">add a node → add capacity — no bigger box needed</text>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="340" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <rect x="24" y="20" width="380" height="56" rx="10" fill="#fef2f2" stroke="#fecaca"/>
+  <text x="44" y="48" font-size="20" font-weight="700" fill="#b91c1c">Load doubles to ~20k writes/s</text>
+  <rect x="700" y="31" width="150" height="34" rx="17" fill="#fee2e2"/>
+  <text x="775" y="53" font-size="15" font-weight="700" fill="#b91c1c" text-anchor="middle">2× traffic</text>
+
+  <rect x="30" y="110" width="150" height="150" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="52" y="132" width="106" height="26" rx="6" fill="#6366f1"/>
+  <text x="105" y="150" font-size="13" fill="#ffffff" text-anchor="middle">App clients</text>
+  <text x="105" y="192" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle">↑ 20k writes/s</text>
+  <text x="105" y="215" font-size="12" fill="#6b7280" text-anchor="middle">posts, likes, follows</text>
+  <text x="105" y="240" font-size="12" fill="#6b7280" text-anchor="middle">all hitting one box</text>
+
+  <line x1="186" y1="185" x2="318" y2="185" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <path d="M 350 110 L 350 240 A 95 16 0 0 0 540 240 L 540 110 Z" fill="#fecaca" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="445" cy="110" rx="95" ry="16" fill="#fff5f5"/>
+  <text x="445" y="170" font-size="17" font-weight="700" fill="#b91c1c" text-anchor="middle">Postgres</text>
+  <text x="445" y="194" font-size="13" fill="#7f1d1d" text-anchor="middle">one node, one box</text>
+  <text x="445" y="222" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle">CPU 100%</text>
+
+  <rect x="570" y="100" width="280" height="170" rx="14" fill="#fffbfa" stroke="#fecaca" stroke-width="1"/>
+  <text x="590" y="132" font-size="16" font-weight="700" fill="#b91c1c">Impact on the node</text>
+  <circle cx="598" cy="156" r="5" fill="#dc2626"/>
+  <text x="614" y="161" font-size="14" fill="#374151">CPU saturates immediately</text>
+  <circle cx="598" cy="186" r="5" fill="#f59e0b"/>
+  <text x="614" y="191" font-size="14" fill="#374151">Write queue ~45k pending</text>
+  <circle cx="598" cy="216" r="5" fill="#dc2626"/>
+  <text x="614" y="221" font-size="14" fill="#374151">p95 150ms → 1.4s</text>
+
+  <text x="440" y="318" font-size="13" font-style="italic" fill="#6b7280" text-anchor="middle">One box cannot keep up — something has to give.</text>
+</svg>

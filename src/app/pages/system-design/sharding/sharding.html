@@ -1,271 +1,77 @@
-﻿<article class="content-wrapper">
- <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
 
- <header class="page-header">
- <div class="page-icon"><i class="pi pi-database"></i></div>
- <div>
- <h1>Database Sharding</h1>
- <p>Split one database across many nodes so writes,reads and storage scale horizontally.</p>
- </div>
- <p-tag class="header-tag" value="Medium" severity="warn" />
- </header>
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-database"></i></div>
+    <div>
+      <h1>Database Sharding</h1>
+      <p>Split one database across many nodes so writes, reads and storage scale horizontally.</p>
+    </div>
+    <p-tag class="header-tag" value="Medium" severity="warn" />
+  </header>
 
- <div class="card-stack">
- <p-card header="Problem">
- <ng-template #content>
- <p>A social app has ~100M users. A single Postgres instance sits at ~70% CPU at peak, holds ~4 TB and is one crash away from a total outage. Shard the database layer so it scales linearly.</p>
- </ng-template>
- </p-card>
+  <div class="card-stack">
+    <p-card header="Visual Walkthrough – one Box to many">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/postgres-10k-wps.png" alt="One Postgres handling ~10k writes per second" />
+          <figcaption><strong>Start</strong> – one Postgres handles ~10k writes/sec comfortably (indexes, connection pooling, a bit of tuning).</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/postgres-20k-wps.svg" alt="One Postgres overloaded at 20k writes per second" />
+          <figcaption><strong>Load grows to ~20k writes/s</strong> – the single node saturates: CPU at 100%, writes queue up, and p95 latency balloons past every budget.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/scaling-options.svg" alt="Two options: scale vertically or shard" />
+          <figcaption><strong>Decision point</strong> – when one box hits its ceiling we pick a path: scale up (bigger box) or scale out (sharding).</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/vertical-scaling.svg" alt="Vertical scaling: more RAM and CPU on the same box" />
+          <figcaption><strong>Option A – vertical scaling:</strong> add RAM / CPU / NVMe to the same box. Quick, and no app changes – but a hardware ceiling remains, and it is still a single point of failure.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/sharding.svg" alt="Sharding: split data across many Postgres nodes" />
+          <figcaption><strong>Option B – sharding:</strong> split data, and writes across many Postgres nodes by user_id hash – throughput, and storage scale linearly; one node per slice.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
 
- <p-card header="Functional Requirements">
- <ng-template #content>
- <ol class="steps">
- <li><strong>FR 1</strong> - store ~100M user profiles; reads dominate, profiles change rarely.</li>
- <li><strong>FR 2</strong> - publish posts at ~5k writes/sec and return a user's posts in reverse-chronological order.</li>
- <li><strong>FR 3</strong> - point lookups by user_id (profile, posts) finish in &lt; 50 ms.</li>
- <li><strong>FR 4</strong> - email login,and admin queries work without scanning every database node.</li>
- <li><strong>FR 5</strong> - a committed write survives the loss of a single node.</li>
- </ol>
- </ng-template>
- </p-card>
+    <p-card header="How to Choose a Shard Key – the rules">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/shard-key-high-cardinality.svg" alt="High cardinality: few values pile onto one shard while millions spread evenly" />
+          <figcaption><strong>High cardinality</strong> – the key must have millions of distinct values (a few thousand is not enough). Few distinct values means data piles onto one shard, and the others stay empty.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/shard-key-even-distribution.svg" alt="Even distribution: a 10x more common value creates a hot shard" />
+          <figcaption><strong>Even distribution (low frequency)</strong> – every value should appear with roughly equal frequency. A value that is 10x more common creates a hot shard that drags down everyone.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/shard-key-non-monotonic.svg" alt="Non-monotonic: auto-increment IDs and timestamps flood the newest shard" />
+          <figcaption><strong>Non-monotonic – avoid ID counters and timestamps</strong> – auto-increment IDs, date, or created_at grow forever, so every new write races to the newest shard while older shards sit idle.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/shard-key-stable.svg" alt="Stable: key changes force physically moving rows across shards" />
+          <figcaption><strong>Stable / immutable</strong> – the key must not change after a row is written. Changing it means physically moving the row between shards – expensive, and never worth it.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/shard-key-query-alignment.svg" alt="Query alignment: hottest reads must hit exactly one shard" />
+          <figcaption><strong>Query alignment</strong> – pick the field your hottest queries filter by, so each request hits exactly one shard. A key reads don't use turns every query into a slow scatter-gather across all shards.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
 
- <p-card header="Non-Functional Requirements">
- <ng-template #content>
- <ol class="steps">
- <li><strong>NFR 1 - Scale:</strong> ~100M users, ~10B posts, ~500k read QPS,and ~50k write QPS.</li>
- <li><strong>NFR 2 - Latency:</strong> p95 &lt; 50 ms for user_id point lookups.</li>
- <li><strong>NFR 3 - Availability:</strong> 99.99% (~52 min downtime per year).</li>
- <li><strong>NFR 4 - Consistency:</strong> single-shard reads reflect committed writes; no lost commits on failover.</li>
- <li><strong>NFR 5 - Storage:</strong> ~10 TB primary dataset,and growing; grows by adding nodes, not bigger disks.</li>
- </ol>
- </ng-template>
- </p-card>
-
- <p-card header="Entities">
- <ng-template #content>
- <ul class="points">
- <li><strong>User</strong> - user_id (PK), name, email,and created_at.</li>
- <li><strong>Post</strong> - post_id (PK), user_id,and created_at.</li>
- <li><strong>Follower</strong> - (user_id,follower_id) composite PK for the fan-out graph.</li>
- </ul>
- <p>Shard key = <strong>user_id</strong>: every hot query filters by it first.</p>
- </ng-template>
- </p-card>
-
- <p-card header="APIs">
- <ng-template #content>
- <ul class="points">
- <li><code>GET /v1/users/&#123;id&#125;</code> - read a profile.</li>
- <li><code>POST /v1/users/&#123;id&#125;/posts</code> - publish a post,and return its post_id.</li>
- <li><code>GET /v1/users/&#123;id&#125;/posts?cursor=</code> - paginated recent posts.</li>
- <li><code>POST /v1/auth/email</code> - login by email; resolves email to user_id.</li>
- </ul>
- </ng-template>
- </p-card>
- <p-card header="Step 1 - One Postgres and one box (v0)">
- <ng-template #content>
- <p><strong>Satisfies FR 1-3 naively:</strong> the entire app runs on a single ACID database.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> one relational instance gives free JOINs, transactions,and simple ops - but every NFR is capped by one machine's CPU, disk,and network.</li>
- <li><strong>Why it must change:</strong> at 100M users this box needs &gt; 4 TB and ~50k writes/sec - far beyond one node's I/O budget.</li>
- <li><strong>Design change:</strong> nothing to split yet: app -&gt; Postgres on one VM.</li>
- <li><strong>Improved:</strong> nothing needed at small scale - simple,and strongly consistent.</li>
- <li><strong>New problem:</strong> CPU, storage,and availability peak out together - one crash means 0% availability.</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Step 2 - Vertical scale buys time (v1)">
- <ng-template #content>
- <p><strong>Triggers NFR 1 - scale:</strong> CPU at ~70%, disk at ~80%.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> scale-up (32 vCPU,and 128 GB RAM, NVMe)vs scale-out(sharding). Scale-up,is trivially operable but hits a ceiling (~2-4 TB per box,and stays a single point of failure - picked as a stop-gap only.</li>
- <li><strong>Why add:</strong> cheapest win before committing to a data-model change.</li>
- <li><strong>Design change:</strong> before - default config; after - indexes on user_id,and created_at, PgBouncer connection pool,and work_mem tuning.</li>
- <li><strong>Improved:</strong> headroom to ~5-10M users; p95 stays &lt; 50 ms.</li>
- <li><strong>New problem:</strong> the ceiling is real - writes,and storage cannot outgrow one machine,and a single box can never meet NFR 3(99.99%).</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Step 3 - Hash shard by user_id (v2)">
- <ng-template #content>
- <p><strong>Triggers NFR 1 plus NFR 5 - scale,and storage:</strong> the vertical ceiling is reached.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> hash(user_id)% N vs range sharding (by created_at or id ranges). Ranges give locality,and easy scans, but new data lands on one hot-tail shard; hashing spreads writes evenly - picked hash.</li>
- <li><strong>Why add:</strong> every hot query filters by user_id, so a user's rows live on exactly one shard -&gt; single-shard reads stay fast.</li>
- <li><strong>Design change:</strong> before - one Postgres; after - 16 Postgres shards,with identical schema; the app computes shard = hash(user_id)% 16,and routes the query.</li>
- <li><strong>Improved:</strong> storage,and writes divide by 16 (~625 GB,and ~3k writes/sec per shard); point lookups stay p95 &lt; 50 ms.</li>
- <li><strong>New problem:</strong> N is frozen - growing to 17 shards means rehashing nearly every key(a resharding storm,and email login now scatters across all shards.</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Step 4 - Consistent-hash ring (v3)">
- <ng-template #content>
- <p><strong>Triggers NFR 5 - grow by adding nodes:</strong> modulo-N makes every resize a full migration.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> modulo rehash (moves ~N/(N+1)of all data per resize)vs a consistent-hash ring - a 2^32 circle where each key lands on the first node clockwise of hash(key. Ring plus virtual nodes(each physical node owns hundreds of virtual arcs()gives even spread - picked ring.</li>
- <li><strong>Why add:</strong> the shard count must change as data grows, without rewriting the database world.</li>
- <li><strong>Design change:</strong> before - shard = hash(user_id)% 16; after - a shard-map service owns ring -&gt; node ownership,and clients route through it.</li>
- <li><strong>Improved:</strong> 16 to 17 shards moves only ~1/17 of keys instead of 16/17; resharding becomes a background job instead of a freeze.</li>
- <li><strong>New problem:</strong> every node owns a different key range, so any non-key query fans out everywhere,and a hot key(celebrity account)pins one node,with all of its traffic.</li>
- </ul>
- </ng-template>
- </p-card>
- <p-card header="Step 5 - Replicas and failover (v4)">
- <ng-template #content>
- <p><strong>Triggers NFR 3 plus FR 5 - availability:</strong> scaling is fixed, but any node crash is still a full-data outage.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> async vs sync (quorum) replication. Async is fast but loses committed writes on a primary crash - unacceptable vs FR 5; picked synchronous commit to at least 1 replica.</li>
- <li><strong>Why add:</strong> NFR 3 demands 99.99%, impossible,with a single copy per shard.</li>
- <li><strong>Design change:</strong> before - 1 node per shard; after - 1 primary plus 2 replicas per shard; leader election(e.g., Patroni)promotes a replica,and the shard-map service points clients at the new primary.</li>
- <li><strong>Improved:</strong> availability ~99.99%; committed-write loss window ~0; replicas also absorb read fan-out.</li>
- <li><strong>New problem:</strong> 3x the nodes to operate,and email login still queries every shard - the read path needs a global lookup,the same way writes needed replication.</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Step 6 - Hot keys,and scatter-gather (v5)">
- <ng-template #content>
- <p><strong>Triggers FR 4 - cross-shard reads:</strong> email login,and admin queries hit every node.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> replicate hot keys(write N copies, read any copy)vs splitting the hot key itself(re-shard the celebrity's suffix by sub-key - powerful,but complex); picked hot-key replicas: cheap, reversible, reads scale.</li>
- <li><strong>Why add:</strong> one celebrity account can double a shard's traffic by itself.</li>
- <li><strong>Design change:</strong> before - one hot row = one shard = one bottleneck; after - a routing coordinator scatter-gathers queries in parallel(N shards, merge,and re-sort at the coordinator,and copies hot rows onto a few extra shards.</li>
- <li><strong>Improved:</strong> celebrity reads back under p95 &lt; 50 ms; cross-shard lookups ~ slowest shard plus merge (~60-80 ms, acceptable for admin/login.</li>
- <li><strong>New problem:</strong> replicated hot rows need write-coordination,and fan-out grows linearly,with shard count - 100+ shards will blow the latency budget for login.</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Step 7 - Global email index (v6)">
- <ng-template #content>
- <p><strong>Triggers FR 4 - login by email:</strong> an email lookup has no user_id, so no shard key.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> dedicated index table sharded by hash(email)- login becomes a point query on one index shard)vs a shared global index,in one DB(it would become a bottleneck itself); picked dedicated index</li>
- <li><strong>Why add:</strong> email to user_id is a rare but latency-critical lookup; fan-out to N shards cannot meet NFR 2.</li>
- <li><strong>Design change:</strong> before - user writes only hit the user shard; after - an outbox row is written transactionally,with the user,and a CDC pipeline,(e.g., Debezium to Kafka)applies it to the email-index shard - dual writes without blocking the user write.</li>
- <li><strong>Improved:</strong> login is one point lookup: p95 &lt; 50 ms, zero fan-out.</li>
- <li><strong>New problem:</strong> outbox/CDC lag means the index is eventually consistent(a just-created account may take ~100 ms to appear),and true multi-shard transactions remain unsupported.</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Step 8 - Production sharded layer (v7)">
- <ng-template #content>
- <p><strong>Triggers NFR 5 - safe growth:</strong> the chain now needs operational discipline, not new components.</p>
- <ul class="points">
- <li><strong>Trade-off:</strong> build a routing proxy in-app(simpler,but couples business code to sharding)vs a dedicated proxy(Vitess-style: owns the shard map, rewrites queries,and hides shards from app code); picked dedicated proxy for separation of concerns.</li>
- <li><strong>Why add:</strong> resharding,and failover must be safe for engineers, not heroics.</li>
- <li><strong>Design change:</strong> before - app logic routes manually; after - proxy owns map plus routing; resharding = double-write old plus new shards, backfill, then cut over, one canary shard at a time.</li>
- <li><strong>Improved:</strong> shards added in days, not weeks; app code unchanged; failover handled centrally.</li>
- <li><strong>New problem(accepted residuals):</strong> cross-shard joins are banned(data model flattens them); no distributed transactions across shards(single-shard idempotent writes plus sagas instead); a single celebrity write storm still caps at one node's write rate(queue plus batch);and global analytics move to a warehouse/ES fed by the CDC pipeline.</li>
- </ul>
- </ng-template>
- </p-card>
- <p-card header="Step Summary">
- <ng-template #content>
- <table class="summary-table">
- <thead>
- <tr>
- <th>Step</th>
- <th>We added</th>
- <th>Satisfies</th>
- <th>Improved</th>
- <th>New problem</th>
- </tr>
- </thead>
- <tbody>
- <tr>
- <td>v0</td>
- <td>One Postgres</td>
- <td>FR 1-3 (naive)</td>
- <td>simplest thing that works</td>
- <td>CPU / storage / availability ceiling</td>
- </tr>
- <tr>
- <td>v1</td>
- <td>Bigger box plus tuning</td>
- <td>NFR 1 and 2</td>
- <td>headroom to ~5-10M users</td>
- <td>hard ceiling; SPOF remains</td>
- </tr>
- <tr>
- <td>v2</td>
- <td>Hash sharding, user_id mod 16</td>
- <td>NFR 1 and 5</td>
- <td>16x storage,and writes; ~625 GB, ~3k writes/s per shard</td>
- <td>N frozen - resharding storm; email scatters</td>
- </tr>
- <tr>
- <td>v3</td>
- <td>Consistent-hash ring plus shard map</td>
- <td>NFR 5</td>
- <td>resize moves ~1/N keys (16/17 to 1/17)</td>
- <td>hot keys; fan-out grows</td>
- </tr>
- <tr>
- <td>v4</td>
- <td>Primary plus 2 sync replicas, failover</td>
- <td>NFR 3 and FR 5</td>
- <td>~99.99% availability, ~0 data-loss window</td>
- <td>3x nodes; login still fans out</td>
- </tr>
- <tr>
- <td>v5</td>
- <td>Scatter-gather plus hot-key replicas</td>
- <td>FR 4</td>
- <td>celebrity reads &lt; 50 ms</td>
- <td>replicated rows must stay consistent</td>
- </tr>
- <tr>
- <td>v6</td>
- <td>Global email index(outbox plus CDC)</td>
- <td>FR 4</td>
- <td>login &lt; 50 ms, zero fan-out</td>
- <td>eventual-consistency lag; no cross-shard transactions</td>
- </tr>
- <tr>
- <td>v7</td>
- <td>Vitess-style proxy, canary reshard</td>
- <td>NFR 5,and 4</td>
- <td>safe, fast shard growth; app decoupled</td>
- <td>accepted residuals(below)</td>
- </tr>
- </tbody>
- </table>
- </ng-template>
- </p-card>
-
- <p-card header="Final Design">
- <ng-template #content>
- <ul class="points">
- <li><strong>64 Postgres shards</strong> - each a primary plus 2 replicas; one per user_id hash-ring arc.</li>
- <li><strong>Routing proxy(Vitess-style)</strong> - owns the shard map, routes,and rewrites queries; app talks to it like one database.</li>
- <li><strong>CDC pipeline(Debezium to Kafka)</strong> - feeds the global email index,and warehouse/ES for analytics.</li>
- <li><strong>Hot-key replicas</strong> - celebrity rows copied to extra shards for read scale.</li>
- <li><strong>Data flow:</strong> POST /posts -&gt; proxy -&gt; user's shard primary -&gt; sync commit -&gt; replicas; login -&gt; proxy -&gt; email-index shard -&gt; user_id -&gt; user's shard; async jobs(outbox to CDC)keep auxiliary stores,in sync.</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Numbers (back of envelope)">
- <ng-template #content>
- <ul class="points">
- <li>Storage: 10B posts times ~400 B ~ 4 TB,total ~5-10 TB with indexes.</li>
- <li>Load: ~500k read QPS,and ~50k write QPS.</li>
- <li>Over 64 shards ~ 160 GB,and ~8k reads/s,and ~800 writes/s per shard - comfortably under one Postgres box's limits.</li>
- <li>Machines: 64 times 3 = 192 DB nodes plus ~8 proxy/front-end boxes(or a managed option like Vitess/Spanner).</li>
- </ul>
- </ng-template>
- </p-card>
-
- <p-card header="Cheat Sheet - 60-second rehearsal">
- <ng-template #content>
- <p>Start with one database (v0). Vertical scaling buys time (v1), then hash-shard on user_id (v2). The modulo trap is a fixed N - switch to consistent hashing so resizing moves only ~1/N of the keys (v3. Harden availability,with a primary plus sync replicas per shard (v4. Cross-shard lookups,and hot keys get scatter-gather plus hot-key replicas(v5,and login by email gets a dedicated index fed by outbox plus CDC(v6. Operate it behind a Vitess-style routing proxy,and reshard via double-write plus canary backfill(v7.</p>
- <p><strong>Always name the alternatives:</strong> range vs hash, modulo vs ring, async vs sync replication,and single-writer vs multi-writer.</p>
- </ng-template>
- </p-card>
- </div>
+    <p-card header="Twitter at 100M+ users – what we pick">
+      <ng-template #content>
+        <p>Every read is a profile or a timeline for one user, so the shard key is the user_id – it satisfies every rule above.</p>
+        <ul class="points">
+          <li><strong>Choose user_id (hash)</strong> – hundreds of millions of distinct values, evenly spread, and it is the field every hot READ filters on, so one query maps to one shard.</li>
+          <li><strong>Avoid tweet_id</strong> – it auto-increments and grows forever; live tweets all flood the newest shard, leaving the rest idle.</li>
+          <li><strong>Avoid created_at / date</strong> – monotonic and time-bucketed, so "today" becomes a single hot shard, and old data roams idle.</li>
+          <li><strong>Avoid country / region</strong> – low cardinality with huge skew (say the US is 30%+ of users), so a couple of shards go hot, and most sit near-empty.</li>
+          <li><strong>Avoid email</strong> – cardinality is great but it can change, and hot queries (timeline, profile) don't filter by email, so reads scatter-gather.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+  </div>
 </article>
