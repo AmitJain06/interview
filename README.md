@@ -2,6 +2,10 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.36.
 
+> 📖 This app is a system-design learning guide and last-day interview notes. Before generating or
+> improving any **system design** problem page, read [`agent.md`](./agent.md) — it defines the required
+> step-by-step design-evolution format and the Angular page conventions.
+
 ## Development server
 
 To start a local development server, run:
