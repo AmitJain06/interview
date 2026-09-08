@@ -8,20 +8,218 @@
       </div>
     </header>
 
-    <div class="problem-grid">
-      @for (problem of problems; track problem.route) {
-        <a class="problem-card" [routerLink]="problem.route">
-          <p-card [header]="problem.title">
-            <ng-template #content>
-              <p>{{ problem.description }}</p>
-            </ng-template>
-            <ng-template #footer>
-              <p-tag [value]="problem.difficulty" [severity]="problem.severity" />
-            </ng-template>
-          </p-card>
-        </a>
-      }
+    <div class="table-toolbar">
+      <div class="search-box">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search title, pattern, difficulty, #…"
+          (input)="onGlobalFilter(dt, $event)"
+        />
+      </div>
+      <span class="table-count">{{ problems.length }} problems</span>
     </div>
+
+    <div class="problem-table">
+      <p-table
+        #dt
+        [value]="problems"
+        [stripedRows]="true"
+        [showGridlines]="true"
+        [globalFilterFields]="['number', 'title', 'difficulty', 'pattern']"
+        [sortField]="'number'"
+        [sortOrder]="1"
+        [paginator]="true"
+        [rows]="200"
+        [rowsPerPageOptions]="[50, 100, 200, 500, 1000]"
+        [alwaysShowPaginator]="true"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        [showFirstLastIcon]="true"
+        [showJumpToPageDropdown]="true"
+        [showJumpToPageInput]="true"
+        [paginatorDropdownAppendTo]="'body'"
+      >
+        <ng-template #header>
+          <tr>
+            <th class="rowno-col" scope="col">No.</th>
+            <th scope="col" [pSortableColumn]="'difficulty'">
+              <span class="th-label">Difficulty</span>
+              <p-sort-icon field="difficulty" />
+            </th>
+            <th scope="col" [pSortableColumn]="'number'">
+              <span class="th-label">#</span>
+              <p-sort-icon field="number" />
+            </th>
+            <th scope="col" [pSortableColumn]="'title'">
+              <span class="th-label">Title</span>
+              <p-sort-icon field="title" />
+            </th>
+            <th scope="col" [pSortableColumn]="'pattern'">
+              <span class="th-label">Pattern</span>
+              <p-sort-icon field="pattern" />
+            </th>
+            <th scope="col">Open on LeetCode</th>
+          </tr>
+          <tr class="filter-row">
+            <th class="rowno-col"></th>
+            <th>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filter difficulty"
+                aria-label="Filter by difficulty"
+                (input)="onColumnFilter(dt, 'difficulty', $event)"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filter #"
+                aria-label="Filter by problem number"
+                (input)="onColumnFilter(dt, 'number', $event)"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filter title"
+                aria-label="Filter by title"
+                (input)="onColumnFilter(dt, 'title', $event)"
+              />
+            </th>
+            <th>
+              <p-select
+                [options]="patternOptions"
+                placeholder="Filter pattern"
+                [showClear]="true"
+                [filter]="true"
+                filterPlaceholder="Search pattern…"
+                [appendTo]="'body'"
+                styleClass="pattern-filter"
+                (onChange)="onPatternFilter(dt, $event)"
+              />
+            </th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-problem let-rowIndex="rowIndex">
+          <tr>
+            <td class="rowno-cell">{{ dt.first() + rowIndex + 1 }}</td>
+            <td><p-tag [value]="problem.difficulty" [severity]="problem.severity" /></td>
+            <td>{{ problem.number }}</td>
+            <td>
+              <button type="button" class="problem-link" (click)="openExplanation(problem)">
+                <span>{{ problem.title }}</span>
+                <i class="pi pi-book" aria-hidden="true"></i>
+              </button>
+            </td>
+            <td>{{ problem.pattern }}</td>
+            <td>
+              <a
+                class="leetcode-link"
+                [href]="problem.leetcodeUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="pi pi-external-link" aria-hidden="true"></i>
+                Open
+              </a>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6" class="empty-message">No problems match your filters.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <p-dialog
+      [(visible)]="explanationVisible"
+      [modal]="true"
+      [closable]="true"
+      [dismissableMask]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [appendTo]="'self'"
+      [style]="{ width: 'min(92vw, 44rem)' }"
+    >
+      <ng-template #header>
+        @if (selectedProblem(); as problem) {
+          <div class="dialog-header">
+            <span>LeetCode {{ problem.number }} · {{ problem.title }}</span>
+            <p-tag [value]="problem.difficulty" [severity]="problem.severity" />
+          </div>
+        }
+      </ng-template>
+
+      <ng-template #content>
+        @if (selectedProblem(); as problem) {
+          <div class="explanation">
+            @if (problem.notes) {
+              <div class="notes" [innerHTML]="safeHtml(problem.notes)"></div>
+            } @else {
+              @if (problem.pattern) {
+                <h2>Pattern</h2>
+                <p class="explanation-description">{{ problem.pattern }}</p>
+              }
+
+              @if (problem.description) {
+                <h2>Problem</h2>
+                <p class="explanation-description">{{ problem.description }}</p>
+              }
+
+              @if (problem.approach && problem.approach.length) {
+                <h2>Approach</h2>
+                <ol class="steps">
+                  @for (step of problem.approach; track step) {
+                    <li>{{ step }}</li>
+                  }
+                </ol>
+              }
+
+              @if (problem.time || problem.space) {
+                <div class="status-row">
+                  @if (problem.time) {
+                    <p-tag icon="pi pi-clock" value="Time: {{ problem.time }}" severity="info" />
+                  }
+                  @if (problem.space) {
+                    <p-tag icon="pi pi-database" value="Space: {{ problem.space }}" severity="info" />
+                  }
+                </div>
+              }
+            }
+          </div>
+        }
+      </ng-template>
+
+      <ng-template #footer>
+        @if (selectedProblem(); as problem) {
+          <div class="dialog-footer">
+            <a
+              class="dialog-action external"
+              [href]="problem.leetcodeUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i class="pi pi-external-link" aria-hidden="true"></i>
+              Open on LeetCode
+            </a>
+            @if (problem.route) {
+              <a class="dialog-action" [routerLink]="problem.route" (click)="explanationVisible.set(false)">
+                <i class="pi pi-book" aria-hidden="true"></i>
+                Full explanation
+              </a>
+            }
+          </div>
+        }
+      </ng-template>
+    </p-dialog>
   </div>
 }
 
