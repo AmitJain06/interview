@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="300" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Entities + the ONE API (don’t over-invest here)</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">nouns → contract → high-level design must implement exactly this · K ≤ 1000 so no pagination infra needed</text>
+<rect x="24" y="80" width="260" height="196" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="154" y="106" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle">Core entities (3 nouns)</text>
+<rect x="44" y="118" width="220" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="154" y="134" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">Video { videoId }</text>
+<text x="154" y="149" font-size="11" fill="#6b7280" text-anchor="middle">what is watched</text>
+<rect x="44" y="162" width="220" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="154" y="178" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">View { videoId, ts }</text>
+<text x="154" y="193" font-size="11" fill="#6b7280" text-anchor="middle">one watch event (Kafka msg)</text>
+<rect x="44" y="206" width="220" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="154" y="222" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">Window { type, start, end }</text>
+<text x="154" y="237" font-size="11" fill="#6b7280" text-anchor="middle">all-time | 1h | 1d | 7d | 28d</text>
+<rect x="296" y="80" width="560" height="196" rx="12" fill="#1e293b"/>
+<text x="576" y="106" font-size="14" font-weight="700" fill="#4ade80" text-anchor="middle">GET /views/top-k?window=…&amp;k=… → 200 OK (sorted desc)</text>
+<text x="316" y="130" font-size="11" fill="#93c5fd">request:  window = “all-time” | “1h” | “1d” | “7d” | “28d” · k = 1…1000</text>
+<rect x="316" y="142" width="520" height="52" rx="6" fill="#0f172a" stroke="#334155"/>
+<text x="330" y="162" font-size="11" fill="#e2e8f0">GET /views/top-k?window=7d&amp;k=3</text>
+<text x="330" y="180" font-size="11" fill="#4ade80">→ [{“videoId”:“vid9”,“views”:9812011}, {“videoId”:“vid3”,…}, …] (KBs, sorted)</text>
+<text x="316" y="214" font-size="11" fill="#e2e8f0">no write API — views arrive via the upstream Kafka topic (assumption; saves 10 min)</text>
+<text x="316" y="234" font-size="11" fill="#e2e8f0">no pagination — worst case 1000 × (id+count) ≈ a few KB, one round trip</text>
+<text x="316" y="254" font-size="11" fill="#fbbf24">senior tip: timebox this to ~2 min; the marks are in requirements + deep dives</text>
+
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 370" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker></defs>
+<rect width="880" height="370" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="34" font-size="19" font-weight="700" fill="#1f2937" text-anchor="middle">Full streaming design — Kafka → Flink → Postgres → cron → Redis → API</text>
+<text x="440" y="56" font-size="12" fill="#6b7280" text-anchor="middle">write path pre-aggregates (Flink) so the DB stays small · read path never touches the DB live</text>
+<g font-size="11" text-anchor="middle">
+<rect x="16" y="76" width="130" height="96" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="81" y="98" font-weight="700" fill="#3730a3">Kafka</text>
+<text x="81" y="114" fill="#374151">video_views</text>
+<text x="81" y="130" fill="#374151">~700k/s</text>
+<text x="81" y="148" fill="#6b7280" font-size="10">upstream topic</text>
+<rect x="158" y="76" width="140" height="96" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="228" y="98" font-weight="700" fill="#3730a3">Flink</text>
+<text x="228" y="114" fill="#374151">hourly</text>
+<text x="228" y="130" fill="#374151">windows</text>
+<text x="228" y="148" fill="#6b7280" font-size="10">aggregate+sort</text>
+<rect x="310" y="76" width="150" height="96" rx="10" fill="#f8fafc" stroke="#94a3b8"/>
+<text x="385" y="98" font-weight="700" fill="#0f172a">Views DB</text>
+<text x="385" y="114" fill="#374151">Hour/Day/Month</text>
+<text x="385" y="130" fill="#374151">+ raw Views</text>
+<text x="385" y="148" fill="#6b7280" font-size="10">idx(ts, views)</text>
+<rect x="472" y="76" width="130" height="96" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="537" y="98" font-weight="700" fill="#3730a3">Top-K cron</text>
+<text x="537" y="114" fill="#374151">hourly job</text>
+<text x="537" y="130" fill="#374151">per window</text>
+<text x="537" y="148" fill="#6b7280" font-size="10">backoff+alert</text>
+<rect x="614" y="76" width="110" height="96" rx="10" fill="#fef9c3" stroke="#fde047"/>
+<text x="669" y="98" font-weight="700" fill="#854d0e">Redis</text>
+<text x="669" y="114" fill="#374151">window:key</text>
+<text x="669" y="130" fill="#374151">TTL 30d</text>
+<text x="669" y="148" fill="#6b7280" font-size="10">always warm</text>
+<rect x="736" y="76" width="128" height="96" rx="10" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="800" y="98" font-weight="700" fill="#15803d">API</text>
+<text x="800" y="114" fill="#374151">Gateway +</text>
+<text x="800" y="130" fill="#374151">Top-K svc</text>
+<text x="800" y="148" fill="#6b7280" font-size="10">p99 ~ms</text>
+</g>
+<line x1="146" y1="124" x2="158" y2="124" stroke="#64748b" stroke-width="3" marker-end="url(#a4)"/>
+<line x1="298" y1="124" x2="310" y2="124" stroke="#64748b" stroke-width="3" marker-end="url(#a4)"/>
+<line x1="460" y1="124" x2="472" y2="124" stroke="#64748b" stroke-width="3" marker-end="url(#a4)"/>
+<line x1="602" y1="124" x2="614" y2="124" stroke="#4f46e5" stroke-width="3" marker-end="url(#a4)"/>
+<line x1="724" y1="124" x2="736" y2="124" stroke="#22c55e" stroke-width="3" marker-end="url(#a4)"/>
+<rect x="16" y="186" width="848" height="60" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="32" y="208" font-size="12" font-weight="700" fill="#0f172a">Read flow (green): Client → Gateway → Top-K svc → Redis HIT → sorted Top-K (K≤1000, KBs) — DB is never on the hot path.</text>
+<text x="32" y="230" font-size="12" fill="#374151">Write flow (blue): Kafka view events → Flink hourly tumbling aggregation → small Hour/Day/Month tables → cron caches results.</text>
+<rect x="16" y="254" width="848" height="100" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="32" y="276" font-size="12" font-weight="700" fill="#92400e">Why each piece exists (evolution recap — tell this story in order):</text>
+<text x="32" y="296" font-size="11" fill="#78350f">1) Postgres alone → correct but 70× over write limit + window queries scan TBs. 2) +Redis read-through → fast hits, catastrophic misses.</text>
+<text x="32" y="314" font-size="11" fill="#78350f">3) +cron pre-compute → predictable ms reads, stale-on-failure (no DB fallthrough). 4) +Flink aggregation → DB stays small, cron fast.</text>
+<text x="32" y="334" font-size="11" fill="#78350f">Below the line (deferred): sliding windows, arbitrary ranges, per-creator/lang filters, CMS approximation — name them, don’t build them.</text>
+
+</svg>

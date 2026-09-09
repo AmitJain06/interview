@@ -4,39 +4,268 @@
   <header class="page-header">
     <div class="page-icon"><i class="pi pi-sitemap"></i></div>
     <div>
-      <h1>Top-K Elements</h1>
-      <p>Continuously surface the K highest-ranked items from a large stream.</p>
+      <h1>Top-K YouTube Videos by Views</h1>
+      <p>Stream-processing classic: precise Top-K over billions of videos and ~700k views/sec — notes from the Hello Interview breakdown (Ex-Meta).</p>
     </div>
     <p-tag class="header-tag" value="Medium" severity="warn" />
   </header>
 
   <div class="card-stack">
-    <p-card header="Problem">
+    <p-card header="How to use this page (your interview script)">
       <ng-template #content>
         <p>
-          Design a service that tracks millions of events per minute (searches, plays, votes) and
-          answers "what are the current top-K items?" with low latency.
+          Full step-by-step notes for the video <em>Top-K System Design Interview Breakdown w/ Ex-Meta Senior Manager</em>.
+          Read in order: working-but-slow high-level design, then cache, pre-compute, write-path fix, full streaming design, optional deep dives.
+          Every step embeds the <strong>actual whiteboard frame</strong> from the video (captions start with “Whiteboard”) next to a redrawn diagram — so you can watch the design improve one change at a time.
         </p>
+        <h3 class="subhead">Delivery framework (use it every interview)</h3>
+        <ol class="steps">
+          <li><strong>Requirements</strong> (~5 min) — functional (what) + non-functional (how well, quantified, top 3-5).</li>
+          <li><strong>Entities</strong> (~2 min) — nouns: Video, View, Window. Keep it fast here.</li>
+          <li><strong>API</strong> (~5 min) — the contract. Implement the API and you are done.</li>
+          <li><strong>High-level design</strong> (~10-15 min) — simplest system satisfying <em>functional</em> reqs only.</li>
+          <li><strong>Deep dives</strong> — layer NFRs on: latency, scale, freshness.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Golden rule:</strong>&nbsp;start working, not optimal. Easier to optimize a working system than to fix an optimal-but-broken one.
+        </div>
       </ng-template>
     </p-card>
 
-    <p-card header="Approach">
+    <p-card header="1 — Functional requirements (ask, don't assume)">
       <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-requirements.svg" alt="Functional and non-functional requirements for Top-K" />
+          <figcaption><strong>Requirements board.</strong> Small wording changes imply totally different systems — that is why the video spends so long here.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>FR1 — ingest every view event</strong> from an upstream Kafka <code>video_views</code> topic. You design only the Top-K feature, not all of YouTube.</li>
+          <li><strong>FR2 — precise Top-K (K up to 1000), all-time.</strong> The unchanging leaderboard (Gangnam Style test).</li>
+          <li><strong>FR3 — precise Top-K for tumbling windows: 1h, 1d, 1 week (7 days), 1 month (28 days).</strong> Fixed 7/28-day blocks — no calendaring.</li>
+          <li><strong>Below the line:</strong> arbitrary ranges (Oct 2019?), true sliding windows, per-language/creator filters. Name them, defer them.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="2 — Non-functional requirements (quantified, in context)">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>NFR1 — write freshness ~1 min</strong> (event happens to counted in Top-K). Covers retries, congestion, out-of-order events; justifies cache TTL + stale-on-failure later.</li>
+          <li><strong>NFR2 — read latency tens of ms</strong> (single-digit on cache hit). Forces pre-computation — per-request compute can never hit this.</li>
+          <li><strong>NFR3 — cardinality: billions of videos (TBD).</strong> Cannot sort per request; must pre-compute.</li>
+          <li><strong>NFR4 — write scale: hundreds of thousands to ~700k views/sec (TBD).</strong> The hardest dimension — flag it early.</li>
+          <li><strong>NFR5 — precise results, no approximation.</strong> Precise is easier to design well; Count-Min Sketch is a senior/staff deep dive only.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Phrasing tip:</strong>&nbsp;“low-latency Top-K reads in tens of ms” beats “system should be low latency”. Quantify + scope to the hot path. Pick 3-5 only.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="3 — Tumbling vs sliding windows (decide before drawing)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-tumbling-vs-sliding.svg" alt="Tumbling versus sliding windows comparison" />
+          <figcaption><strong>Assume tumbling, defer sliding.</strong> Tumbling = fixed blocks (Hr0, Hr1...), one cache key each. Sliding = anchored at now, shifting constantly.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Tumbling:</strong> last week = Sunday-to-Sunday of prior week. Query = <code>SUM(views) WHERE ts BETWEEN start AND end</code>. One cron run per window type per hour.</li>
+          <li><strong>Sliding:</strong> last 7 days from this second — range moves as time moves. Needs add-new/subtract-expired maintenance (deep dive).</li>
+          <li><strong>Say:</strong> “I'll assume tumbling (week = 7d, month = 28d). If you want true sliding I'll add minute tables + Flink sliding windows later.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="4 — Entities + the ONE API (2 min, don't over-invest)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-entities-api.svg" alt="Core entities and REST API for Top-K" />
+          <figcaption><strong>Three nouns, one endpoint.</strong> Save energy for the HLD + deep dives.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Video</strong> (videoId), <strong>View</strong> (videoId + ts, one Kafka message), <strong>Window</strong> (all-time | 1h | 1d | 7d | 28d).</li>
+          <li><strong>REST:</strong> <code>GET /views/top-k?window=7d&amp;k=50</code> returns sorted <code>[{{ '{' }} videoId, views {{ '}' }}]</code> desc. K 1-1000, so no pagination (worst case = KBs).</li>
+          <li><strong>No write API</strong> — views arrive via the assumed Kafka topic. State the assumption out loud.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="5 — HLD v1: all-time Top-K (functional, not scalable)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-hld-v1-alltime.svg" alt="High-level design v1 for all-time Top-K" />
+          <figcaption><strong>v1 answers FR2 only.</strong> Kafka topic (assumed) → View Consumer (INSERT/UPDATE per view) → Postgres(videoId, views) with index on views → Gateway + Top-K service with ORDER BY views LIMIT k.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-hld-v1.jpg" alt="Whiteboard: high-level design v1 from the video" />
+          <figcaption><strong>Whiteboard — the actual v1 from the video:</strong> assumed video_views Kafka topic → View Consumer → Views DB Postgres(videoId, views) → API gateway + Top-K service. Copy this layout when you draw it live.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-hld-v1-sql.jpg" alt="Whiteboard: all-time Top-K SQL query" />
+          <figcaption><strong>Whiteboard — the all-time SQL:</strong> SELECT videoId, views … ORDER BY views DESC LIMIT k. Fast only because of the index on views — a sorted list the planner grabs the first K entries from.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Write path:</strong> one UPDATE per view (<code>views = views + 1</code>). Simple, correct — and the bottleneck (hot rows for viral videos, index churn).</li>
+          <li><strong>Read path:</strong> fast ONLY because of the <code>INDEX on views</code> (sorted list → grab first K). Without it Postgres scans + sorts everything.</li>
+          <li><strong>Say out loud:</strong> “I know this doesn't scale — one box, hot-row contention, and it can't answer window queries. That's intentional: working first, optimize in deep dives.” Juniors: start here. Staff: you may start one step ahead, but still narrate the trade-off.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="6 — HLD v2: hourly buckets unlock window queries (but dog-slow)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-hld-v2-windows.svg" alt="High-level design v2 with hourly buckets" />
+          <figcaption><strong>v2 answers FR2 + FR3 functionally.</strong> One row per (videoId, hour). Window query = filter hours in range → GROUP BY videoId → SUM → sort → LIMIT k. Correct, but scans TBs per request.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-hld-v2-windows.jpg" alt="Whiteboard: v2 hourly buckets and window query from the video" />
+          <figcaption><strong>Whiteboard — the actual v2 from the video:</strong> same table plus the hour-rounded timestamp, and the window SQL — WHERE ts BETWEEN start AND end, GROUP BY videoId, SUM(views), ORDER BY … DESC LIMIT k.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Schema change:</strong> add <code>ts_hour</code> (round each view down to its hour). Row count grows (one row per video per active hour) but history is now distinguishable — last month vs last year no longer “bungled together”.</li>
+          <li><strong>Index change:</strong> drop reliance on <code>INDEX on views</code> (useless for grouped sums); add <code>INDEX on timestamp</code> so the planner can at least skip out-of-window rows. Still must read EVERY in-window row + aggregate + sort.</li>
+          <li><strong>Why hourly (not per-view, not per-day):</strong> per-view rows = unbounded explosion; per-day rows can't serve hour windows. Hourly is the granularity that serves 1h/1d/7d/28d.</li>
+          <li><strong>Interview line:</strong> “This satisfies the functional requirement but violates NFR2 (tens of ms). That gap is exactly what my deep dives close.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="7 — Deep dive 1: read path (cache → cron pre-compute)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-cache-roulette.svg" alt="Read-through cache miss problem" />
+          <figcaption><strong>Step 1: read-through Redis.</strong> Key = window + truncated timestamp, value = Top-K response, TTL 30 days. Hits = single-digit ms. Misses = minutes-to-hours DB query. Average looks fine; p99 is Russian roulette.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-cron-precompute.svg" alt="Top-K cron pre-computation design" />
+          <figcaption><strong>Step 2: pre-compute with a Top-K cron.</strong> Misses are predictable (new hour every hour) — so run the heavy query hourly and warm the cache BEFORE users ask. Reads become predictable ms.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-read-cache-cron.jpg" alt="Whiteboard: cache and cron from the video" />
+          <figcaption><strong>Whiteboard — cache + cron on the board:</strong> Redis read-through cache (key = window + truncated timestamp) plus the Top-K cron service that runs the heavy query hourly and SETs the result, so users never trigger it.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why cron beats lazy caching:</strong> distributed systems reward predictability. Scheduled ~1 query/hour vs thousands of live RPS hitting a minutes-long query on every rollover.</li>
+          <li><strong>Failure rule (say this unprompted):</strong> on cron failure, serve slightly-stale cache + alert + retry with backoff. NEVER fall through to the DB — one scheduled QPH becoming thousands of live QPS melts the DB (thundering herd).</li>
+          <li><strong>NFR link:</strong> the 1-min freshness budget + tens-of-ms read NFR jointly force this: users accept ≤1h-old data; stale-by-2h on rare failure is within spirit.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="8 — Deep dive 2: write path (math → Flink aggregation)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-write-bottleneck.svg" alt="Write bottleneck capacity estimation" />
+          <figcaption><strong>Capacity proof:</strong> 70B views/day ≈ 700k writes/s vs ~10k/s per Postgres ≈ 70x over. Storage (4B × 16B = 64 GB) fits — throughput is the killer, not disk.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-scale-math.jpg" alt="Whiteboard from the video: write scale math" />
+          <figcaption><strong>The actual whiteboard (write volume):</strong> 70B views/day ÷ 100k seconds ≈ 700k writes/sec — flagged in the video as the number that breaks a single Postgres box and drives the whole write-side deep dive.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-storage-math.jpg" alt="Whiteboard from the video: storage math" />
+          <figcaption><strong>The actual whiteboard (storage sanity-check):</strong> 3.6–4B videos × ~16 bytes ≈ 64 GB — storage fits comfortably, so the interview conclusion is precise: throughput is the problem, not disk.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-flink-aggregate-sort.svg" alt="Flink aggregate then sort compression" />
+          <figcaption><strong>The compression insight:</strong> per-(videoId, hour) aggregation collapses hundreds of GB to tens of GB (most videos idle most hours); sorting that small table to K ≤ 1000 leaves kilobytes — THAT is what the cron queries.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-flink-design.jpg" alt="Whiteboard from the video: full Flink streaming design" />
+          <figcaption><strong>The actual whiteboard (Flink design):</strong> Kafka video_views topic → Flink hourly tumbling windows → VideoViewsHour table. The per-view UPDATE consumer from v1 is replaced entirely by stream pre-aggregation.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-aggregate.jpg" alt="Whiteboard from the video: aggregation phase" />
+          <figcaption><strong>Phase 1 — aggregate:</strong> for each (videoId, hour) bucket Flink buffers the views and emits ONE row with the total. Videos with zero views in the hour produce nothing — that is the collapse from hundreds of GB to tens of GB.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-aggregate-sort.jpg" alt="Whiteboard from the video: aggregate then sort phases" />
+          <figcaption><strong>Two-phase pattern (say it exactly like this):</strong> aggregation is the compression (100s GB → 10s GB), then sorting the small table down to K ≤ 1000 is the selection (10s GB → KBs). Never sort raw events.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-sort-kb.jpg" alt="Whiteboard from the video: sorted result is kilobytes" />
+          <figcaption><strong>Phase 2 — sort + take K:</strong> the final Top-K result is kilobytes (K ≤ 1000 rows) — exactly what the cron caches in Redis, so every user read is a single-digit-ms cache hit.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-hour-day.jpg" alt="Whiteboard from the video: hour and day rollups" />
+          <figcaption><strong>Rollups — day:</strong> a 1-day window = SUM of the 24 hourly rows. No separate per-day pipeline needed; the hourly table is the source of truth.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-hour-day-month.jpg" alt="Whiteboard from the video: hour, day and month rollups" />
+          <figcaption><strong>Rollups — month:</strong> 1 month (28 days) = SUM over 28×24 hourly rows; all-time = SUM over everything (or a separate counter). Index on (timestamp, views) keeps every rollup on the small tables.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why not just “more Postgres”:</strong> every view is an UPDATE on a hot row (viral videos serialize on row locks) plus index churn. Batching in Flink removes per-view DB writes entirely.</li>
+          <li><strong>Rollups:</strong> Flink emits VideoViewsHour; Day = SUM of 24 hourly rows, Month = SUM of 28×24. Index on (timestamp, views). Cron queries small tables only.</li>
+          <li><strong>Say:</strong> “Reads are safe behind cache, but every view is a write I can't cache away — so the write path must change from per-view UPDATEs to streaming pre-aggregation.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="9 — Full streaming design (tell the evolution story)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/topk-full-design.svg" alt="Full streaming Top-K architecture" />
+          <figcaption><strong>End state:</strong> Kafka → Flink hourly aggregation → small Hour/Day/Month tables → cron warms Redis → API serves cache only. Write path pre-aggregates; read path never touches the DB live.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-final-arch.jpg" alt="Whiteboard from the video: final architecture" />
+          <figcaption><strong>The actual whiteboard (final architecture):</strong> every component in one picture — Kafka video_views → Flink → Views tables → Top-K cron → Redis → API Gateway/Top-K service. This is the board you draw and keep pointing at.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-final.jpg" alt="Whiteboard from the video: complete final design" />
+          <figcaption><strong>The actual whiteboard (complete design):</strong> the end-to-end system as the video finishes it — the write path pre-aggregates via Flink into hourly tables, the read path reads only the warm Redis cache, and the database is never on the hot path.</figcaption>
+        </figure>
         <ol class="steps">
-          <li>Count frequencies with hash counters, or approximate them with a Count-Min Sketch when the keyspace is huge.</li>
-          <li>Maintain a min-heap of size K — push new candidates and pop the smallest to keep the heap at K elements.</li>
-          <li>Use bucket sort when counts are bounded, giving near O(n) selection instead of O(n log k).</li>
-          <li>At scale, compute per-shard top-K sets and merge them at a coordinator node (map-reduce style).</li>
-          <li>Cache hot result sets with a short TTL and serve slightly stale data while recomputing.</li>
+          <li>Postgres alone: correct, 70x over write limit, window queries scan TBs.</li>
+          <li>+ Redis read-through: fast hits, catastrophic predictable misses.</li>
+          <li>+ Cron pre-compute: predictable ms reads, stale-on-failure, no DB fallthrough.</li>
+          <li>+ Flink aggregation: DB stays small, cron queries stay fast. Done.</li>
         </ol>
       </ng-template>
     </p-card>
 
-    <p-card header="Complexity">
+    <p-card header="10 — Optional: sliding windows + Count-Min Sketch">
       <ng-template #content>
-        <div class="status-row">
-          <p-tag icon="pi pi-clock" value="Time: O(n log k)" severity="info" />
-          <p-tag icon="pi pi-database" value="Space: O(k)" severity="info" />
+        <figure class="visual-figure">
+          <img src="/images/topk-sliding-windows.svg" alt="Sliding windows with minute buckets" />
+          <figcaption><strong>Sliding (only if asked):</strong> minute buckets + add-new/subtract-expired. Video's T60 to T61 example: +6 new − 5 expired = +1. Needs Flink sliding assigner + VideoViewsMinute + Last-hour/day/month rollups. 60x more rows — don't volunteer it.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-sliding.jpg" alt="Whiteboard from the video: sliding window mechanics" />
+          <figcaption><strong>The actual whiteboard (sliding math):</strong> sliding_total(T61) = sliding_total(T60) + views(M61) − views(expired M59) — the add-new/subtract-expired rule drawn out with the video's +6 − 5 = +1 example.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-sliding-arch.jpg" alt="Whiteboard from the video: sliding window architecture" />
+          <figcaption><strong>The actual whiteboard (sliding architecture):</strong> Flink sliding assigner → VideoViewsMinute tables → Last-Hour / Last-Day / Last-Month rollups + AllTime counters — the machinery true sliding needs stacked on top of the tumbling design.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-count-min-sketch.svg" alt="Count-Min Sketch approximation" />
+          <figcaption><strong>CMS (only if NFR allows error):</strong> d hash rows x w columns; add touches one column per row; query takes the min (never under-counts, may over-count on collisions). Default to precise — offer CMS as a trade-off, don't build it unasked.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/topk-frame-sketch.jpg" alt="Whiteboard from the video: Count-Min Sketch" />
+          <figcaption><strong>The actual whiteboard (Count-Min Sketch):</strong> the video's d × w grid with per-row hash functions — ADD increments one column per row, QUERY takes the min across rows. One-sided error: never under-counts, may over-count on hash collisions.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Sliding steering line:</strong> “Tumbling covers hour/day/week/month blocks. True sliding needs minute tables + Flink sliding windows — want me to go deeper there, or stay with tumbling?” Let the interviewer steer.</li>
+          <li><strong>CMS positioning:</strong> “My NFR5 says precise. If you want, CMS + a size-K min-heap trades bounded over-count for far less memory — but most interviewers don't expect it below senior/staff.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="60-second recap (say this to close)">
+      <ng-template #content>
+        <ol class="steps">
+          <li>Requirements: precise Top-K ≤1000, all-time + tumbling 1h/1d/7d/28d; freshness ~1 min; reads tens of ms; billions of videos; ~700k views/s; no approximation.</li>
+          <li>API: one endpoint <code>GET /views/top-k?window&amp;k</code>, sorted, KBs — no write API (Kafka assumption), no pagination.</li>
+          <li>HLD: Kafka topic (assumed) → consumer → Postgres(videoId, views, ts_hour); window query = filter + GROUP BY + SUM + sort + LIMIT k. Functional but slow.</li>
+          <li>Read fix: Redis (window key, TTL 30d) → cron pre-compute (predictable); stale-on-failure, never DB fallthrough.</li>
+          <li>Write fix: Flink hourly tumbling aggregation (100s GB → 10s GB → KBs); Day/Month = rollups; cron reads small tables.</li>
+          <li>Below the line: sliding windows, arbitrary ranges, filters, CMS — named, deferred, offered as follow-ups.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Source:</strong>&nbsp;Hello Interview “Top-K System Design Interview Breakdown w/ Ex-Meta Senior Manager” (video file in public/). Numbers (70B/day, 3.6–4B videos, K ≤ 1000, TTL 30d) and all diagrams above follow that video's whiteboard step by step.
         </div>
       </ng-template>
     </p-card>

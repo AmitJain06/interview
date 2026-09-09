@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="340" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Requirements — what the video actually pins down</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">spend ~5 min here · small wording changes → completely different systems (tumbling vs sliding, precise vs approximate)</text>
+<rect x="24" y="80" width="420" height="236" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="106" font-size="14" font-weight="700" fill="#15803d">Functional (what it does)</text>
+<text x="44" y="128" font-size="12" fill="#374151">FR1 · ingest every view event (Kafka stream)</text>
+<text x="44" y="148" font-size="12" fill="#374151">FR2 · precise Top-K (K ≤ 1000) — ALL TIME</text>
+<text x="44" y="168" font-size="12" fill="#374151">FR3 · precise Top-K — tumbling 1h / 1d / 7d / 28d</text>
+<text x="44" y="188" font-size="12" fill="#374151"> week = 7 days · month = 28 days (no calendaring)</text>
+<rect x="44" y="200" width="380" height="52" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="220" font-size="12" font-weight="700" fill="#15803d">Below the line (explicitly out of scope):</text>
+<text x="56" y="240" font-size="11" fill="#374151">arbitrary ranges (Oct 2019?), true sliding, filters — name them, defer them</text>
+<rect x="456" y="80" width="400" height="236" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="476" y="106" font-size="14" font-weight="700" fill="#3730a3">Non-functional (how well) — 5 to state</text>
+<text x="476" y="128" font-size="12" fill="#374151">NFR1 · write freshness ≤ ~1 min (event → tabulated)</text>
+<text x="476" y="148" font-size="12" fill="#374151">NFR2 · read p99 tens of ms (single-digit on cache hit)</text>
+<text x="476" y="168" font-size="12" fill="#374151">NFR3 · cardinality: billions of videos (TBD w/ interviewer)</text>
+<text x="476" y="188" font-size="12" fill="#374151">NFR4 · write scale: ~100s of k → 700k views/s (TBD)</text>
+<text x="476" y="208" font-size="12" fill="#374151">NFR5 · precise results — NO approximation (Count-Min later)</text>
+<text x="476" y="232" font-size="11" fill="#4c1d95">Quantify + put in context: “low-latency TOP-K READS in tens of ms”</text>
+<text x="476" y="252" font-size="11" fill="#4c1d95">beats “the system should be low latency”. Prioritize 3–5 only.</text>
+<text x="476" y="276" font-size="11" fill="#4c1d95">Scale numbers drive deep dives: 70B/day math → Flink;</text>
+<text x="476" y="296" font-size="11" fill="#4c1d95">ms-read NFR → cache + cron pre-computation.</text>
+
+</svg>
