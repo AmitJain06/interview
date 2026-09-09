@@ -11,33 +11,41 @@
   </header>
 
   <div class="card-stack">
-    <p-card header="Visual Walkthrough – one Box to many">
+    <p-card header="Why shard? — one box hits a ceiling">
       <ng-template #content>
         <figure class="visual-figure">
           <img src="/images/postgres-10k-wps.png" alt="One Postgres handling ~10k writes per second" />
-          <figcaption><strong>Start</strong> – one Postgres handles ~10k writes/sec comfortably (indexes, connection pooling, a bit of tuning).</figcaption>
+          <figcaption><strong>Start</strong> – one Postgres handles ~10k writes/sec and ~70 TB comfortably (indexes, connection pooling, a bit of tuning). Early days are smooth: traffic, reads and writes all grow, but one big box keeps up.</figcaption>
         </figure>
         <figure class="visual-figure">
           <img src="/images/postgres-20k-wps.svg" alt="One Postgres overloaded at 20k writes per second" />
-          <figcaption><strong>Load grows to ~20k writes/s</strong> – the single node saturates: CPU at 100%, writes queue up, and p95 latency balloons past every budget.</figcaption>
+          <figcaption><strong>We outgrow it</strong> – demand climbs to ~20k writes/s, or storage approaches the ~70 TB limit. Queries slow down, backups take forever — the single database is straining at its ceiling.</figcaption>
         </figure>
         <figure class="visual-figure">
           <img src="/images/scaling-options.svg" alt="Two options: scale vertically or shard" />
-          <figcaption><strong>Decision point</strong> – when one box hits its ceiling we pick a path: scale up (bigger box) or scale out (sharding).</figcaption>
+          <figcaption><strong>Decision point</strong> – before sharding, honest candidates try the cheaper ladder first: scale up (bigger box) while it still works, then scale out (sharding) when the box can no longer keep up.</figcaption>
         </figure>
         <figure class="visual-figure">
           <img src="/images/vertical-scaling.svg" alt="Vertical scaling: more RAM and CPU on the same box" />
-          <figcaption><strong>Option A – vertical scaling:</strong> add RAM / CPU / NVMe to the same box. Quick, and no app changes – but a hardware ceiling remains, and it is still a single point of failure.</figcaption>
+          <figcaption><strong>Option A – vertical scaling:</strong> AWS sells bigger boxes — ~140 TB storage and ~50k writes/s. That is a ton of headroom (most products never reach it) — but growth is global, the hardware ceiling returns, and it is still a single point of failure.</figcaption>
         </figure>
         <figure class="visual-figure">
           <img src="/images/sharding.svg" alt="Sharding: split data across many Postgres nodes" />
-          <figcaption><strong>Option B – sharding:</strong> split data, and writes across many Postgres nodes by user_id hash – throughput, and storage scale linearly; one node per slice.</figcaption>
+          <figcaption><strong>Option B – sharding:</strong> when no single box can keep up, split data and writes across many Postgres nodes — throughput and storage scale linearly, one node per slice.</figcaption>
         </figure>
+        <h3 class="subhead">What a shard actually is</h3>
+        <ul class="points">
+          <li>Each shard is a <strong>standalone database</strong> — its own CPU, memory, storage and connection pool.</li>
+          <li>It stores <strong>one subset</strong> of the data; all shards together form the full dataset.</li>
+          <li>Add a shard → storage, read and write throughput scale <strong>horizontally</strong>.</li>
+          <li><strong>New problems it creates:</strong> choosing a shard key, routing queries, hot shards, rebalancing, node failures, cross-shard queries and transactions.</li>
+        </ul>
       </ng-template>
     </p-card>
 
-    <p-card header="How to Choose a Shard Key – the rules">
+    <p-card header="How #1 — choose the shard key: the rules">
       <ng-template #content>
+        <p>The shard key is the field we group data by — <strong>all rows for one key value live on the same shard</strong>. A good key satisfies the video's three rules (the two extra refinements below come from the same logic).</p>
         <figure class="visual-figure">
           <img src="/images/shard-key-high-cardinality.svg" alt="High cardinality: few values pile onto one shard while millions spread evenly" />
           <figcaption><strong>High cardinality</strong> – the key must have millions of distinct values (a few thousand is not enough). Few distinct values means data piles onto one shard, and the others stay empty.</figcaption>
@@ -47,21 +55,21 @@
           <figcaption><strong>Even distribution (low frequency)</strong> – every value should appear with roughly equal frequency. A value that is 10x more common creates a hot shard that drags down everyone.</figcaption>
         </figure>
         <figure class="visual-figure">
+          <img src="/images/shard-key-query-alignment.svg" alt="Query alignment: hottest reads must hit exactly one shard" />
+          <figcaption><strong>Query alignment</strong> – pick the field your hottest queries filter by, so each request hits exactly one shard. A key reads don't use turns every query into a slow scatter-gather across all shards.</figcaption>
+        </figure>
+        <figure class="visual-figure">
           <img src="/images/shard-key-non-monotonic.svg" alt="Non-monotonic: auto-increment IDs and timestamps flood the newest shard" />
-          <figcaption><strong>Non-monotonic – avoid ID counters and timestamps</strong> – auto-increment IDs, date, or created_at grow forever, so every new write races to the newest shard while older shards sit idle.</figcaption>
+          <figcaption><strong>Non-monotonic – avoid ID counters and timestamps</strong> – auto-increment IDs, date, or created_at grow forever, so every new write races to the newest shard while older shards sit idle. This is exactly the range-based failure mode covered later.</figcaption>
         </figure>
         <figure class="visual-figure">
           <img src="/images/shard-key-stable.svg" alt="Stable: key changes force physically moving rows across shards" />
           <figcaption><strong>Stable / immutable</strong> – the key must not change after a row is written. Changing it means physically moving the row between shards – expensive, and never worth it.</figcaption>
         </figure>
-        <figure class="visual-figure">
-          <img src="/images/shard-key-query-alignment.svg" alt="Query alignment: hottest reads must hit exactly one shard" />
-          <figcaption><strong>Query alignment</strong> – pick the field your hottest queries filter by, so each request hits exactly one shard. A key reads don't use turns every query into a slow scatter-gather across all shards.</figcaption>
-        </figure>
       </ng-template>
     </p-card>
 
-    <p-card header="Twitter at 100M+ users – what we pick">
+    <p-card header="Example — Twitter at 100M+ users: what we pick">
       <ng-template #content>
         <p>Every read is a profile or a timeline for one user, so the shard key is the user_id – it satisfies every rule above.</p>
         <ul class="points">
@@ -71,6 +79,127 @@
           <li><strong>Avoid country / region</strong> – low cardinality with huge skew (say the US is 30%+ of users), so a couple of shards go hot, and most sit near-empty.</li>
           <li><strong>Avoid email</strong> – cardinality is great but it can change, and hot queries (timeline, profile) don't filter by email, so reads scatter-gather.</li>
         </ul>
+        <div class="callout-box">
+          Same logic, second example: an e-commerce app whose hottest flow is one order (create, review, track) shards by order_id — the key always follows the hottest single-entity query.
+        </div>
+      </ng-template>
+    </p-card>
+    <p-card header="How #2 — distribute the values: 3 strategies">
+      <ng-template #content>
+        <h3 class="subhead">Strategy A — range-based: split the key into ranges</h3>
+        <figure class="visual-figure">
+          <img src="/images/range-sharding.svg" alt="Range sharding: user IDs 0-10M to S0, 10M-20M to S1, 20M-30M hot on S2" />
+          <figcaption>Range-based sharding: user_id 0–10M → S0, 10M–20M → S1, 20M–30M → S2. Intuitive, but monotonic IDs push every new user onto the newest range.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>How:</strong> split the key into simple ranges; each range lives on its shard.</li>
+          <li><strong>Pain point 1:</strong> early days (1M users) → only the first range holds data and load; the rest sit empty.</li>
+          <li><strong>Pain point 2:</strong> auto-increment IDs grow forever → all active (new) users land on the last range → that shard goes hot.</li>
+          <li><strong>When it&apos;s fine:</strong> data that naturally falls into clean ranges and grows steadily — but you must split ranges before they get too big.</li>
+        </ul>
+
+        <h3 class="subhead">Strategy B — hash-based: hash(key) mod N — the industry default</h3>
+        <figure class="visual-figure">
+          <img src="/images/hash-sharding.svg" alt="Hash sharding: hash(user_id) mod 3 spreads users evenly across S0 S1 S2" />
+          <figcaption>Hash-based sharding: shard = hash(user_id) mod N. The hash scrambles keys, so rows spread ~evenly — the "even distribution" rule for free. The catch: adding a shard changes N, so almost every row must move — hence consistent hashing.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>How:</strong> hash the key, mod by the shard count — deterministically maps every key to one shard.</li>
+          <li><strong>Win:</strong> solid, even distribution without thinking about the data.</li>
+          <li><strong>Cost:</strong> add/remove a shard → "mod 3" becomes "mod 4" → almost everything re-maps → a full reshuffle (operational nightmare).</li>
+        </ul>
+        <h3 class="subhead">Consistent hashing — the ring that makes resharding cheap</h3>
+        <figure class="visual-figure">
+          <img src="/images/consistent-hashing.svg" alt="Consistent hashing ring: keys and shards on a virtual ring, walk clockwise to the nearest shard" />
+          <figcaption>Consistent hashing: keys and shards both sit on a <strong>virtual ring</strong>; a key walks clockwise to the first shard it meets. Joining the ring only re-maps the neighbours (~1/N of keys), not everything.</figcaption>
+        </figure>
+        <ul class="points">
+          <li>Places the key on the ring, walks <strong>clockwise</strong> to the first shard — no modulo that breaks when N changes.</li>
+          <li><strong>Virtual nodes</strong> sprinkle copies of each shard around the ring so loads stay balanced.</li>
+          <li>This is why "shard by user_id" is shorthand for <strong>hash-based + consistent hashing</strong> — the expected default in interviews.</li>
+        </ul>
+
+        <h3 class="subhead">Strategy C — directory-based: a lookup table</h3>
+        <figure class="visual-figure">
+          <img src="/images/directory-sharding.svg" alt="Directory sharding: a lookup table maps each key to a shard; requests do two hops" />
+          <figcaption>Directory-based sharding: a <strong>lookup table</strong> maps key → shard. Maximum flexibility (move Messi to his own shard by editing one row), but every request pays an extra hop and the directory is a single point of failure.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>How:</strong> each read/write first asks the directory where the key lives, then queries that shard.</li>
+          <li><strong>Win:</strong> total control — rebalance or relocate hot keys by rewriting the map, with no data-formula to fight.</li>
+          <li><strong>Cost:</strong> +1 hop of latency on <em>every</em> request, and a directory outage means nobody knows where anything is (SPOF).</li>
+          <li><strong>In interviews:</strong> almost never the right answer — keep hash + consistent hashing as your bread and butter.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="Challenges #1 — hotspots: the celebrity problem">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/celebrity-problem.svg" alt="Celebrity problem: Messi lands on shard S1 which gets 10x the traffic while others idle" />
+          <figcaption>Even a perfect shard key can&apos;t predict fame: Messi&apos;s user_id hashes to S1, so every profile view, like and comment about him hits S1 — its write throughput becomes an order of magnitude bigger than every other shard.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Fix A — compound shard key:</strong> add a suffix before hashing — e.g. <code>shard(user_id + post#)</code> or <code>shard(user_id + time)</code> — so a single celebrity&apos;s data spreads across many shards.</li>
+          <li><strong>Fix B — dedicated celebrity shard:</strong> detect high-traffic users, move them to their own (often bigger) shard and route them via a directory lookup; everyone else stays on plain hash + consistent hashing.</li>
+          <li>Most systems never need this — it exists for platforms with extreme outliers like a social media app.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Challenges #2 — cross-shard queries">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/cross-shard-query.svg" alt="Cross-shard query: top-10 posts fans out to all shards, aggregates, then caches the result" />
+          <figcaption>"Top 10 posts across the platform" does not align with a user_id key: the app asks <strong>every</strong> shard for its local top posts, aggregates them in memory, ranks, and only then responds — a scatter-gather far more expensive than one shard hit.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>First line of defence:</strong> choose a shard key aligned with the <em>most common</em> queries — then cross-shard queries simply happen less often.</li>
+          <li><strong>Cache the result:</strong> run the expensive scatter-gather once, cache it (e.g. Redis, TTL ~5 min) — later reads are one cache hit. You trade a little staleness for latency, which is fine for feeds, leaderboards, trending pages.</li>
+          <li><strong>Denormalize:</strong> store the related data together so the hot read stays on one shard — you pay on writes (write both copies) to win on reads.</li>
+          <li><strong>Interview signal:</strong> constantly querying across all shards for a common use case means either the <strong>shard key is wrong</strong>, or you should cache/precompute, or denormalize. Cross-shard reads must be the exception, not the norm.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="Challenges #3 — consistency &amp; transactions">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/consistency.svg" alt="Consistency: Bob on S1 and Alice on S3; transfer across shards needs 2PC or a saga" />
+          <figcaption>One database makes "Bob sends $5 to Alice" a single atomic transaction. Once Bob (S1) and Alice (S3) live on different shards, no single node can commit both updates — the textbook answers are two-phase commit and the saga pattern.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Golden rule:</strong> avoid cross-shard transactions — keep every row a transaction touches on one shard, whenever possible.</li>
+          <li><strong>2PC (two-phase commit):</strong> a coordinator asks all shards "ready?", waits for every YES, then says "commit". Correct in theory, <em>slow and fragile</em> in practice — one crash mid-way leaves locks that are hard to escape; production systems avoid it.</li>
+          <li><strong>Saga pattern:</strong> chain small steps, each with a compensating action — if "credit Alice" fails, run "refund Bob $5". No global lock and no stuck state; this is the practical production choice.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="When to shard — justify with numbers (and when not to)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/when-to-shard.svg" alt="When to shard: 500M users x 5KB = 2.5TB against one 140TB Postgres — no shard needed yet" />
+          <figcaption>Sharding belongs in the deep-dive when we hit a scaling NFR — but only if the numbers say so. <strong>Storage:</strong> 500M users × 5 KB ≈ 2.5 TB. <strong>Writes:</strong> ~50k/s peak. <strong>Reads:</strong> 100M DAU × several queries each. Compare against a single Postgres (~140 TB, ~50k writes/s).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Storage:</strong> 2.5 TB fits comfortably in one database → <em>no shard needed</em>; if we grew 10–100×, we would shard.</li>
+          <li><strong>Writes:</strong> ~50k writes/s at peak exceeds one database&apos;s comfort zone → this is a real trigger to shard.</li>
+          <li><strong>Reads:</strong> 100M DAU × several queries — even with read replicas, the read load must spread across shards.</li>
+          <li><strong>The trap:</strong> candidates reflexively say "we shard by X". Saying <em>"based on this math we don&apos;t need to shard yet"</em> is often the more impressive answer — modern hardware goes a long way.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="Interview — 4 steps to bring up sharding">
+      <ng-template #content>
+        <p>When a scaling NFR is unmet, walk the interviewer through these four moves (the video&apos;s closing framework):</p>
+        <ol class="steps">
+          <li><strong>Propose a shard key from the access pattern.</strong> "Most queries are user-centric — profile, feed, followers — so I&apos;d shard by user_id."</li>
+          <li><strong>Name the distribution strategy.</strong> "Hash user_id with consistent hashing to spread users evenly." (Senior+ can skip this — it&apos;s the default expectation. Junior/mid: say it explicitly.)</li>
+          <li><strong>Call out the trade-offs.</strong> "Global queries get expensive — we&apos;d cache trending content or precompute it with a background job."</li>
+          <li><strong>Address growth.</strong> "Start with 10 shards for headroom; consistent hashing makes it easy to add shards or reshard when we need more capacity."</li>
+        </ol>
+        <div class="callout-box">
+          <strong>60-second recap:</strong> ceiling → justify with numbers → propose key (user_id) → hash + consistent hashing → trade-offs (hot spots, cross-shard reads, distributed transactions) → cache / compound keys / saga; start with room to grow.
+        </div>
       </ng-template>
     </p-card>
   </div>

@@ -16,11 +16,18 @@ describe('Sharding', () => {
   it('renders the Database Sharding page', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Database Sharding');
-    expect(text).toContain('Visual Walkthrough');
-    expect(text).toContain('How to Choose a Shard Key');
+    expect(text).toContain('Why shard?');
+    expect(text).toContain('choose the shard key');
+    expect(text).toContain('distribute the values');
+    expect(text).toContain('celebrity problem');
+    expect(text).toContain('cross-shard queries');
+    expect(text).toContain('consistency');
+    expect(text).toContain('When to shard');
+    expect(text).toContain('4 steps to bring up sharding');
     expect(text).toContain('Twitter at 100M+ users');
     expect(fixture.nativeElement.querySelectorAll('p-card').length).toBeGreaterThan(0);
     expect(fixture.nativeElement.querySelectorAll('figure.visual-figure').length).toBeGreaterThan(0);
     expect(fixture.nativeElement.querySelectorAll('ul.points').length).toBeGreaterThan(0);
+    expect(fixture.nativeElement.querySelectorAll('ol.steps').length).toBeGreaterThan(0);
   });
 });

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 400" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="400" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Strategy 3 — Directory-based sharding</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">a lookup table maps each key → shard, so every request asks the directory first</text>
+
+  <rect x="30" y="96" width="300" height="190" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="180" y="124" font-size="15" font-weight="700" fill="#3730a3" text-anchor="middle">Directory (lookup table)</text>
+  <line x1="50" y1="136" x2="310" y2="136" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="180" y="160" font-size="12" fill="#6b7280" text-anchor="middle">key / user  →  shard</text>
+  <text x="180" y="186" font-size="12.5" fill="#334155" text-anchor="middle">user_001 → S0</text>
+  <text x="180" y="210" font-size="12.5" fill="#334155" text-anchor="middle">user_002 → S1</text>
+  <text x="180" y="234" font-size="12.5" fill="#b91c1c" text-anchor="middle">Messi → C0 (celebrity)</text>
+  <text x="180" y="262" font-size="11.5" font-style="italic" fill="#6b7280" text-anchor="middle">editing the map = re-routing data</text>
+
+  <rect x="380" y="96" width="120" height="44" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="440" y="117" font-size="12.5" font-weight="700" fill="#92400e" text-anchor="middle">request</text>
+  <text x="440" y="133" font-size="11" fill="#6b7280" text-anchor="middle">who owns user_001?</text>
+
+  <line x1="330" y1="118" x2="380" y2="118" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="500" y1="118" x2="620" y2="118" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="560" y="106" font-size="11.5" fill="#6b7280" text-anchor="middle">2nd hop</text>
+
+  <text x="670" y="150" font-size="13" font-weight="700" fill="#b91c1c" text-anchor="middle">the shards</text>
+
+  <path d="M 560 118 L 560 300 A 75 12 0 0 0 710 300 L 710 118 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="635" cy="118" rx="75" ry="12" fill="#f0fdf4"/>
+  <text x="635" y="214" font-size="15" font-weight="700" fill="#15803d" text-anchor="middle">S0</text>
+  <text x="635" y="236" font-size="11.5" fill="#6b7280" text-anchor="middle">S1 · S2 · C0</text>
+
+  <rect x="600" y="290" width="200" height="26" rx="13" fill="#fee2e2"/>
+  <text x="700" y="307" font-size="11.5" font-weight="700" fill="#b91c1c" text-anchor="middle">C0: dedicated celebrity shard</text>
+
+  <rect x="30" y="312" width="820" height="76" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <circle cx="52" cy="336" r="5" fill="#22c55e"/>
+  <text x="68" y="341" font-size="13.5" fill="#334155">✓ maximum flexibility — move a hot user to its own shard by editing one row; manual rebalancing</text>
+  <circle cx="52" cy="366" r="5" fill="#dc2626"/>
+  <text x="68" y="371" font-size="13.5" fill="#334155">✗ an extra hop adds latency to EVERY request, and the directory is a single point of failure</text>
+  <text x="440" y="390" font-size="12.5" font-style="italic" fill="#6b7280" text-anchor="middle">in an interview: almost never the answer — default to hash-based + consistent hashing</text>
+</svg>

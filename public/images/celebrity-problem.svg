@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 400" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <rect width="880" height="400" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Challenge 1 — Hotspots: the celebrity problem</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">Messi lands on shard S1 → one shard takes 10× the traffic while the rest stay idle</text>
+
+  <rect x="30" y="86" width="480" height="150" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="270" y="112" font-size="13.5" font-weight="700" fill="#1f2937" text-anchor="middle">sharded by user_id — Messi happens to hash to S1</text>
+
+  <path d="M 60 160 L 60 208 A 32 8 0 0 0 124 208 L 124 160 Z" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <ellipse cx="92" cy="160" rx="32" ry="8" fill="#f8fafc"/>
+  <text x="92" y="234" font-size="12" fill="#94a3b8" text-anchor="middle">S0 · idle</text>
+
+  <path d="M 158 140 L 158 228 A 40 10 0 0 0 238 228 L 238 140 Z" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <ellipse cx="198" cy="140" rx="40" ry="10" fill="#fef2f2"/>
+  <text x="198" y="176" font-size="14" font-weight="700" fill="#b91c1c" text-anchor="middle">Messi</text>
+  <text x="198" y="254" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">S1 · HOT 🔥</text>
+
+  <path d="M 300 160 L 300 208 A 32 8 0 0 0 364 208 L 364 160 Z" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <ellipse cx="332" cy="160" rx="32" ry="8" fill="#f8fafc"/>
+  <text x="332" y="234" font-size="12" fill="#94a3b8" text-anchor="middle">S2 · idle</text>
+
+  <path d="M 400 160 L 400 208 A 32 8 0 0 0 464 208 L 464 160 Z" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <ellipse cx="432" cy="160" rx="32" ry="8" fill="#f8fafc"/>
+  <text x="432" y="234" font-size="12" fill="#94a3b8" text-anchor="middle">S3 · idle</text>
+
+  <rect x="540" y="86" width="320" height="150" rx="14" fill="#fffbfa" stroke="#fecaca" stroke-width="1"/>
+  <text x="700" y="112" font-size="14" font-weight="700" fill="#b91c1c" text-anchor="middle">what happens</text>
+  <text x="560" y="140" font-size="12.5" fill="#374151">every profile view, like, comment or</text>
+  <text x="560" y="158" font-size="12.5" fill="#374151">message about Messi hits S1 only</text>
+  <text x="560" y="182" font-size="12.5" font-weight="600" fill="#b91c1c">→ S1’s read/write throughput is an</text>
+  <text x="560" y="200" font-size="12.5" font-weight="600" fill="#b91c1c">order of magnitude above the rest</text>
+  <text x="560" y="224" font-size="12.5" fill="#374151">a good shard key cannot predict fame</text>
+
+  <text x="440" y="272" font-size="15" font-weight="700" fill="#1f2937" text-anchor="middle">two fixes</text>
+
+  <rect x="30" y="288" width="410" height="100" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="50" y="314" font-size="15" font-weight="700" fill="#3730a3">A · Compound shard key</text>
+  <text x="50" y="340" font-size="12.5" fill="#374151">hash a suffix with the id, not just the id:</text>
+  <text x="50" y="362" font-size="13" font-weight="700" fill="#3730a3">shard(user_id + post#) or (user_id + time)</text>
+  <text x="50" y="382" font-size="12.5" fill="#374151">spreads Messi’s own posts across many shards</text>
+
+  <rect x="460" y="288" width="400" height="100" rx="14" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="480" y="314" font-size="15" font-weight="700" fill="#92400e">B · Dedicated celebrity shard</text>
+  <text x="480" y="340" font-size="12.5" fill="#374151">detect high-traffic users at runtime and move</text>
+  <text x="480" y="360" font-size="12.5" fill="#374151">them to their own (possibly bigger) shard,</text>
+  <text x="480" y="380" font-size="12.5" fill="#374151">routed via a directory; rest stay hashed</text>
+</svg>

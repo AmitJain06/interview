@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 390" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="390" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Do we even need to shard? — justify with numbers</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">shard only when a capacity number says so — never reflexively</text>
+
+  <rect x="30" y="96" width="420" height="200" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="240" y="124" font-size="15" font-weight="700" fill="#1f2937" text-anchor="middle">calculate the three ceilings</text>
+
+  <rect x="50" y="142" width="380" height="42" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+  <text x="240" y="162" font-size="13" font-weight="700" fill="#3730a3" text-anchor="middle">Storage</text>
+  <text x="240" y="180" font-size="12" fill="#334155" text-anchor="middle">500M users × 5 KB ≈ 2.5 TB total</text>
+
+  <rect x="50" y="196" width="380" height="42" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+  <text x="240" y="216" font-size="13" font-weight="700" fill="#3730a3" text-anchor="middle">Write throughput</text>
+  <text x="240" y="234" font-size="12" fill="#334155" text-anchor="middle">~50k writes/s at peak</text>
+
+  <rect x="50" y="250" width="380" height="42" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+  <text x="240" y="270" font-size="13" font-weight="700" fill="#3730a3" text-anchor="middle">Read throughput</text>
+  <text x="240" y="288" font-size="12" fill="#334155" text-anchor="middle">100M DAU × several queries each</text>
+
+  <rect x="480" y="96" width="380" height="200" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="670" y="124" font-size="15" font-weight="700" fill="#1f2937" text-anchor="middle">compare to one big Postgres</text>
+
+  <path d="M 520 150 L 520 250 A 85 12 0 0 0 690 250 L 690 150 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <ellipse cx="605" cy="150" rx="85" ry="12" fill="#f0fdf4"/>
+  <text x="605" y="192" font-size="14" font-weight="700" fill="#15803d" text-anchor="middle">Postgres</text>
+  <text x="605" y="214" font-size="12" fill="#15803d" text-anchor="middle">~140 TB storage</text>
+  <text x="605" y="234" font-size="12" fill="#15803d" text-anchor="middle">~50k writes/s</text>
+
+  <rect x="700" y="150" width="140" height="100" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <text x="770" y="206" font-size="17" font-weight="700" fill="#15803d" text-anchor="middle">FITS ✓</text>
+
+  <text x="440" y="330" font-size="15" font-weight="700" fill="#15803d" text-anchor="middle">2.5 TB « 140 TB → a single database copes: NO shard needed yet</text>
+  <text x="440" y="356" font-size="13" fill="#6b7280" text-anchor="middle">grow 10–100× or pass 50k writes/s → now re-run the numbers → that is when you shard</text>
+  <text x="440" y="378" font-size="12.5" font-style="italic" fill="#6b7280" text-anchor="middle">“the math says we don’t need to shard yet” is often the strongest line in the deep dive</text>
+</svg>

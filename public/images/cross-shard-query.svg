@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 410" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="410" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Challenge 2 — Cross-shard queries (scatter-gather)</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">any query needing data from many shards fans out, waits and aggregates — expensive</text>
+
+  <rect x="30" y="96" width="150" height="52" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="105" y="121" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">“Top 10 posts</text>
+  <text x="105" y="138" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">on the platform”</text>
+
+  <line x1="180" y1="110" x2="252" y2="110" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="180" y1="122" x2="330" y2="170" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="180" y1="122" x2="480" y2="170" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <path d="M 270 140 L 270 250 A 50 10 0 0 0 370 250 L 370 140 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="320" cy="140" rx="50" ry="10" fill="#f0fdf4"/>
+  <text x="320" y="176" font-size="13" font-weight="700" fill="#15803d" text-anchor="middle">S0</text>
+  <path d="M 420 140 L 420 250 A 50 10 0 0 0 520 250 L 520 140 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="470" cy="140" rx="50" ry="10" fill="#f0fdf4"/>
+  <text x="470" y="176" font-size="13" font-weight="700" fill="#15803d" text-anchor="middle">S1</text>
+  <path d="M 570 140 L 570 250 A 50 10 0 0 0 670 250 L 670 140 Z" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <ellipse cx="620" cy="140" rx="50" ry="10" fill="#f0fdf4"/>
+  <text x="620" y="176" font-size="13" font-weight="700" fill="#15803d" text-anchor="middle">S2</text>
+
+  <path d="M 720 96 L 720 172 A 60 10 0 0 0 840 172 L 840 96 Z" fill="#f9f5ff" stroke="#c026d3" stroke-width="1.5"/>
+  <ellipse cx="780" cy="96" rx="60" ry="10" fill="#fdf4ff"/>
+  <text x="780" y="126" font-size="12.5" font-weight="700" fill="#a21caf" text-anchor="middle">Cache</text>
+  <text x="780" y="146" font-size="11" fill="#6b7280" text-anchor="middle">Redis · TTL ~5 min</text>
+
+  <rect x="90" y="272" width="330" height="58" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="110" y="296" font-size="13" font-weight="700" fill="#1f2937">Aggregate &amp; rank</text>
+  <text x="110" y="318" font-size="12" fill="#6b7280">merge each shard’s local top-N in memory</text>
+
+  <line x1="320" y1="250" x2="255" y2="272" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="470" y1="250" x2="300" y2="272" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="620" y1="250" x2="345" y2="272" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <line x1="255" y1="272" x2="760" y2="146" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="420" y="212" font-size="12" font-weight="700" fill="#b45309" text-anchor="middle">cache the result →</text>
+  <text x="420" y="230" font-size="12" fill="#6b7280" text-anchor="middle">next 4 min: 1 cache read</text>
+
+  <line x1="420" y1="300" x2="560" y2="258" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="540" y="290" font-size="12" font-weight="700" fill="#1f2937" text-anchor="start">serve</text>
+
+  <rect x="30" y="344" width="820" height="58" rx="14" fill="#fffbfa" stroke="#fecaca" stroke-width="1"/>
+  <text x="50" y="368" font-size="13" fill="#374151"><tspan font-weight="700" fill="#b91c1c">Why it happens:</tspan> the query does not align with the shard key (e.g. global ranking).</text>
+  <text x="50" y="390" font-size="13" fill="#374151"><tspan font-weight="700" fill="#15803d">Fix order:</tspan> better shard key → cache / precompute the result → denormalize data so it co-locates. Cross-shard reads must stay the exception.</text>
+</svg>

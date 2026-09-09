@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 380" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="880" height="380" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="440" y="40" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Consistent hashing — add &amp; remove shards without reshuffling</text>
+  <text x="440" y="64" font-size="14" fill="#6b7280" text-anchor="middle">put keys and shards on one virtual ring; walk clockwise to the first shard you meet</text>
+
+  <rect x="30" y="86" width="420" height="280" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="240" y="120" font-size="14" font-weight="700" fill="#6366f1" text-anchor="middle">the ring with 3 shards</text>
+
+  <ellipse cx="240" cy="225" rx="140" ry="140" fill="none" stroke="#cbd5e1" stroke-width="2.5"/>
+
+  <rect x="222" y="72" width="36" height="18" rx="6" fill="#6366f1"/>
+  <text x="240" y="66" font-size="16" font-weight="700" fill="#1f2937" text-anchor="middle">S0</text>
+
+  <rect x="366" y="205" width="36" height="18" rx="6" fill="#22c55e"/>
+  <text x="402" y="208" font-size="16" font-weight="700" fill="#1f2937" text-anchor="middle">S1</text>
+
+  <rect x="60" y="280" width="36" height="18" rx="6" fill="#f59e0b"/>
+  <text x="60" y="276" font-size="16" font-weight="700" fill="#1f2937" text-anchor="middle">S2</text>
+
+  <circle cx="140" cy="120" r="5" fill="#94a3b8"/>
+  <circle cx="300" cy="110" r="5" fill="#94a3b8"/>
+  <circle cx="350" cy="300" r="5" fill="#94a3b8"/>
+  <circle cx="120" cy="320" r="5" fill="#94a3b8"/>
+  <circle cx="340" cy="155" r="5" fill="#22c55e"/>
+
+  <line x1="290" y1="100" x2="324" y2="88" stroke="#15803d" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="258" y="96" font-size="11" fill="#15803d">walk</text>
+  <text x="258" y="108" font-size="11" fill="#15803d">clockwise →</text>
+
+  <line x1="268" y1="150" x2="268" y2="225" stroke="#64748b" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="300" y="300" font-size="11.5" fill="#6b7280" text-anchor="middle">hash(key) lands here,</text>
+  <text x="300" y="316" font-size="11.5" fill="#6b7280" text-anchor="middle">keeps walking to S2</text>
+
+  <rect x="480" y="86" width="380" height="280" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="670" y="120" font-size="14" font-weight="700" fill="#16a34a" text-anchor="middle">add a shard — only neighbours change</text>
+
+  <ellipse cx="600" cy="225" rx="110" ry="110" fill="none" stroke="#cbd5e1" stroke-width="2.5"/>
+  <rect x="586" y="110" width="28" height="14" rx="5" fill="#6366f1"/>
+  <text x="600" y="106" font-size="14" font-weight="700" fill="#1f2937" text-anchor="middle">S0</text>
+  <rect x="600" y="315" width="28" height="14" rx="5" fill="#22c55e"/>
+  <text x="688" y="352" font-size="14" font-weight="700" fill="#1f2937" text-anchor="middle">S1</text>
+  <rect x="486" y="220" width="28" height="14" rx="5" fill="#f59e0b"/>
+  <text x="470" y="216" font-size="14" font-weight="700" fill="#1f2937" text-anchor="middle">S2</text>
+  <rect x="676" y="150" width="28" height="14" rx="5" fill="#dc2626"/>
+  <text x="708" y="146" font-size="14" font-weight="700" fill="#b91c1c" text-anchor="middle">new S3</text>
+  <circle cx="560" cy="180" r="4.5" fill="#94a3b8"/>
+  <circle cx="648" cy="270" r="4.5" fill="#94a3b8"/>
+  <circle cx="540" cy="280" r="4.5" fill="#94a3b8"/>
+  <circle cx="660" cy="180" r="4.5" fill="#94a3b8"/>
+
+  <text x="670" y="268" font-size="13" font-weight="700" fill="#15803d">only keys in the arc</text>
+  <text x="670" y="288" font-size="13" font-weight="700" fill="#15803d">before S3 re-map (~1/N)</text>
+  <text x="670" y="312" font-size="12" fill="#6b7280">others keep their shard —</text>
+  <text x="670" y="328" font-size="12" fill="#6b7280">no giant reshuffle</text>
+
+  <rect x="480" y="340" width="380" height="26" rx="13" fill="#eef2ff"/>
+  <text x="670" y="356" font-size="12.5" font-weight="600" fill="#3730a3" text-anchor="middle">virtual nodes smooth the ring for balanced loads</text>
+</svg>
