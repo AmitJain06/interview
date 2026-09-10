@@ -1,0 +1,259 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-ticket"></i></div>
+    <div>
+      <h1>Ticketmaster — Ticket Booking</h1>
+      <p>Search events, view seat maps, and never sell one ticket twice — notes from the Hello Interview breakdown with an Ex-Meta Staff Engineer.</p>
+    </div>
+    <p-tag class="header-tag" value="Hard" severity="danger" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="How to use this page (your interview script)">
+      <ng-template #content>
+        <p>
+          Full step-by-step notes for the video <em>System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer</em>.
+          Read in order: requirements → entities → API → working HLD → deep dives (booking lock, search, caching, real-time seat map, surge queue).
+          Every step embeds the <strong>actual whiteboard frame</strong> from the video next to a redrawn diagram — so you can watch the design improve one change at a time.
+        </p>
+        <h3 class="subhead">Delivery framework (identical to Top-K — reuse it every time)</h3>
+        <ol class="steps">
+          <li><strong>Requirements</strong> (~5 min) — functional (what) + non-functional (how well). 3 FRs only.</li>
+          <li><strong>Core entities</strong> (~2-4 min) — Event, Venue, Performer, Ticket. One SQL-vs-NoSQL sentence, move on.</li>
+          <li><strong>API</strong> (~5 min) — the contract: 2 reads + the reserve/confirm pair.</li>
+          <li><strong>High-level design</strong> (~10-15 min) — simplest system satisfying <em>functional</em> reqs. Deliberately imperfect.</li>
+          <li><strong>Deep dives</strong> — return to the NFR list and attack what's missing. Where senior/staff earn the offer.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Two goals the video writes on the board:</strong>&nbsp;satisfy <em>functional</em> requirements in the HLD; satisfy <em>non-functional</em> requirements in the deep dives. Every deep dive must trace back to an NFR — that's how you pick what to spend time on.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="1 — Functional requirements (3, deliberately small)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-requirements.svg" alt="Functional and non-functional requirements for Ticketmaster" />
+          <figcaption><strong>Requirements board.</strong> The video keeps FRs tiny (Book tickets · View an event · Search for events) and puts the real weight in 5 NFRs — each one is a scheduled deep dive.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-requirements-api.jpg" alt="Whiteboard: requirements, entities and API from the video" />
+          <figcaption><strong>Whiteboard — the actual left panel:</strong> framework boxes (Requirements → Core Entities → API → High-Level Design → Deep Dives), the two “primary goal” arrows, FR/NFR lists, out-of-scope (GDPR, fault tolerance), entities, and all four API signatures. Copy this layout live.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>FR1 — Book tickets.</strong> The money path; everything else serves it.</li>
+          <li><strong>FR2 — View an event.</strong> Details + venue + performer + seat map with available/booked seats.</li>
+          <li><strong>FR3 — Search for events</strong> by term, location, type, date.</li>
+          <li><strong>Out of scope (say it, stop):</strong> GDPR compliance, fault tolerance, auth. Naming them prevents scope creep later.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+
+    <p-card header="2 — Non-functional requirements (each NFR pre-books a deep dive)">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>NFR1 — low-latency search</strong> → forces Elasticsearch later. (The presenter admits he forgot this one and went back to add it — editing your NFR list mid-interview is fine and even good.)</li>
+          <li><strong>NFR2 — strong consistency for booking tickets</strong> → forces the Redis ticket lock. “One ticket, one owner, never sold twice.”</li>
+          <li><strong>NFR3 — high availability for search + viewing events</strong> → cache layers, horizontal scaling.</li>
+          <li><strong>NFR4 — read-heavy</strong> (100M DAU browse far more than they buy) → CDN + Redis cache “to hell”.</li>
+          <li><strong>NFR5 — scalability for surges from popular events</strong> → virtual waiting queue (Taylor Swift onsale).</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Math with a purpose:</strong>&nbsp;the video skips back-of-envelope estimations after NFRs <em>on purpose</em> — “most candidates compute QPS, say wow, big system, and learn nothing that informs the design. Math without a purpose.” Do math only where the result changes a decision (shard or not?), and do it in the HLD or deep dives.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="3 — Core entities (2-4 min, resist the rabbit hole)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-entities.svg" alt="Event, Venue, Performer, Ticket entity model" />
+          <figcaption><strong>Four nouns.</strong> Event is the aggregate root (foreign keys to venue, performer, tickets); Ticket.status: available | reserved | booked is the field every deep dive orbits.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Event</strong> — id, venueId, performerId, tickets[], name, description. The GET /event/&#123;id&#125; response assembles exactly this.</li>
+          <li><strong>Venue</strong> — id, location, seatMap (the clickable map). <strong>Performer</strong> — id, “…who cares, the details there.”</li>
+          <li><strong>Ticket</strong> — id, eventId, seat, price, userId, <code>status: available | reserved | booked</code>.</li>
+          <li><strong>Storage choice in one breath:</strong> “consistency matters for tickets, relationships exist, I know Postgres well → Postgres.” Senior tip from the video: SQL-vs-NoSQL is an old, boring debate — state the <em>qualities</em> you need (ACID, transactions, joins) and note either could work.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+
+    <p-card header="5 — HLD v1: all functional reqs, knowingly unscalable">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-hld-v1.svg" alt="High-level design v1 for Ticketmaster" />
+          <figcaption><strong>v1 on one board:</strong> Client → API Gateway (authn · rate limiting · routing) → Search svc → Elasticsearch; Event CRUD ↔ Postgres; Booking ↔ Postgres + Ticket Lock (Redis) + Stripe; CDC keeps ES fresh. Every NFR already has a home — the deep dives just earn it.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-hld-v1.jpg" alt="Whiteboard: Ticketmaster high-level design from the video" />
+          <figcaption><strong>Whiteboard — the actual board at HLD-complete:</strong> same layout, including the playoff/swift search example and “node query caching” note at Elasticsearch, and the &#123;ticketId: true&#125; TTL 10 lock annotation. Draw it in this order: gateway first, then 3 services, then data stores.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>View path:</strong> Event CRUD joins Postgres for event + venue + performer + tickets and returns the assembly.</li>
+          <li><strong>Search path (v1, knowingly bad):</strong> a SQL <code>… WHERE name LIKE '%term%'</code> — the video says it “totally sucks, full DB scan”, but ships it anyway: <em>working first, optimize in deep dives</em> — the same golden rule as Top-K.</li>
+          <li><strong>Booking path (v1):</strong> reserve → UPDATE tickets SET status='reserved' → 200; confirm → Stripe (async webhook) → UPDATE status='booked' + userId. Simple, correct… with a hole the next card fixes.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="6 — Deep dive: the 10-minute hole → Redis ticket lock (NFR2)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-booking-lock.svg" alt="Redis ticket lock reserve and confirm flow" />
+          <figcaption><strong>The evolution is the story:</strong> broken v1 (hold stays forever) → reserved_timestamp column → cron reset (mid-level pass, but Δ gap) → distributed lock with TTL (the optimal answer).</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-booking-lock.jpg" alt="Whiteboard: booking service with ticket lock and Stripe" />
+          <figcaption><strong>Whiteboard — booking cluster from the video:</strong> reserve(ticketId) / confirm(ticketId, paymentDetails) into Booking, Ticket Lock (Redis) with <em>&#123;ticketId: true&#125; TTL 10</em>, and Stripe below with two-way arrows for the webhook.</figcaption>
+        </figure>
+        <ol class="steps">
+          <li><strong>The hole:</strong> user closes the laptop mid-payment → status stays 'reserved' FOREVER. Seat map (which queries available) never shows it again. NFR2 broken.</li>
+          <li><strong>Fix 1 — reserved_timestamp column:</strong> query “available, OR reserved-but-expired”. Works, but “your data model lies” — rows say reserved while actually expired, two sources of truth to keep consistent.</li>
+          <li><strong>Fix 2 — cron every 10 min:</strong> reset expired holds back to available. Mid-level passing answer — but a Δ gap: cron at 12:09 un-reserves a ticket that expired at 12:00 → it was really held 19 minutes.</li>
+          <li><strong>Fix 3 (optimal) — distributed lock:</strong> drop the DB write at reserve entirely. <code>SET ticketlock:&#123;ticketId&#125; = userId NX EX 600</code>. Seat map = query PG for available, then remove any ticketId present in the lock. TTL expiry auto-releases. No janitor.</li>
+        </ol>
+        <ul class="points">
+          <li><strong>Why distributed (not in-process memory):</strong> many Booking instances must share ONE consistent view of the lock — “this isn't a single machine.”</li>
+          <li><strong>What if Redis dies?</strong> Bring a new one up; users holding locks from the last 10 min lost them → several users can reach payment for the same ticket. Postgres ACID still guarantees exactly one winner (“whoever submits first wins, the other gets an error”). Bad UX for a 10-min window, consistency never lost — “a conversation with the product team; I'd argue this is fine.”</li>
+          <li><strong>Why Redis and not DB row locks:</strong> 100k fans → 100k held DB connections. Redis keys are O(1) and burn no DB connections; rows only change at confirm.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+
+    <p-card header="7 — Deep dive: search → Elasticsearch + CDC (NFR1)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-search-cdc.svg" alt="Elasticsearch inverted index kept fresh by CDC" />
+          <figcaption><strong>The video's own example:</strong> tokenize event text → terms map to eventIds — “playoff: [event1, event2, event3]”, “swift: [event5, event6, eventN]”. The SQL LIKE line is deleted and replaced by “search using Elasticsearch”.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-hld-board.jpg" alt="Whiteboard: search service, Elasticsearch and CDC from the video" />
+          <figcaption><strong>Whiteboard — the search cluster:</strong> Search svc ↔ Elasticsearch (AWS OpenSearch) with the term→events note and “node query caching”; Postgres → cdc → Elasticsearch keeps the index derived from the source of truth.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why not Postgres:</strong> <code>LIKE '%swift%'</code> = full table scan, no relevance ranking, no typo tolerance. Different access pattern → different storage.</li>
+          <li><strong>What ES buys:</strong> inverted index (term → documents), analyzed text (fuzzy/prefix), geospatial queries (quadtrees + geohashing) so term + location + date filter in one fast query. Single-digit-ms reads = NFR1 ✓.</li>
+          <li><strong>“ES is NOT your primary store”:</strong> durability concerns + no complex transactions — the presenter used it as primary at his first startup “and learned the hard way”.</li>
+          <li><strong>Sync options:</strong> (a) dual writes in app code — must handle partial failure (retry/rollback); (b) <strong>CDC</strong>: Postgres WAL → change stream → consumer updates ES. He draws CDC as a labeled arrow and says the stream+worker behind it is a fine abstraction for interviews.</li>
+          <li><strong>Write-load nuance (say it):</strong> ES has per-second write limits (index updates per write) — heavy-update systems need a queue + batching. Here events/venues/performers change “tens, hundreds, maybe thousands a day — absolutely nothing”, so direct updates are fine.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="8 — Deep dive: make it fast for everyone — query caching + CDN (NFR3/NFR4)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-cache-read.svg" alt="CDN edge cache and Redis cache on the read path" />
+          <figcaption><strong>Premise from the video:</strong> no personalization → “if two users search the same thing, they get the same result” — which makes every popular query cacheable.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-cdn.jpg" alt="Whiteboard: CDN added between client and API gateway" />
+          <figcaption><strong>Whiteboard — CDN joins the board:</strong> Client ↔ CDN ↔ API Gateway, with the caution that the more query permutations you have (type, date, location, lat/long precision), the fewer cache hits you get.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-redis-cache.jpg" alt="Whiteboard: Redis cache added in front of Postgres" />
+          <figcaption><strong>Whiteboard — Redis joins Event CRUD:</strong> events/venues/performers cached “to hell” (they ~never change); only the tickets query still hits Postgres because that's the dynamic part.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Option 1 — OpenSearch node query cache:</strong> per-shard LRU cache of top ~10k queries; enable via config. “Quick, dirty, easy.”</li>
+          <li><strong>Option 2 — Redis/Memcached:</strong> normalized search term → results; invalidate on updates.</li>
+          <li><strong>Option 3 (his pick) — CDN:</strong> the system already has a CDN for static images; cache API responses 30-60s at the edge. Pros: wicked fast for popular events. Cons: many query-param permutations → few hits; lat/long precision kills overlap; personalization breaks it entirely.</li>
+          <li><strong>View path cache:</strong> Redis key = eventId → &#123;event, venue, performer&#125;. No LFU/LRU needed if it all fits (or bound to upcoming events). Only tickets stay un-cached — dynamic.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+
+
+    <p-card header="9 — Deep dive: the seat map lies — long polling vs SSE">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>The problem:</strong> seat map loads accurate… then 5 minutes later the user clicks a seat someone else already bought. For popular events this happens constantly — terrible UX.</li>
+          <li><strong>Option 1 — long polling:</strong> client keeps an HTTP request open ~30-60s in a while loop; server answers only when a seat changes. “Super cheap, no new infrastructure — if users sit on the page 1-5 minutes, this is perfect.”</li>
+          <li><strong>Option 2 — SSE (server-sent events):</strong> persistent connection, server pushes seat changes whenever it wants. Key comparison from the video: WebSockets are fully bidirectional; SSE is unidirectional server→client — “and that's all that we need here.”</li>
+          <li><strong>Say it:</strong> “SSE between client ↔ API gateway ↔ Event CRUD; every status change (available/reserved/booked) pushes to the client. Implementation is out of scope, but that's the design.”</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Interview pattern:</strong>&nbsp;the video leads with the CHEAPEST fix (long polling), names its valid range, then upgrades only when a stated fact (users stay longer) demands it. Same escalation discipline as Top-K's cache → cron step.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="10 — Deep dive: surges → virtual waiting queue (NFR5)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-waiting-queue.svg" alt="Virtual waiting queue in front of the booking service" />
+          <figcaption><strong>“Introduce a choke point.”</strong> The queue converts a flash crowd (1M people fighting for 10-100k seats) into a metered flow the backend can actually serve.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-waiting-queue.jpg" alt="Whiteboard: virtual waiting queue added between gateway and booking" />
+          <figcaption><strong>Whiteboard — the queue on the board:</strong> “Virtual waiting queue” box between API Gateway and Booking — only enabled per-event via admin config for popular onsales.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>The failure without it:</strong> “they get to the page and it immediately goes black — 100,000 or a million people fighting for 10,000 to 100,000 seats.” Every NFR5 scenario (Taylor Swift, Super Bowl, World Cup).</li>
+          <li><strong>Implementation:</strong> Redis sorted set as a priority queue by arrival time (or randomized for fairness — so users closest to the servers don't always win). Event-driven admission: every 100 seats booked → admit the next 100/1000.</li>
+          <li><strong>Flow:</strong> user enters queue → “you're in the queue” → assigned a token/session → pulled off in batches → notified over the SAME SSE connection from card 9 → led to book. The components compose.</li>
+          <li><strong>The closing quote to remember:</strong> “A simple solution, but a sophisticated solution… the best answer isn't the most technically complex — it solves the problem in a simple, creative way.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+
+    <p-card header="11 — Full design + the scaling conversation you must lead">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-full-design.svg" alt="Full Ticketmaster architecture" />
+          <figcaption><strong>End state:</strong> reads = CDN → gateway → ES / Redis → PG; writes = waiting queue → Booking → Redis lock + Stripe; PG = source of truth; ES = derived index fed by CDC.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/tm-frame-final.jpg" alt="Whiteboard: complete final design from the video" />
+          <figcaption><strong>Whiteboard — the finished board:</strong> left panel (requirements/entities/API) and full architecture together — the exact picture the video closes on. Keep pointing at it: each deep dive traced back to one NFR on the left.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Scaling chat (least interesting, but expected):</strong> managed API gateway with its own load balancers; every service horizontally scaled on CPU/memory; then the one real decision — sharding Postgres. Shard by <code>eventId</code> (majority of queries) or <code>venueId</code> (if geographic correlation is high). “No wrong answer — weigh the pros and cons with the interviewer.”</li>
+          <li><strong>Level check (from the video):</strong> this design with the Redis lock already passes most mid-level interviews (“most mid-levels land on the cron job”); executed well it passes senior and probably staff/principal.</li>
+          <li><strong>Close by checking every FR and NFR against the board.</strong> If both lists check out, you're done — stop drawing.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+
+    <p-card header="12 — Patterns you already own (cross-link to Top-K)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/tm-shared-patterns.svg" alt="Shared design patterns between Top-K and Ticketmaster" />
+          <figcaption><strong>Three transfers, one new idea.</strong> Cache the read path · smooth the write path · derived stores with async sync — all reused from <a routerLink="/system-design/top-k">Top-K</a>. The genuinely new concept here is strong consistency for booking (the TTL'd distributed lock).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Cache the read path (same):</strong> Top-K = Redis read-through + cron pre-compute (TTL 30d). Ticketmaster = Redis cache-aside + CDN edge (TTL seconds-minutes) + ES node query cache. Rule that transfers: never let a user request trigger the expensive path.</li>
+          <li><strong>Smooth the write path (same, different flavor):</strong> Top-K = Kafka absorbs 700k views/s → Flink pre-aggregates. Ticketmaster = waiting queue absorbs the onsale stampede → Booking trickles. Queue-as-admission-control instead of queue-as-storage.</li>
+          <li><strong>Derived stores + async sync (same):</strong> Top-K's rollup tables ↔ Ticketmaster's ES index. Rule that transfers: one source of truth, everything else rebuildable.</li>
+          <li><strong>The ONE new idea:</strong> Top-K tolerates ~1-min staleness; booking demands strong consistency — Redis ticket lock (SET NX, TTL 10 min) serializes ownership. That asymmetry (stale reads, exact writes) is the senior signal.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="60-second recap (say this to close)">
+      <ng-template #content>
+        <ol class="steps">
+          <li>Requirements: book / view / search; NFRs = low-latency search, strong booking consistency, HA for reads, read-heavy (100M DAU), surge-proof.</li>
+          <li>Entities: Event, Venue, Performer, Ticket (status available | reserved | booked) → Postgres, stated via qualities not the SQL-vs-NoSQL debate.</li>
+          <li>API: GET /event/&#123;id&#125;, GET /search?term&amp;location&amp;type&amp;date, POST /booking/reserve, PUT /booking/confirm (Stripe webhook).</li>
+          <li>HLD: gateway (authn · rate limit · routing) → Search svc → ES; Event CRUD → PG; Booking → PG + Ticket Lock + Stripe; working but knowingly slow.</li>
+          <li>Deep dives: distributed lock with TTL (fix the forever-hold), ES inverted index + CDC, CDN + Redis query caching, SSE seat updates, virtual waiting queue for surges.</li>
+          <li>Close: check every FR + NFR against the board; sharding by eventId/venueId as the offered follow-up.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Source:</strong>&nbsp;Hello Interview “System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer” (video file in public/). All quotes are from the video's transcript; every diagram above follows the on-screen whiteboard step by step.
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</article>
+

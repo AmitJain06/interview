@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="360" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Requirements — Ticketmaster (100M DAU, read-heavy, surge-y)</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">board says: “primary goal — satisfy FUNCTIONAL reqs in HLD · NON-FUNCTIONAL reqs drive deep dives”</text>
+<rect x="24" y="80" width="410" height="180" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="106" font-size="14" font-weight="700" fill="#15803d">Functional (3 — small on purpose)</text>
+<text x="44" y="130" font-size="12" fill="#374151">FR1 · Book tickets (buy = the money path)</text>
+<text x="44" y="150" font-size="12" fill="#374151">FR2 · View an event (details + seat map)</text>
+<text x="44" y="170" font-size="12" fill="#374151">FR3 · Search for events (term, location, type, date)</text>
+<rect x="44" y="186" width="370" height="58" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="206" font-size="12" font-weight="700" fill="#15803d">Out of scope (say it, then stop):</text>
+<text x="56" y="226" font-size="11" fill="#374151">GDPR compliance · fault tolerance · auth — named, deferred</text>
+<rect x="446" y="80" width="410" height="180" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="466" y="106" font-size="14" font-weight="700" fill="#3730a3">Non-functional (these pick your deep dives)</text>
+<text x="466" y="130" font-size="12" fill="#374151">NFR1 · low-latency SEARCH</text>
+<text x="466" y="150" font-size="12" fill="#374151">NFR2 · STRONG consistency for booking tickets</text>
+<text x="466" y="170" font-size="12" fill="#374151">NFR3 · HIGH availability for search + viewing events</text>
+<text x="466" y="190" font-size="12" fill="#374151">NFR4 · read-heavy (100M DAU browsing &gt; buying)</text>
+<text x="466" y="210" font-size="12" fill="#374151">NFR5 · scalability for SURGES from popular events</text>
+<text x="466" y="236" font-size="11" fill="#4c1d95">One ticket, one owner — double-selling is the cardinal sin.</text>
+<rect x="24" y="272" width="832" height="70" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="296" font-size="13" font-weight="700" fill="#92400e">How each NFR becomes a component (say this mapping out loud):</text>
+<text x="40" y="316" font-size="12" fill="#78350f">low-latency search → Elasticsearch · strong booking consistency → ticket locks (Redis)</text>
+<text x="40" y="334" font-size="12" fill="#78350f">HA + read-heavy → CDN + Redis cache · surges → virtual waiting queue</text>
+</svg>

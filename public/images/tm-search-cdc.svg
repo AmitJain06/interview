@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 330" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="330" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Deep dive: search — Postgres can’t, Elasticsearch + CDC can</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">“GET /search?term=swift&amp;location=NYC” — typed-prefix, fuzzy, ranked · LIKE ‘%swift%’ would full-scan every row</text>
+<rect x="24" y="84" width="256" height="150" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="152" y="110" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Why not Postgres?</text>
+<text x="40" y="134" font-size="11" fill="#374151">· ILIKE ‘%swift%’ → seq scan, no index</text>
+<text x="40" y="154" font-size="11" fill="#374151">· no relevance ranking (Taylor Swift?)</text>
+<text x="40" y="174" font-size="11" fill="#374151">· no fuzzy/typo tolerance</text>
+<text x="40" y="194" font-size="11" fill="#374151">· NFR1 says LOW-LATENCY search</text>
+<text x="40" y="218" font-size="10.5" fill="#6b7280">different access pattern → different storage</text>
+<rect x="304" y="84" width="256" height="150" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+<text x="432" y="110" font-size="13" font-weight="700" fill="#c2410c" text-anchor="middle">Elasticsearch (OpenSearch)</text>
+<text x="320" y="134" font-size="11" fill="#374151">· inverted index: term → [eventIds]</text>
+<text x="320" y="154" font-size="11" fill="#374151">· analyzed text: “taylr swit” still hits</text>
+<text x="320" y="174" font-size="11" fill="#374151">· ranked results in single-digit ms</text>
+<text x="320" y="194" font-size="11" fill="#374151">· node query cache: hot queries stay hot</text>
+<text x="320" y="218" font-size="10.5" fill="#9a3412">playoff: [event1, event2, event3]</text>
+<rect x="584" y="84" width="272" height="150" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="720" y="110" font-size="13" font-weight="700" fill="#15803d" text-anchor="middle">Keeping it fresh: CDC</text>
+<text x="600" y="134" font-size="11" fill="#374151">Postgres WAL → change stream → indexer</text>
+<text x="600" y="154" font-size="11" fill="#374151">updates the ES document per event</text>
+<rect x="600" y="166" width="240" height="52" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="720" y="186" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">ES is DERIVED state</text>
+<text x="720" y="204" font-size="10.5" fill="#374151" text-anchor="middle">PG stays source of truth — can rebuild</text>
+<rect x="24" y="246" width="832" height="66" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="270" font-size="13" font-weight="700" fill="#92400e">Interview lines:</text>
+<text x="40" y="290" font-size="12" fill="#78350f">“Reads tolerate seconds of staleness — that buys async CDC instead of dual writes. Booking is the ONLY synchronous path.”</text>
+</svg>

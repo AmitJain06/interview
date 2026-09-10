@@ -32,6 +32,14 @@ export class SystemDesign {
       severity: 'warn',
     },
     {
+      title: 'Ticketmaster — Ticket Booking',
+      route: '/system-design/ticketmaster',
+      description:
+        'Search events, view seat maps, and book tickets without ever selling the same seat twice.',
+      difficulty: 'Hard',
+      severity: 'danger',
+    },
+    {
       title: 'Uber — Ride Hailing',
       route: '/system-design/uber',
       description: 'Match riders with nearby drivers and track rides in real time.',

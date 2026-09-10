@@ -44,6 +44,12 @@ export const routes: Routes = [
         title: 'Interview App | Top-K',
       },
       {
+        path: 'ticketmaster',
+        loadComponent: () =>
+          import('./pages/system-design/ticketmaster/ticketmaster').then((m) => m.Ticketmaster),
+        title: 'Interview App | Ticketmaster',
+      },
+      {
         path: 'uber',
         loadComponent: () => import('./pages/system-design/uber/uber').then((m) => m.Uber),
         title: 'Interview App | Uber',
