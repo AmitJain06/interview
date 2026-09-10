@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="460" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Deep dive 3 — surges + high availability outside matching</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">ride-request queue = admission control, not storage · partition it by region · split the whole stack by data center</text>
+
+<rect x="24" y="84" width="176" height="56" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="112" y="110" font-size="11.5" font-weight="700" fill="#0f172a" text-anchor="middle">Ride requests</text>
+<text x="112" y="128" font-size="9" fill="#6b7280" text-anchor="middle">NYE · stadium · concert</text>
+<line x1="200" y1="112" x2="230" y2="112" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<rect x="230" y="84" width="220" height="126" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="340" y="106" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">Ride request queue</text>
+<text x="250" y="128" font-size="10" fill="#374151">partitioned by REGION</text>
+<text x="250" y="146" font-size="9.5" fill="#374151">· Manhattan</text>
+<text x="250" y="162" font-size="9.5" fill="#374151">· DT Brooklyn</text>
+<text x="250" y="178" font-size="9.5" fill="#374151">· … (fine-grained)</text>
+<text x="250" y="198" font-size="9" fill="#6b7280">head-of-line guard: a hard match in</text>
+<text x="250" y="210" font-size="9" fill="#6b7280">the boonies can't block NYC rides</text>
+<line x1="450" y1="112" x2="480" y2="112" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<rect x="480" y="84" width="376" height="76" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="668" y="106" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">Ride Matching services (n instances)</text>
+<text x="500" y="126" font-size="10" fill="#374151">poll the queue · each match takes ~10 s of waiting —</text>
+<text x="500" y="142" font-size="10" fill="#374151">expensive, long-running, the most likely thing to die</text>
+<text x="500" y="158" font-size="10" fill="#6b7280">crash mid-match? it wasn't acked → pull it off again</text>
+<line x1="600" y1="160" x2="600" y2="300" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#a2)"/>
+<text x="606" y="280" font-size="9.5" fill="#6b7280">surge drained</text>
+<text x="606" y="296" font-size="9.5" fill="#6b7280">at steady pace</text>
+<text x="480" y="210" font-size="10.5" font-weight="700" fill="#991b1b">The queue is what makes the system surge-proof:</text>
+<text x="480" y="228" font-size="10.5" fill="#78350f">hundreds of thousands of requests stack up instead of</text>
+<text x="480" y="246" font-size="10.5" fill="#78350f">hitting the matchers all at once — and if a matcher</text>
+<text x="480" y="264" font-size="10.5" fill="#78350f">crashes, the message is re-delivered, not lost.</text>
+
+<rect x="24" y="248" width="832" height="120" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="272" font-size="13" font-weight="700" fill="#15803d">High availability OUTSIDE matching — the boring, reliable parts</text>
+<text x="44" y="294" font-size="11" fill="#374151">· every service horizontally scaled behind its own load balancer — no single instance is precious</text>
+<text x="44" y="314" font-size="11" fill="#374151">· stores chosen to scale: DynamoDB (nearly unbounded), Redis cluster (100k–1M ops/s) — both handle growth</text>
+<text x="44" y="334" font-size="11" fill="#374151">· care about availability everywhere EXCEPT matching; matching trades availability for exactness (lock + TTL)</text>
+<text x="44" y="356" font-size="11" fill="#374151">· travelers crossing regions: one read replica of the primary DB per data center — a user is always local</text>
+
+<rect x="24" y="400" width="408" height="48" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="44" y="422" font-size="11.5" font-weight="700" fill="#c2410c">Split by region, in different data centers:</text>
+<text x="44" y="440" font-size="10.5" fill="#374151">copy the whole stack → Northeast / Southwest / Northwest …</text>
+<rect x="452" y="400" width="404" height="48" rx="10" fill="#fff" stroke="#fdba74"/>
+<text x="472" y="422" font-size="11.5" font-weight="700" fill="#c2410c">Why it helps you personally on the board:</text>
+<text x="472" y="440" font-size="10.5" fill="#374151">less cross-node traffic, smaller queues, bounded blast radius.</text>
+<defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker>
+<marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/></marker>
+</defs>
+</svg>

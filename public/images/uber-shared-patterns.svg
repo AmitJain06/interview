@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 400" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="400" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Patterns you already own — Uber reuses your Top-K + Ticketmaster muscles</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">same components, different trigger — one new idea per system (see /system-design/top-k and /system-design/ticketmaster)</text>
+<rect x="24" y="80" width="404" height="106" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="104" font-size="13" font-weight="700" fill="#15803d">Smooth the write path — SAME as Top-K</text>
+<text x="44" y="126" font-size="11" fill="#374151">Top-K: Kafka absorbs 700k views/s → Flink pre-aggregates</text>
+<text x="44" y="144" font-size="11" fill="#374151">Uber: location pings 600k/s → throttled + batched + DYNAMIC</text>
+<text x="44" y="160" font-size="11" fill="#374151">   updates (status/speed/proximity-aware) cut it to ~100k/s</text>
+<text x="44" y="182" font-size="10" fill="#15803d" font-weight="700">rule: don't let every event hit the expensive store</text>
+<rect x="452" y="80" width="404" height="106" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="472" y="104" font-size="13" font-weight="700" fill="#3730a3">Consistency via TTL lock — SAME as Ticketmaster</text>
+<text x="472" y="126" font-size="11" fill="#374151">TM: ticket lock SET NX TTL 10 min → one buyer per seat</text>
+<text x="472" y="144" font-size="11" fill="#374151">Uber: driver lock SET driverId TTL 5 s → one request per driver</text>
+<text x="472" y="182" font-size="10" fill="#3730a3" font-weight="700">rule: TTL auto-release beats cron cleanup every time</text>
+<rect x="24" y="202" width="404" height="106" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+<text x="44" y="226" font-size="13" font-weight="700" fill="#c2410c">Queue-as-admission-control — SAME as Ticketmaster</text>
+<text x="44" y="248" font-size="11" fill="#374151">TM: virtual waiting queue absorbs onsale stampede</text>
+<text x="44" y="266" font-size="11" fill="#374151">Uber: ride-request queue (partitioned by region) absorbs</text>
+<text x="44" y="284" font-size="11" fill="#374151">   stadium/NYE surge; matcher crash = re-delivery, not loss</text>
+<text x="44" y="304" font-size="10" fill="#c2410c" font-weight="700">rule: queue ≠ storage here — it's admission control</text>
+<rect x="452" y="202" width="404" height="106" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="472" y="226" font-size="13" font-weight="700" fill="#991b1b">The ONE new idea in Uber</text>
+<text x="472" y="248" font-size="11" fill="#374151">2D geospatial indexing — genuinely new:</text>
+<text x="472" y="266" font-size="11" fill="#374151">· quadtree (PostGIS): density-aware, rebalance cost</text>
+<text x="472" y="284" font-size="11" fill="#374151">· geohash (Redis): fixed precision, write-friendly</text>
+<text x="472" y="304" font-size="10" fill="#991b1b" font-weight="700">uneven density → quadtree · high-frequency writes → geohash</text>
+<rect x="24" y="330" width="832" height="50" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="354" font-size="12" font-weight="700" fill="#92400e">Interview one-liner when asked "why another system instead of my old patterns?":</text>
+<text x="40" y="374" font-size="11" fill="#78350f">every one of these is a NEW TRIGGER on a pattern you know — the novelty Uber adds is WHERE + HOW FAST (2D space, seconds, 3M devices).</text>
+</svg>

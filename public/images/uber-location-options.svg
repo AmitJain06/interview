@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="520" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Deep dive 1 — the location store: three answers, in order</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">the math: 3M active drivers (of ~6M) × a heartbeat every 5 s ≈ 600 000 writes/s — that number drives everything</text>
+<rect x="24" y="84" width="832" height="40" rx="9" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="106" font-size="12" font-weight="700" fill="#92400e">NFR1 (low-latency matching &lt; 1 min) + this TPS budget → the proximity lookup must be fast AND absorb 600k writes/s</text>
+<rect x="24" y="140" width="270" height="180" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="44" y="164" font-size="13" font-weight="700" fill="#991b1b">A — Postgres lat/lng (naive)</text>
+<text x="44" y="186" font-size="10.5" fill="#374151">SELECT … WHERE lat BETWEEN</text>
+<text x="44" y="202" font-size="10.5" fill="#374151"> lo,hi AND lng BETWEEN lo,hi</text>
+<text x="44" y="222" font-size="10.5" fill="#374151">· B-trees are 1D-optimized —</text>
+<text x="44" y="238" font-size="10.5" fill="#374151">  lat/lng is 2D → bad fit</text>
+<text x="44" y="254" font-size="10.5" fill="#374151">· wide region = scan many rows</text>
+<text x="44" y="274" font-size="10.5" fill="#374151">· ~2–4k TPS ≪ 600k TPS</text>
+<text x="44" y="290" font-size="10" fill="#991b1b" font-weight="700">"if a candidate proposes this, I probe."</text>
+<rect x="314" y="140" width="270" height="180" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+<text x="334" y="164" font-size="13" font-weight="700" fill="#c2410c">B — PostGIS quadtree + queue</text>
+<text x="334" y="186" font-size="10.5" fill="#374151">geospatial index (density-based) —</text>
+<text x="334" y="202" font-size="10.5" fill="#374151">proximity queries get fast ✓</text>
+<text x="334" y="222" font-size="10.5" fill="#374151">then a queue batches 600k → ~4k</text>
+<text x="334" y="242" font-size="10.5" fill="#374151">downsides:</text>
+<text x="334" y="258" font-size="10.5" fill="#374151">· batching = staleness (mildly</text>
+<text x="334" y="274" font-size="10.5" fill="#374151">  inaccurate locations)</text>
+<text x="334" y="290" font-size="10.5" fill="#374151">· every write reindexes the tree</text>
+<text x="44" y="306" font-size="10" fill="#c2410c" font-weight="700">okay answer — ok for mid, limited for senior</text>
+<rect x="604" y="140" width="252" height="180" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="624" y="164" font-size="13" font-weight="700" fill="#15803d">C — Redis + geohash (winner)</text>
+<text x="624" y="186" font-size="10.5" fill="#374151">100k – ~1M TPS per cluster —</text>
+<text x="624" y="202" font-size="10.5" fill="#374151">handles 600k writes DIRECTLY</text>
+<text x="624" y="222" font-size="10.5" fill="#374151">geohash = fixed-precision grid,</text>
+<text x="624" y="238" font-size="10.5" fill="#374151">a base-32 string key</text>
+<text x="624" y="258" font-size="10.5" fill="#374151">· cheap to compute + store</text>
+<text x="624" y="274" font-size="10.5" fill="#374151">· no extra index to maintain</text>
+<text x="624" y="290" font-size="10.5" fill="#374151">· no queue needed — no cache</text>
+<text x="624" y="306" font-size="10" fill="#15803d" font-weight="700">over-engineering to keep the queue here</text>
+<rect x="24" y="404" width="832" height="92" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="40" y="428" font-size="13" font-weight="700" fill="#3730a3">Choose by workload, not by brand:</text>
+<text x="40" y="452" font-size="12" fill="#374151">· quadtree wins with UNEVEN density + LOW update frequency → Yelp (dense NY, empty Atlantic, no one in Kansas)</text>
+<text x="40" y="472" font-size="12" fill="#374151">· geohash wins with HIGH write frequency even though density is uneven → Uber, because we re-ping every 5 s</text>
+<text x="40" y="492" font-size="11" fill="#6b7280">bonus: real Uber uses H3 — hexagons instead of squares, so "distance to edge" is direction-uniform (built in-house).</text>
+</svg>

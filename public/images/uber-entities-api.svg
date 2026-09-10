@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="460" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Core entities + the API — four nouns, five endpoints</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">entities map 1:1 to tables and inform the API · implement every API endpoint and the FRs are done</text>
+<rect x="24" y="84" width="404" height="300" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="108" font-size="14" font-weight="700" fill="#15803d">Core entities (bullets first — schema comes later)</text>
+<rect x="44" y="120" width="364" height="52" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="138" font-size="12" font-weight="700" fill="#15803d">Ride</text>
+<text x="56" y="156" font-size="10.5" fill="#374151">id · riderId · fare · eta · source · destination · status (fare_estimated → …)</text>
+<rect x="44" y="182" width="364" height="52" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="200" font-size="12" font-weight="700" fill="#15803d">Driver</text>
+<text x="56" y="218" font-size="10.5" fill="#374151">id · metadata (car, plate, photo) · status: available | in_ride | offline | request_sent</text>
+<rect x="44" y="244" width="364" height="38" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="262" font-size="12" font-weight="700" fill="#15803d">Rider</text>
+<text x="56" y="278" font-size="10.5" fill="#374151">id · metadata (location, payment) …</text>
+<rect x="44" y="292" width="364" height="72" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="310" font-size="12" font-weight="700" fill="#15803d">Location</text>
+<text x="56" y="328" font-size="10.5" fill="#374151">driverId → (lat, lng) — the MOST UP-TO-DATE locations</text>
+<text x="56" y="346" font-size="10.5" fill="#15803d" font-weight="700">only current positions live here; everything else lives in the primary DB</text>
+<rect x="452" y="84" width="404" height="300" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="472" y="108" font-size="14" font-weight="700" fill="#3730a3">API — one FR at a time</text>
+<rect x="472" y="120" width="364" height="52" rx="8" fill="#fff" stroke="#c7d2fe"/>
+<text x="484" y="138" font-size="11" font-weight="700" fill="#3730a3">POST /ride/fare-estimate</text>
+<text x="484" y="156" font-size="10.5" fill="#374151">body: { source, destination } → { rideId, eta, price }</text>
+<text x="484" y="168" font-size="9.5" fill="#6b7280">creates a PARTIAL Ride row (status fare_estimated)</text>
+<rect x="472" y="184" width="364" height="52" rx="8" fill="#fff" stroke="#c7d2fe"/>
+<text x="484" y="202" font-size="11" font-weight="700" fill="#3730a3">PATCH /ride/{rideId}/request</text>
+<text x="484" y="220" font-size="10.5" fill="#374151">async → 200/202, matching happens off-line</text>
+<text x="484" y="232" font-size="9.5" fill="#6b7280">the &lt; 1-min match-or-fail budget lives here</text>
+<rect x="472" y="248" width="364" height="52" rx="8" fill="#fff" stroke="#c7d2fe"/>
+<text x="484" y="266" font-size="11" font-weight="700" fill="#3730a3">PUT /driver/location</text>
+<text x="484" y="284" font-size="10.5" fill="#374151">body: { driverId, lat, lng } — every ~5 s from the app</text>
+<text x="484" y="296" font-size="9.5" fill="#6b7280">get missed this one early? fine — API grows as you design</text>
+<rect x="472" y="312" width="364" height="52" rx="8" fill="#fff" stroke="#c7d2fe"/>
+<text x="484" y="330" font-size="11" font-weight="700" fill="#3730a3">PATCH /ride/{rideId}/accept · PATCH /ride/{rideId}/update</text>
+<text x="484" y="348" font-size="10.5" fill="#374151">accept: { accept: bool } → matched · update: { picked_up | dropped_off } → next lat/lng or null</text>
+<text x="484" y="360" font-size="9.5" fill="#6b7280">identity comes from the JWT/session header — never from the body</text>
+<rect x="24" y="396" width="832" height="48" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="420" font-size="12" font-weight="700" fill="#92400e">Why no user IDs in the body?</text>
+<text x="40" y="438" font-size="11" fill="#78350f">a user could request a ride on someone else's behalf by putting that user's ID in the body. Session/JWT header only.</text>
+</svg>

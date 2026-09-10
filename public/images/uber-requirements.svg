@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="460" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Requirements — Uber (the hardest proximity-search problem)</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">board says: FRs are satisfied by the high-level design · NFRs choose your deep dives · CAP matters more than DAU here</text>
+<rect x="24" y="80" width="410" height="214" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="106" font-size="14" font-weight="700" fill="#15803d">Functional (3 — small on purpose)</text>
+<text x="44" y="130" font-size="12" fill="#374151">FR1 · input start + destination → get a fare estimate</text>
+<text x="44" y="148" font-size="11" fill="#6b7280">     (ETA + price, one car type UberX)</text>
+<text x="44" y="170" font-size="12" fill="#374151">FR2 · request a ride → matched to a nearby available</text>
+<text x="44" y="188" font-size="11" fill="#6b7280">     driver in real time (estimate → request → match)</text>
+<text x="44" y="210" font-size="12" fill="#374151">FR3 · driver accepts / denies the request, then</text>
+<text x="44" y="228" font-size="11" fill="#6b7280">     navigates to pickup → dropoff</text>
+<rect x="44" y="246" width="370" height="38" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="266" font-size="11" font-weight="700" fill="#15803d">Out of scope (say it, then stop):</text>
+<text x="56" y="280" font-size="10.5" fill="#374151">multiple car types · ratings · scheduled rides</text>
+<rect x="446" y="80" width="410" height="214" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="466" y="106" font-size="14" font-weight="700" fill="#3730a3">Non-functional (quantified + in context)</text>
+<text x="466" y="130" font-size="12" fill="#374151">NFR1 · low-latency MATCHING — target &lt; 1 min to match</text>
+<text x="466" y="148" font-size="11" fill="#6b7280">     or fail, then tell the rider "no drivers available"</text>
+<text x="466" y="170" font-size="12" fill="#374151">NFR2 · STRONG consistency OF MATCHING (CAP trade)</text>
+<text x="466" y="188" font-size="11" fill="#6b7280">     one ride → one driver, 1:1, never two of each</text>
+<text x="466" y="210" font-size="12" fill="#374151">NFR3 · high availability EVERYTHING OUTSIDE matching</text>
+<text x="466" y="228" font-size="11" fill="#6b7280">     serve 24/7, minimize downtime, stay reliable</text>
+<text x="466" y="250" font-size="12" fill="#374151">NFR4 · high throughput in SURGES — stadiums / NYE /</text>
+<text x="466" y="268" font-size="11" fill="#6b7280">     Taylor Swift out: ~hundreds of thousands of</text>
+<text x="466" y="286" font-size="11" fill="#6b7280">     requests within one region</text>
+<rect x="24" y="306" width="832" height="64" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="330" font-size="13" font-weight="700" fill="#92400e">Back-of-envelope rule (from the video, say it):</text>
+<text x="40" y="352" font-size="12" fill="#78350f">skip estimate math up front — only compute when a number can change the design.</text>
+<text x="40" y="372" font-size="12" fill="#78350f">Example: 3M active drivers × heartbeats every 5s ≈ 600k writes/s — THAT number picks the DB (deep dive 1).</text>
+<rect x="24" y="386" width="832" height="56" rx="10" fill="#fef2f2" stroke="#fecaca"/>
+<text x="40" y="410" font-size="13" font-weight="700" fill="#991b1b">Where the CAP choice lands (this is the Uber twist):</text>
+<text x="40" y="432" font-size="12" fill="#78350f">consistency FOR MATCHING (never double-book a driver) + availability for every other path —</text>
+<text x="40" y="448" font-size="12" fill="#78350f">same "stale reads, exact writes" asymmetry you already know from Ticketmaster.</text>
+</svg>

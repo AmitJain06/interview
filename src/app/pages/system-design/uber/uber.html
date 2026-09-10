@@ -2,56 +2,236 @@
   <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
 
   <header class="page-header">
-    <div class="page-icon"><i class="pi pi-sitemap"></i></div>
+    <div class="page-icon"><i class="pi pi-car"></i></div>
     <div>
       <h1>Uber — Ride Hailing</h1>
-      <p>Match riders with nearby drivers and track rides in real time.</p>
+      <p>The hardest proximity-search problem: match riders to nearby drivers in real time — notes from the Hello Interview breakdown (Ex-Meta Staff).</p>
     </div>
     <p-tag class="header-tag" value="Hard" severity="danger" />
   </header>
 
   <div class="card-stack">
-    <p-card header="Functional Requirements">
+    <p-card header="How to use this page (your interview script)">
+      <ng-template #content>
+        <p>
+          Full step-by-step notes for the video <em>Design Uber w/ an Ex-Meta Staff Engineer: System Design Interview breakdown</em>.
+          Read in order: requirements → entities → API → working high-level design → deep dives (location store, matching consistency, surges, high availability).
+          Every step embeds the <strong>actual whiteboard frame</strong> from the video next to a redrawn diagram — so you can watch the design improve one change at a time.
+        </p>
+        <h3 class="subhead">Delivery framework (identical to Top-K &amp; Ticketmaster — reuse it every time)</h3>
+        <ol class="steps">
+          <li><strong>Requirements</strong> (~5 min) — functional (what) + non-functional (how well). Pick 3 FRs, quantify the NFRs.</li>
+          <li><strong>Core entities</strong> (~2-4 min) — Ride, Driver, Rider, Location. Bullet each; fill the schema later.</li>
+          <li><strong>API</strong> (~5 min) — the contract. Implement the endpoints and the FRs are done.</li>
+          <li><strong>High-level design</strong> (~10-15 min) — simplest system satisfying <em>functional</em> reqs. Deliberately imperfect.</li>
+          <li><strong>Deep dives</strong> — return to the NFR list and attack what's missing. Where senior/staff earn the offer.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Golden rule from the video:</strong>&nbsp;skip back-of-envelope estimate math up front — only compute when a number can change a design decision. Then make sure every deep dive ≤1 NFR.
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="1 — Functional requirements (3, deliberately small)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-requirements.svg" alt="Functional and non-functional requirements for Uber" />
+          <figcaption><strong>Requirements board.</strong> FRs stay tiny: estimate the fare, match to a driver, accept &amp; navigate. The real weight sits in 4 quantified NFRs — each one maps to a deep dive later.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-frames/requirements-board-t0.jpg" alt="Whiteboard from the video: Uber requirements board" />
+          <figcaption><strong>The actual whiteboard (requirements):</strong> framework boxes on the left (Requirements → Core Entities → API → High-Level Design → Deep Dives) with the FR/NFR lists and out-of-scope line. Copy this layout when you draw it live.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>FR1 — get a fare estimate:</strong> rider inputs start + destination → app returns ETA and price. The video marks out of scope: multiple car types / ratings / scheduled rides. One car type (UberX), one estimate.</li>
+          <li><strong>FR2 — request a ride:</strong> from that estimate, request a ride and get matched, in real time, to a nearby available driver.</li>
+          <li><strong>FR3 — driver accepts / denies then navigates:</strong> driver accepts or denies; once matched, navigates to the pickup location and then to the destination.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="2 — Non-functional requirements (quantified, in context)">
       <ng-template #content>
         <ul class="points">
-          <li>Riders can request a ride, see a fare estimate, and track their driver.</li>
-          <li>Nearby drivers are matched to a rider within seconds.</li>
-          <li>Drivers can accept trips and push their location continuously.</li>
-          <li>Both parties can rate each other after the trip.</li>
+          <li><strong>NFR1 — low-latency MATCHING: &lt; 1 min to match or fail.</strong> Care about latency on the hot path only, and quantify it. Failure = tell the rider "no available drivers in the area". This picks the location store + the matching deep dives.</li>
+          <li><strong>NFR2 — STRONG consistency OF MATCHING (CAP choice).</strong> A ride is matched 1:1 to a driver — never two drivers to one ride, never two rides to one driver. This is the $ cost of CAP here and drives the distributed-lock deep dive.</li>
+          <li><strong>NFR3 — high availability EVERYTHING OUTSIDE matching.</strong> Serve 24/7; minimize downtime for estimates, requests, navigation, profile. Matching itself trades availability for exactness.</li>
+          <li><strong>NFR4 — high throughput in SURGES.</strong> Stadiums / NYE / Taylor-Swift-out = hundreds of thousands of requests within one region. That number names the queue deep dive.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>CAP takeaway (say this unprompted):</strong>&nbsp;consistency for matching + availability for everything else. Same "stale reads, exact writes" asymmetry you already know from the Ticketmaster booking lock.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="3 — Core entities (2-4 min, bullets first)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-entities-api.svg" alt="Core entities and REST API for Uber" />
+          <figcaption><strong>Four nouns, five endpoints.</strong> Entities map 1:1 to tables; the Location entity is the one candidates forget — it exists to answer "nearest drivers" in O(tree depth), not O(all drivers).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Ride</strong> — id, riderId, fare, eta, source, destination, status (fare_estimated → requested → matched → picked_up → dropped_off).</li>
+          <li><strong>Driver</strong> — id + metadata (car, plate, photo, …) and crucially <code>status: available | in_ride | offline | request_sent</code>.</li>
+          <li><strong>Rider</strong> — id + metadata (location, payment, …). Dots mean "don't design the profile now".</li>
+          <li><strong>Location</strong> — driverId → (lat, lng), the most up-to-date current locations only. Lives apart from the primary DB specifically so proximity queries are cheap.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="4 — API: the contract that satisfies every FR">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>POST /ride/fare-estimate</strong> — body {{ '{' }} source, destination {{ '}' }} → {{ '{' }} rideId, eta, price {{ '}' }}. Creates a PARTIAL Ride row (status fare_estimated). Abandoned estimates are analytics gold — "people priced this ride but never booked it".</li>
+          <li><strong>PATCH /ride/&#123;rideId&#125;/request</strong> — async: rider asked to match. Returns 200/202 since matching takes up to a minute off the critical path.</li>
+          <li><strong>PUT /driver/location</strong> — every ~5 s, the driver app calls with driverId, lat, lng. (Candidates commonly miss it in the API section — fine, the API grows as you design.)</li>
+          <li><strong>PATCH /ride/&#123;rideId&#125;/accept</strong> — body {{ '{' }} accept: true/false {{ '}' }}; the driver answers the push. Update ride status + set driver ID.</li>
+          <li><strong>PATCH /ride/&#123;rideId&#125;/update</strong> — body {{ '{' }} picked_up | dropped_off {{ '}' }}; respond with the next lat/lng to navigate to, or null when done.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Security note (the interviewer checks):</strong>&nbsp;never put user/driver IDs in the request body — identity comes from the session/JWT header. Otherwise any user can request a ride on someone else's behalf.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="5 — HLD v1: fare estimate (FR1, functional)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-hld-v1-fare.svg" alt="High-level design v1: fare estimate flow" />
+          <figcaption><strong>v1 answers FR1 only.</strong> Rider app → API gateway (load balancer · routing · authn/TLS/rate-limit) → Ride service → 3rd-party maps for ETA → persist a Ride row → return {{ '{' }} rideId, fare, eta {{ '}' }}.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-frames/hld-v1-fare-estimate-t0.jpg" alt="Whiteboard from the video: fare estimate flow" />
+          <figcaption><strong>The actual whiteboard (fare estimate):</strong> Writer app (they typo'd "writer") → AWS API Gateway → Ride service → third-party mapping (Google Maps) → primary DB. Reads as a single data flow, top to bottom.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why an API gateway:</strong> load-balances, routes each request to the right microservice, and does authn, TLS termination, rate limiting. Write the bullets; don't over-explain — it's not the meatiest part.</li>
+          <li><strong>Fare model:</strong> black-box an ML model OR simplify to "fare ≈ ETA × rate". Either is fine — the video simplifies out loud.</li>
+          <li><strong>Ride row written NOW</strong> with status fare_estimated — before any request/match happens. Every subsequent API just updates this one row.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="6 — HLD full: request → match → accept → navigate (FR2 + FR3)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-hld-full.svg" alt="Full high-level design for Uber" />
+          <figcaption><strong>Everything on one board.</strong> Fare path (blue), request/match path (red), driver heartbeat + accept/update path (green). Split the matcher into its own service: async + computationally expensive → scales and fails independently.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-frames/hld-full-request-match-t0.jpg" alt="Whiteboard from the video: full matching flow" />
+          <figcaption><strong>The actual whiteboard (request → match):</strong> Rider hits the match service → it reads driver locations (within N miles) from the location DB → filters status=available → sends a push (notification service) to the closest driver → accept/deny returns to the ride service → update returns the next lat/lng.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Ride Matching service</strong> — separate from Ride service because matching is computationally expensive AND asynchronous (each attempt waits ~10 s for a driver). That also isolates its failures.</li>
+          <li><strong>Location DB</strong> — stores only current driver locations so matching can ask "who is within 1-2-3 miles of the rider?" Add the get-status filter to skip offline / in-ride drivers.</li>
+          <li><strong>Notification service</strong> — black-box (it's its own interview question); native push to the driver device: "Accept this ride?"</li>
+          <li><strong>Driver accept</strong> → hits the ride endpoint → update status + ride.driver_id → matched. <strong>Driver update</strong> → picked_up / dropped_off → the service returns the next lat/lng to navigate to (or null when done).</li>
+          <li><strong>Location updates</strong> flow continuously: driver app → (PUT /driver/location) → location service → Location DB — so appetite loops every ~5 s.</li>
         </ul>
       </ng-template>
     </p-card>
 
-    <p-card header="Non-Functional Requirements">
+    <p-card header="7 — Deep dive 1: the location store (NFR1 low latency + 600k TPS)">
       <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-location-options.svg" alt="Three location storage options compared" />
+          <figcaption><strong>The answer ladder.</strong> A) Postgres lat/lng — the naive trap. B) PostGIS + queue (batched, reindexed) — okay. C) Redis + geohash — the pick. The number that drives it: 3M active drivers ÷ 5s ≈ 600 000 writes/second.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-frames/hld-location-service-t0.jpg" alt="Whiteboard from the video: location service deep dive" />
+          <figcaption><strong>Whiteboard (location service):</strong> the video writes the estimate right next to the box — 6M drivers, ~3M active, every 5s → 600k updates/sec — then tours Postgres (bad), quadtree via PostGIS + queue (okay), and Redis geohash (winner).</figcaption>
+        </figure>
         <ul class="points">
-          <li>Low matching latency (sub-second) for a good user experience.</li>
-          <li>High availability — the system tolerates individual node failures.</li>
-          <li>Eventual consistency is fine for driver locations; matching must be strongly consistent to avoid double-booking.</li>
+          <li><strong>Why B-tree lat/lng queries are bad:</strong> B-trees optimize 1D data; lat/lng is inherently 2D. Wide ranges scan many rows; a 20-mile radius means scanning a huge slice of the table. And Postgres realistically tops out ~2-4k TPS — 150-300x short.</li>
+          <li><strong>A candidate lands on quadtree? Fine.</strong> Description: split a cell into 4 once it holds &gt;K drivers; walk root→leaf to get neighbors. Great for uneven density + low write frequency. It needs an accompanying queue to batch 600k→~4k writes, which adds staleness + a full tree reindex per batch. Acceptable for mid; lead a senior toward the limit.</li>
+          <li><strong>Redis + geohashing: the fit.</strong> Redis clusters handle 100k–1M ops/s, so no queue — events write DIRECTLY. Geohash = fixed-precision string keys; cheap to compute, trivial to index, and a write never rebalances a tree. That's why it wins for Uber's high-frequency updates despite uneven density.</li>
+          <li><strong>Chooser rules (say them word-for-word):</strong> quadtree for UNEVEN density + LOW freq (Yelp — New York dense, Atlantic empty); geohash for HIGH write freq no matter the density (Uber, we re-ping every 5s).</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Dynamic location updates (600k → ~100k):</strong> make the client adaptive — skip pings while parked/driving/offline, pace by status and speed, and drop precision away from hot areas. Product-compatible and shows senior depth without new infra.
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="8 — Deep dive 2: consistency of matching (NFR2, the hard one)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-consistency.svg" alt="Consistency of matching: two invariants" />
+          <figcaption><strong>Two invariants to protect.</strong> (1) one ride sends ≤1 request at a time — per-instance while-loop. (2) one driver receives ≤1 request — hard, because many matcher instances run in parallel and only a shared store keeps them in sync.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-frames/hld-consistency-t0.jpg" alt="Whiteboard from the video: matching consistency" />
+          <figcaption><strong>Whiteboard (consistency):</strong> the double-booking trap — two concert-goers both get "driver 1 closest" on different servers — then a status + cron fix, then the distributed-lock-with-TTL winner.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Invariant 1 (easy):</strong> one ride is handled by ONE matcher instance, so a local loop — while not match: next driver → notify → wait ~10s — satisfies it. No shared state needed.</li>
+          <li><strong>Invariant 2 (hard):</strong> at concert-out, 100k riders share the same nearest drivers; the requests land on DIFFERENT servers, each ranking driver 1 first. A fix on a single box can't coordinate N instances.</li>
+          <li><strong>Option A — status + cron:</strong> set driver.status=request_sent + updated_at; cron resets stale ones to available. Works, but a driver stays locked for TTL + up to the entire cron interval (5s + 60s) — too slow during surges. Good mid-level answer.</li>
+          <li><strong>Option B — distributed lock with TTL (winner):</strong> SET driver:&#123;id&#125; = true in Redis with a 5-second TTL; every instance checks BEFORE sending. No response → the TTL auto-releases; the next reader sees no key and can retry. O(1), consistent, no cron job — the same idea as Ticketmaster's ticket lock.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Level check:</strong>&nbsp;cron = solid mid-level. TTL lock = senior+. Staff callouts: put the lock in DynamoDB as a driver_locks table with row TTLs (consolidation, HA, scales).
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="9 — Deep dive 3: surges + high availability outside matching (NFR3 + NFR4)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-surge-queue.svg" alt="Ride request queue and regional scaling" />
+          <figcaption><strong>Surge-proof and region-split.</strong> A rider request queue absorbs stadium/NYE spikes before the matchers; partitioned by region so one hard rural match can't block dense-city requests. Every service horizontally scaled + region-stacked = HA outside matching.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-frames/hld-surge-queue-t0.jpg" alt="Whiteboard from the video: ride request queue" />
+          <figcaption><strong>The actual whiteboard (surge queue):</strong> ride requests → ride-request queue → match service. The video emphasizes partitioning by region so a slow rural match doesn't clog up the FIFO.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why a queue, not just more matchers:</strong> each matcher holds a request for ~10s waiting on drivers. When 100k requests land at once you can't boot servers fast enough — queue + drain at a sustainable pace is the fix.</li>
+          <li><strong>Partition by region</strong> (borough/city-granular) → no head-of-line blocking. A rural request that takes a whole minute can't delay Manhattan rides sitting behind it.</li>
+          <li><strong>Crash-safety:</strong> a matcher acks only on completion. Die mid-match and the un-acked request gets re-pulled and re-matched. No lost rides.</li>
+          <li><strong>HA outside matching:</strong> horizontally scale each service behind its own LB; DynamoDB (near-unbounded) + Redis (100k-1M ops/s) for stores; run the whole stack per region with primary-DB read replicas in each DC.</li>
         </ul>
       </ng-template>
     </p-card>
-
-    <p-card header="High-Level Design">
+    <p-card header="10 — Quadtree vs geohash (the reference cards)">
       <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-quadtree.svg" alt="Quadtree mechanics" />
+          <figcaption><strong>Quadtree on the board.</strong> Recursively split any cell holding more than K drivers; a leaf cell IS your answer list for that area. Great for uneven density + low write frequencies; rebalancing every write makes it itchy for Uber.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/uber-geohash.svg" alt="Geohash mechanics" />
+          <figcaption><strong>Geohash on the board.</strong> Fixed-precision, density-agnostic; the string IS the key and its prefix IS the region. Write-friendly — no index to rebuild — which is exactly what 600k pings/s needs.</figcaption>
+        </figure>
         <ul class="points">
-          <li>Geospatial index (geohash or quadtree) to resolve nearby drivers from constant location pings.</li>
-          <li>Matching service pairs a rider with the best driver by distance and rating.</li>
-          <li>WebSockets push live driver locations and trip state to clients.</li>
-          <li>Event streaming (e.g., Kafka) carries trip and location events to analytics and pricing.</li>
-          <li>Surge pricing service adjusts fares from demand heat maps.</li>
+          <li><strong>Say the comparison out loud:</strong> quadtree for Yelp-style uneven density with few updates; geohash when writes dominate (Uber), even though driver density is uneven.</li>
+          <li><strong>Bonus (senior/staff):</strong> production Uber uses an H3 hexagon grid instead of squares so cell-center-to-edge distance is directionally uniform.</li>
         </ul>
       </ng-template>
     </p-card>
-
-    <p-card header="Scaling & Bottlenecks">
+    <p-card header="11 — Patterns you already own (cross-link: Top-K · Ticketmaster)">
       <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/uber-shared-patterns.svg" alt="Shared patterns between Top-K, Ticketmaster and Uber" />
+          <figcaption><strong>Three transfers, one new idea.</strong> Smooth-the-write-path, TTL-lock consistency, and queue-as-admission-control all come from your two previous designs. The genuinely new Uber muscle is <strong>2D geospatial indexing</strong>.</figcaption>
+        </figure>
         <ul class="points">
-          <li>Shard by city or geohash region so each matcher handles a bounded area.</li>
-          <li>Keep driver locations in memory (Redis geospatial) rather than a relational store.</li>
-          <li>Throttle location pings and batch writes to keep write throughput manageable.</li>
-          <li>Use leader election per region so exactly one matcher owns a trip lifecycle.</li>
+          <li><strong>Smooth the write path — same as Top-K:</strong> Top-K = Kafka absorbs 700k views/s → Flink pre-aggregates. Uber = dynamic client pings (600k→~100k/s) + Redis absorbs writes directly. Rule: don't let every event touch the expensive store.</li>
+          <li><strong>Consistency via TTL lock — same as Ticketmaster:</strong> TM = ticket lock (SET NX, TTL 10 min) one buyer/seat; Uber = driver lock (SET driver:&#123;id&#125;, TTL 5s) one request/driver. Rule: TTL auto-release beats cron cleanup every time.</li>
+          <li><strong>Queue-as-admission-control — same as Ticketmaster:</strong> TM waiting queue for onsale stampede; Uber ride-request queue for stadium surges. Once again: queues as admission control, not storage.</li>
+          <li><strong>The ONE new idea:</strong> 2D geospatial indexing — pick quadtree (uneven density, low write) vs geohash (high write) by the workload. That's the Uber-shaped muscle your other designs don't exercise.</li>
         </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="60-second recap (say this to close)">
+      <ng-template #content>
+        <ol class="steps">
+          <li>Requirements: 3 FRs (estimate → match → accept/navigate); NFRs = low-latency matching &lt; 1 min · STRONG matching consistency (CAP) · HA outside matching · surge-proof throughput (~hundreds of thousands/region).</li>
+          <li>Entities: Ride, Driver, Rider, Location — four nouns; Location is the special one (current positions only → fast proximity).</li>
+          <li>API: POST /fare-estimate · PATCH /request · PUT /driver/location · PATCH /accept · PATCH /update. Identity from headers, never the body.</li>
+          <li>HLD: gateway → Ride svc (maps) OR → Ride Matching svc (read Location DB → filter available → notify → wait for accept). Primary DB holds rides; Location DB holds current positions.</li>
+          <li>Deep dive 1 (location store): Postgres lat/lng bad → PostGIS quadtree + queue okay → Redis geohash wins (handles 600k pings/s, no reindex).</li>
+          <li>Deep dive 2 (consistency): per-ride loop + per-driver distributed lock (Redis TTL 5 s) — never two requests to one driver; no cron; same lock as Ticketmaster.</li>
+          <li>Deep dive 3 (surge + HA): region-partitioned ride-request queue + horizontally scaled services + region-split stacks.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Source:</strong>&nbsp;Hello Interview “Design Uber w/ an Ex-Meta Staff Engineer” (video file in public/). Numbers (6M drivers → 3M active → 600k location writes/s · &lt; 1 min to match · 5 s / 10 s timings · hundreds-of-thousands surge requests) and every diagram above follow that video's whiteboard step by step.
+        </div>
       </ng-template>
     </p-card>
   </div>
