@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="380" rx="16" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="380" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="36" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">Naive O(2^n) explodes, DP O(n) stays flat</text>
+  <text x="450" y="58" text-anchor="middle" font-size="13" fill="#6b7280">Same Fibonacci logic — only difference is remembering answers</text>
+  <g>
+    <line x1="90" y1="90" x2="90" y2="280" stroke="#111827" stroke-width="2"/>
+    <line x1="90" y1="280" x2="840" y2="280" stroke="#111827" stroke-width="2"/>
+    <text x="40" y="190" font-size="12" fill="#6b7280" transform="rotate(-90 40,190)">calls</text>
+    <text x="450" y="304" text-anchor="middle" font-size="12" fill="#6b7280">n →  10        20        30        40</text>
+    <!-- exponential curve -->
+    <path d="M 140 270 C 300 265, 420 240, 500 200 S 640 90, 790 95" fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+    <!-- linear line -->
+    <line x1="140" y1="272" x2="790" y2="252" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="140" cy="270" r="6" fill="#ef4444"/><circle cx="140" cy="272" r="6" fill="#10b981"/>
+    <circle cx="790" cy="95" r="6" fill="#ef4444"/><circle cx="790" cy="252" r="6" fill="#10b981"/>
+  </g>
+  <g font-size="13">
+    <rect x="90" y="92" width="220" height="30" rx="15" fill="#fee2e2"/><text x="200" y="111" text-anchor="middle" fill="#991b1b" font-weight="700">Naive O(2^n) — red</text>
+    <rect x="320" y="92" width="200" height="30" rx="15" fill="#ecfdf5"/><text x="420" y="111" text-anchor="middle" fill="#065f46" font-weight="700">DP O(n) — green</text>
+  </g>
+  <g font-size="12">
+    <rect x="90" y="314" width="750" height="48" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+    <text x="106" y="334" fill="#111827">n=10: 177 vs 10  •  n=20: 21,891 vs 20  •  n=30: 2.7M vs 30  •  n=40: 331M vs 40</text>
+    <text x="106" y="352" fill="#6b7280">Formula to memorize: time = states × work = O(n) × O(1) = O(n)</text>
+  </g>
+</svg>

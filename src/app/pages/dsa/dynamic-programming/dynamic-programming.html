@@ -1,0 +1,173 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/dsa"><i class="pi pi-arrow-left"></i> All algorithms</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-chart-line"></i></div>
+    <div>
+      <h1>Dynamic Programming - Lecture 1</h1>
+      <p>When to use DP, the two conditions, Memoization vs Tabulation, Fibonacci O(2^n) to O(n).</p>
+    </div>
+    <p-tag class="header-tag" value="Hard" severity="danger" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="Lecture transcript summary (what the video teaches)">
+      <ng-template #content>
+        <p>
+          HTML notes for <em>Complete Dynamic Programming - DP Series - Lecture 1</em>.
+          Core idea: plain recursion repeats the same work, DP stores it and reuses it.
+          Flow: <strong>recursion tree -&gt; find repeats -&gt; store answers -&gt; reuse</strong>.
+        </p>
+        <ul class="points">
+          <li><strong>DP = recursion + cache.</strong> Same logic, no repeated calls.</li>
+          <li><strong>Roadmap:</strong> when to use DP, 2 conditions, Fibonacci proof, 2 styles.</li>
+          <li><strong>Future videos</strong> add patterns (knapsack, LCS, LIS, grid DP) here.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>One-line summary:</strong>&nbsp;same subproblem twice in the tree means remember it, do not recompute it.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="1 - When to use DP: BOTH conditions must hold">
+      <ng-template #content>
+        <p>Ask two questions before DP. If either is NO, DP is the wrong tool.</p>
+        <figure class="visual-figure">
+          <img src="/images/dp-two-conditions.svg" alt="Two conditions for DP gate" />
+          <figcaption><strong>Self-drawn diagram.</strong> DP gate: left door Overlapping Subproblems, right door Optimal Substructure. Both must open.</figcaption>
+        </figure>
+        <h3 class="subhead">Condition 1 - Overlapping Subproblems</h3>
+        <ul class="points">
+          <li><strong>Memorize:</strong> same subproblem solved many times in recursion.</li>
+          <li><strong>Fibonacci proof:</strong> <code>fib(5)</code> calls <code>fib(4)</code> and <code>fib(3)</code>. But <code>fib(4)</code> calls <code>fib(3)</code> again. So <code>fib(3)</code> runs twice, <code>fib(2)</code> runs three times.</li>
+          <li><strong>Interview line:</strong> draw tree, circle repeat, say overlapping confirmed.</li>
+        </ul>
+        <figure class="visual-figure">
+          <img src="/images/dp-fib-tree.svg" alt="Fibonacci tree with repeated nodes" />
+          <figcaption><strong>Self-drawn diagram.</strong> Tree for fib(5). fib(3) twice, fib(2) three times. DP removes exactly this.</figcaption>
+        </figure>
+        <h3 class="subhead">Condition 2 - Optimal Substructure</h3>
+        <ul class="points">
+          <li><strong>Memorize:</strong> optimal whole answer built from optimal smaller answers.</li>
+          <li><strong>Fibonacci proof:</strong> <code>fib(n) = fib(n-1) + fib(n-2)</code>. Exact smaller answers combine into exact big answer.</li>
+          <li><strong>Counter-example:</strong> longest simple path in general graph. Reusing a sub-path can form a cycle, so DP fails there.</li>
+        </ul>
+        <h3 class="subhead">Checklist before code</h3>
+        <ol class="steps">
+          <li>Define state: <code>dp[i]</code> = answer for input i.</li>
+          <li>Check repeats: sketch tree for n = 5.</li>
+          <li>Write recurrence: <code>dp[i] = dp[i-1] + dp[i-2]</code>.</li>
+          <li>Set base cases: <code>dp[0] = 0, dp[1] = 1</code>.</li>
+          <li>Pick Memoization or Tabulation.</li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <p-card header="2 - Memoization vs Tabulation">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/dp-memo-vs-tab.svg" alt="Memoization top-down vs tabulation bottom-up" />
+          <figcaption><strong>Self-drawn diagram.</strong> Left: recursion plus cache box. Right: loop filling table upward from base cases.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Memoization = top-down + cache.</strong> Keep recursion, check cache on entry, store before return. Only visited states solved. Risk: stack depth.</li>
+          <li><strong>Tabulation = bottom-up + table.</strong> Loop from base cases upward. All states solved in order. No stack overflow, easy O(1) space.</li>
+          <li><strong>Same speed:</strong> O(n) states x O(1) work = O(n).</li>
+        </ul>
+        <div class="code-grid">
+          <div class="code-block">
+            <h4>Memoization (top-down)</h4>
+            <pre><code>function fibMemo(n: number, memo: Record&lt;number, number&gt; = &#123;&#125;): number &#123;
+  if (n &lt;= 1) return n;
+  if (memo[n] !== undefined) return memo[n];
+  memo[n] = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);
+  return memo[n];
+&#125;</code></pre>
+          </div>
+          <div class="code-block">
+            <h4>Tabulation (bottom-up)</h4>
+            <pre><code>function fibTab(n: number): number &#123;
+  if (n &lt;= 1) return n;
+  const dp: number[] = [0, 1];
+  for (let i = 2; i &lt;= n; i++) &#123;
+    dp[i] = dp[i - 1] + dp[i - 2];
+  &#125;
+  return dp[n];
+&#125;</code></pre>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="3 - Fibonacci: O(2^n) becomes O(n)">
+      <ng-template #content>
+        <p><strong>Memorize:</strong> F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2). Naive tree visibly repeats.</p>
+        <figure class="visual-figure">
+          <img src="/images/dp-fib-complexity.svg" alt="Exponential curve vs linear line" />
+          <figcaption><strong>Self-drawn diagram.</strong> Naive curve explodes, DP line stays flat. Numbers below prove it.</figcaption>
+        </figure>
+        <h3 class="subhead">Why naive is O(2^n)</h3>
+        <ul class="points">
+          <li>Each call spawns 2 children. Depth n gives about 2^n nodes.</li>
+          <li>fib(5) = 15 calls. fib(40) = about 331 million calls.</li>
+        </ul>
+        <div class="code-block">
+          <h4>Naive (do NOT ship)</h4>
+          <pre><code>function fibNaive(n: number): number &#123;
+  if (n &lt;= 1) return n;
+  return fibNaive(n - 1) + fibNaive(n - 2);
+&#125;</code></pre>
+        </div>
+        <h3 class="subhead">Why DP is O(n)</h3>
+        <ul class="points">
+          <li>Unique states: n+1 values (0..n). Each computed once.</li>
+          <li>Work per state: one addition, O(1).</li>
+          <li>Formula: <code>time = states x work = O(n) x O(1) = O(n)</code>.</li>
+          <li>n = 5 table: dp = [0, 1, 1, 2, 3, 5]. Answer dp[5] = 5.</li>
+          <li>Numbers: n=10: 177 vs 10. n=20: 21,891 vs 20. n=30: 2.7M vs 30. n=40: 331M vs 40.</li>
+        </ul>
+        <div class="code-block">
+          <h4>Best: O(n) time, O(1) space</h4>
+          <pre><code>function fibBest(n: number): number &#123;
+  if (n &lt;= 1) return n;
+  let prev2 = 0, prev1 = 1;
+  for (let i = 2; i &lt;= n; i++) &#123;
+    const cur = prev1 + prev2;
+    prev2 = prev1;
+    prev1 = cur;
+  &#125;
+  return prev1;
+&#125;</code></pre>
+        </div>
+        <table class="compare-table">
+          <thead>
+            <tr><th>Approach</th><th>Time</th><th>Space</th><th>Verdict</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Naive recursion</td><td>O(2^n)</td><td>O(n)</td><td>Too slow</td></tr>
+            <tr><td>Memoization</td><td>O(n)</td><td>O(n)</td><td>Good</td></tr>
+            <tr><td>Tabulation</td><td>O(n)</td><td>O(n)</td><td>Good</td></tr>
+            <tr><td>Tabulation opt.</td><td>O(n)</td><td>O(1)</td><td>Best</td></tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Terms to memorize">
+      <ng-template #content>
+        <ol class="steps">
+          <li><strong>Overlapping Subproblems</strong> - repeated node in tree.</li>
+          <li><strong>Optimal Substructure</strong> - recurrence uses optimal smaller states.</li>
+          <li><strong>State</strong> - <code>dp[i]</code> defines one subproblem.</li>
+          <li><strong>Recurrence</strong> - <code>dp[i] = dp[i-1] + dp[i-2]</code>.</li>
+          <li><strong>Base case</strong> - <code>dp[0] = 0, dp[1] = 1</code>.</li>
+          <li><strong>Memoization</strong> - top-down plus cache.</li>
+          <li><strong>Tabulation</strong> - bottom-up table fill.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Summary:</strong>&nbsp;check both conditions, write state plus recurrence plus base case, pick top-down or bottom-up. Fibonacci template: O(2^n) to O(n) by computing each of n states once.
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

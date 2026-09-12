@@ -26,6 +26,7 @@ export class Sidebar {
     { label: 'Interviews', icon: 'pi pi-calendar', routerLink: '/interviews', badge: '3' },
     { label: 'Coding', icon: 'pi pi-code', routerLink: '/coding' },
     { label: 'System Design', icon: 'pi pi-sitemap', routerLink: '/system-design' },
+    { label: 'DSA', icon: 'pi pi-chart-line', routerLink: '/dsa' },
     { label: 'Candidates', icon: 'pi pi-users', routerLink: '/candidates' },
     { label: 'Reports', icon: 'pi pi-chart-bar', routerLink: '/reports' },
   ];

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="360" rx="16" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="360" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="38" text-anchor="middle" font-size="24" font-weight="700" fill="#111827">Memoization vs Tabulation</text>
+  <text x="450" y="62" text-anchor="middle" font-size="14" fill="#6b7280">Same recurrence — opposite direction</text>
+  <!-- Left: memoization -->
+  <g>
+    <rect x="60" y="90" width="370" height="220" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+    <text x="245" y="124" text-anchor="middle" font-size="17" font-weight="700" fill="#4338ca">MEMOIZATION: Top-Down</text>
+    <text x="245" y="146" text-anchor="middle" font-size="13" fill="#374151">solve fib(5) first, go down</text>
+    <rect x="110" y="160" width="270" height="38" rx="8" fill="#ffffff" stroke="#6366f1"/>
+    <text x="245" y="184" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">fib(5) → fib(4) + fib(3)</text>
+    <rect x="110" y="206" width="270" height="38" rx="8" fill="#ffffff" stroke="#6366f1" stroke-dasharray="6 4"/>
+    <text x="245" y="230" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">cache box: memo[n]</text>
+    <text x="245" y="264" text-anchor="middle" font-size="12" fill="#6b7280">if memo[n] found → return, no recompute</text>
+    <text x="245" y="288" text-anchor="middle" font-size="15" font-weight="700" fill="#4338ca">recursion + cache ↓</text>
+  </g>
+  <!-- Right: tabulation -->
+  <g>
+    <rect x="470" y="90" width="370" height="220" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="655" y="124" text-anchor="middle" font-size="17" font-weight="700" fill="#047857">TABULATION: Bottom-Up</text>
+    <text x="655" y="146" text-anchor="middle" font-size="13" fill="#374151">solve base first, loop up</text>
+    <g font-size="12" font-weight="700" text-anchor="middle">
+      <rect x="500" y="160" width="56" height="44" rx="8" fill="#ffffff" stroke="#10b981"/>
+      <text x="528" y="187" fill="#111827">0</text>
+      <rect x="564" y="160" width="56" height="44" rx="8" fill="#ffffff" stroke="#10b981"/>
+      <text x="592" y="187" fill="#111827">1</text>
+      <rect x="628" y="160" width="56" height="44" rx="8" fill="#ffffff" stroke="#10b981"/>
+      <text x="656" y="187" fill="#111827">1</text>
+      <rect x="692" y="160" width="56" height="44" rx="8" fill="#ffffff" stroke="#10b981"/>
+      <text x="720" y="187" fill="#111827">2</text>
+      <rect x="756" y="160" width="56" height="44" rx="8" fill="#047857" fill-opacity="0.12" stroke="#047857"/>
+      <text x="784" y="187" fill="#047857">5</text>
+    </g>
+    <text x="655" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">dp[i] = dp[i-1] + dp[i-2]</text>
+    <text x="655" y="248" text-anchor="middle" font-size="12" fill="#6b7280">for i = 2 … n, fill table</text>
+    <text x="655" y="288" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">loop + table ↑</text>
+  </g>
+</svg>

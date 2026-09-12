@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="360" rx="16" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="360" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="38" text-anchor="middle" font-size="24" font-weight="700" fill="#111827">When to use DP? BOTH doors must open</text>
+  <text x="450" y="62" text-anchor="middle" font-size="14" fill="#6b7280">Lecture 1 rule — if either answer is NO, use another technique</text>
+  <!-- Left door -->
+  <g>
+    <rect x="60" y="90" width="370" height="220" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+    <text x="245" y="124" text-anchor="middle" font-size="17" font-weight="700" fill="#4338ca">DOOR 1: Overlapping</text>
+    <text x="245" y="146" text-anchor="middle" font-size="17" font-weight="700" fill="#4338ca">Subproblems?</text>
+    <text x="245" y="172" text-anchor="middle" font-size="13" fill="#374151">Same subproblem solved</text>
+    <text x="245" y="190" text-anchor="middle" font-size="13" fill="#374151">many times in recursion tree?</text>
+    <rect x="110" y="206" width="270" height="44" rx="8" fill="#ffffff" stroke="#6366f1"/>
+    <text x="245" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">fib(3) appears 2x in fib(5)</text>
+    <text x="245" y="243" text-anchor="middle" font-size="12" fill="#6b7280">fib(2) appears 3x — cache it</text>
+    <text x="245" y="288" text-anchor="middle" font-size="15" font-weight="700" fill="#16a34a">YES → keep going ✓</text>
+  </g>
+  <!-- Right door -->
+  <g>
+    <rect x="470" y="90" width="370" height="220" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="655" y="124" text-anchor="middle" font-size="17" font-weight="700" fill="#047857">DOOR 2: Optimal</text>
+    <text x="655" y="146" text-anchor="middle" font-size="17" font-weight="700" fill="#047857">Substructure?</text>
+    <text x="655" y="172" text-anchor="middle" font-size="13" fill="#374151">Optimal answer built from</text>
+    <text x="655" y="190" text-anchor="middle" font-size="13" fill="#374151">optimal smaller answers?</text>
+    <rect x="520" y="206" width="270" height="44" rx="8" fill="#ffffff" stroke="#10b981"/>
+    <text x="655" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">fib(n) = fib(n-1) + fib(n-2)</text>
+    <text x="655" y="243" text-anchor="middle" font-size="12" fill="#6b7280">exact smaller → exact bigger</text>
+    <text x="655" y="288" text-anchor="middle" font-size="15" font-weight="700" fill="#16a34a">YES → use DP ✓</text>
+  </g>
+  <!-- AND gate -->
+  <circle cx="450" cy="200" r="26" fill="#111827"/>
+  <text x="450" y="208" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">AND</text>
+</svg>

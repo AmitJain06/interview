@@ -62,6 +62,24 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'dsa',
+    loadComponent: () => import('./pages/dsa/dsa').then((m) => m.DSA),
+    title: 'Interview App | DSA',
+    children: [
+      {
+        path: '',
+        redirectTo: 'dynamic-programming',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dynamic-programming',
+        loadComponent: () =>
+          import('./pages/dsa/dynamic-programming/dynamic-programming').then((m) => m.DynamicProgramming),
+        title: 'Interview App | Dynamic Programming',
+      },
+    ],
+  },
+  {
     path: 'candidates',
     loadComponent: () => import('./pages/candidates/candidates').then((m) => m.Candidates),
     title: 'Interview App | Candidates',
