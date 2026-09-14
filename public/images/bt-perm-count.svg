@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 400" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="400" rx="14" fill="#fff" stroke="#e5e7eb"/>
+
+<text x="440" y="34" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Counting permutations — 6P4: fill each seat, one by one</text>
+<text x="440" y="58" font-size="13" fill="#6b7280" text-anchor="middle">n = 6 total items in the pool · r = 4 positions to fill · order of filling matters</text>
+
+<g font-size="12" text-anchor="middle">
+<text x="120" y="96" font-weight="700" fill="#4f46e5">1st seat</text>
+<text x="300" y="96" font-weight="700" fill="#4f46e5">2nd seat</text>
+<text x="480" y="96" font-weight="700" fill="#4f46e5">3rd seat</text>
+<text x="660" y="96" font-weight="700" fill="#4f46e5">4th seat</text>
+<rect x="60" y="106" width="120" height="96" rx="12" fill="#eef2ff" stroke="#6366f1"/><text x="120" y="158" font-size="34" font-weight="800" fill="#3730a3">6</text><text x="120" y="184" font-size="11" fill="#64748b">choices</text>
+<rect x="240" y="106" width="120" height="96" rx="12" fill="#eef2ff" stroke="#6366f1"/><text x="300" y="158" font-size="34" font-weight="800" fill="#3730a3">5</text><text x="300" y="184" font-size="11" fill="#64748b">choices</text>
+<rect x="420" y="106" width="120" height="96" rx="12" fill="#eef2ff" stroke="#6366f1"/><text x="480" y="158" font-size="34" font-weight="800" fill="#3730a3">4</text><text x="480" y="184" font-size="11" fill="#64748b">choices</text>
+<rect x="600" y="106" width="120" height="96" rx="12" fill="#eef2ff" stroke="#6366f1"/><text x="660" y="158" font-size="34" font-weight="800" fill="#3730a3">3</text><text x="660" y="184" font-size="11" fill="#64748b">choices</text>
+</g>
+<g font-size="22" font-weight="700" fill="#94a3b8" text-anchor="middle">
+<text x="190" y="168">×</text>
+<text x="370" y="168">×</text>
+<text x="550" y="168">×</text>
+</g>
+<text x="760" y="168" font-size="22" font-weight="700" fill="#22c55e" text-anchor="middle">=</text>
+<rect x="784" y="140" width="76" height="50" rx="10" fill="#dcfce7" stroke="#22c55e"/>
+<text x="822" y="172" font-size="20" font-weight="800" fill="#15803d" text-anchor="middle">360</text>
+
+<text x="120" y="232" font-size="11" fill="#64748b" text-anchor="middle">each seat has ONE fewer choice</text>
+<path d="M 120 244 L 300 244" stroke="#f59e0b" stroke-width="2"/>
+<text x="210" y="238" font-size="11" font-weight="700" fill="#b45309" text-anchor="middle">−1</text>
+<path d="M 300 244 L 480 244" stroke="#f59e0b" stroke-width="2"/>
+<path d="M 480 244 L 660 244" stroke="#f59e0b" stroke-width="2"/>
+
+<rect x="24" y="262" width="540" height="56" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="44" y="284" font-size="13" font-weight="700" fill="#3730a3">Multiply the choices:  6 × 5 × 4 × 3 = 360 possible arrangements</text>
+<text x="44" y="304" font-size="12" fill="#4f46e5">Same number every time — the multiplication IS the formula in disguise.</text>
+
+<rect x="584" y="262" width="272" height="56" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="604" y="284" font-size="13" font-weight="700" fill="#b91c1c">Using the formula</text>
+<text x="604" y="304" font-size="12" fill="#7f1d1d">6P4 = 6! / (6−4)! = 720 / 2! = 360</text>
+
+<rect x="24" y="334" width="832" height="46" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="44" y="362" font-size="12" fill="#92400e">Note: “4 students and 6 places” and “6 students and 4 places” give the SAME 360 — both are “pick 4 items, in order, from a pool of 6”.</text>
+</svg>

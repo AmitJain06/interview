@@ -31,6 +31,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/coding/leet-code-863/leet-code-863').then((m) => m.LeetCode863),
         title: 'Interview App | LeetCode 863',
       },
+      {
+        path: 'permutations-backtracking',
+        loadComponent: () =>
+          import('./pages/coding/permutations-backtracking/permutations-backtracking').then(
+            (m) => m.PermutationsBacktracking,
+          ),
+        title: 'Interview App | Permutations & Backtracking',
+      },
     ],
   },
   {
@@ -67,15 +75,16 @@ export const routes: Routes = [
     title: 'Interview App | DSA',
     children: [
       {
-        path: '',
-        redirectTo: 'dynamic-programming',
-        pathMatch: 'full',
-      },
-      {
         path: 'dynamic-programming',
         loadComponent: () =>
           import('./pages/dsa/dynamic-programming/dynamic-programming').then((m) => m.DynamicProgramming),
         title: 'Interview App | Dynamic Programming',
+      },
+      {
+        path: 'backtracking',
+        loadComponent: () =>
+          import('./pages/dsa/backtracking/backtracking').then((m) => m.Backtracking),
+        title: 'Interview App | Backtracking',
       },
     ],
   },

@@ -1,0 +1,431 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/coding"><i class="pi pi-arrow-left"></i> All problems</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-code"></i></div>
+    <div>
+      <h1>Permutations &amp; Backtracking</h1>
+      <p>Factorial → nPr → recursion tree → LeetCode 46 · CHOOSE → EXPLORE → UNDO</p>
+    </div>
+    <p-tag class="header-tag" value="Medium" severity="warn" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="1 · Factorial — the counting tool">
+      <ng-template #content>
+        <p>
+          <strong>Factorial</strong> = "multiply n by every whole number below it, down to 1".
+          It counts how many ways n items can be arranged in a line.
+        </p>
+        <div class="code-block">
+          <h4>Definition</h4>
+          <pre><code>n! = n × (n-1) × (n-2) × ... × 3 × 2 × 1
+n! = n × (n-1)!      (steps down by one every time)</code></pre>
+        </div>
+        <ul class="points">
+          <li><code>3! = 3 × 2 × 1 = 6</code></li>
+          <li><code>4! = 4 × 3 × 2 × 1 = 24</code></li>
+          <li><code>5! = 5 × 4 × 3 × 2 × 1 = 120</code></li>
+        </ul>
+        <div class="callout-box">
+          <strong>Why 0! = 1:</strong>&nbsp;the pattern must keep working backwards: 1! = 1 × 0! ⟹ 0! = 1. There is exactly one way to arrange zero things — do nothing.
+        </div>
+        <figure class="visual-figure">
+          <img src="/images/bt-factorial.svg" alt="Factorial ladder with the 0! proof" />
+          <figcaption><strong>Self-drawn diagram.</strong> 5! = 5×4×3×2×1 = 120, the 0! = 1 proof, and quick examples.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+
+    <p-card header="2 · Permutation — arrangements where order matters">
+      <ng-template #content>
+        <p>
+          A <strong>permutation</strong> is an arrangement of items where <strong>order matters</strong>:
+          <code>ABC</code> and <code>BAC</code> are different. Examples: PINs, passwords, race results, seat assignments.
+        </p>
+        <div class="code-block">
+          <h4>Formula</h4>
+          <pre><code>nPr = n! / (n-r)!</code></pre>
+        </div>
+        <ul class="points">
+          <li><code>n</code> = total number of available items (the pool you pick from).</li>
+          <li><code>r</code> = number of positions/items being arranged (how many you actually place).</li>
+          <li><code>nPr</code> = ways to pick r items from n and put them in order.</li>
+        </ul>
+        <h3 class="subhead">Example — 4 students and 6 places</h3>
+        <p>Fill the seats one by one:</p>
+        <ul class="points">
+          <li><strong>6</strong> choices for the <strong>first</strong> student (any of 6 seats)</li>
+          <li><strong>5</strong> for the <strong>second</strong> (1 seat already taken)</li>
+          <li><strong>4</strong> for the <strong>third</strong> (2 taken)</li>
+          <li><strong>3</strong> for the <strong>fourth</strong> (3 taken)</li>
+        </ul>
+        <div class="callout-box">
+          <strong>6 × 5 × 4 × 3 = 360</strong>&nbsp;— same as the formula: 6P4 = 6! / (6-4)! = 720 / 2 = 360. The multiplication IS the formula's shortcut.
+        </div>
+        <figure class="visual-figure">
+          <img src="/images/bt-perm-count.svg" alt="Filling 4 seats with 6,5,4,3 choices" />
+          <figcaption><strong>Self-drawn diagram.</strong> Each seat reduces the choice count by one → 6 × 5 × 4 × 3 = 360.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+<p-card header="3 · 6 Students and 4 Places — the same math, two viewpoints">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>Students = 6, Places = 4</strong> — only 4 of the 6 students can occupy the 4 places.</li>
+          <li>We pick a set of 4 places from 6 students, and the order of who sits where matters.</li>
+        </ul>
+        <div class="code-block">
+          <h4>Calculation (identical to Section 2)</h4>
+          <pre><code>6P4 = 6! / (6-4)! = 720 / 2 = 360
+
+6 × 5 × 4 × 3 = 360</code></pre>
+        </div>
+        <p><strong>Why both stories give 360:</strong></p>
+        <table class="compare-table">
+          <thead><tr><th>Scenario</th><th>What you really pick</th><th>Count</th></tr></thead>
+          <tbody>
+            <tr><td>4 students, 6 places</td><td>4 seats chosen from 6 → assigned in order</td><td>6 × 5 × 4 × 3 = 360</td></tr>
+            <tr><td>6 students, 4 places</td><td>4 seats filled from 6 students, in order</td><td>6 × 5 × 4 × 3 = 360</td></tr>
+          </tbody>
+        </table>
+        <div class="callout-box">
+          <strong>Both are "arrangements of 4 positions chosen from 6 possible items".</strong>&nbsp;The labels (student/place) don't change the math — what matters is n = 6, r = 4.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="4 · Permutation vs Combination">
+      <ng-template #content>
+        <p>The <strong>one</strong> question that separates them: <em>does the order of the chosen items matter?</em></p>
+        <div class="two-col">
+          <ul class="points">
+            <li><strong>Permutation — order matters</strong></li>
+            <li><code>ABC</code> and <code>BAC</code> are <strong>different</strong></li>
+            <li>Real world: ATM PIN <code>1234</code> vs <code>4321</code></li>
+          </ul>
+          <ul class="points">
+            <li><strong>Combination — order does not matter</strong></li>
+            <li><code>ABC</code> and <code>BAC</code> are the <strong>same selection</strong></li>
+            <li>Real world: picking 3 friends for a team</li>
+          </ul>
+        </div>
+        <div class="code-block">
+          <h4>Formulas</h4>
+          <pre><code>Permutation:  nPr = n! / (n-r)!
+Combination:  nCr = n! / (r! × (n-r)!)</code></pre>
+        </div>
+        <div class="callout-box">
+          <strong>The only difference is r! in the denominator.</strong>&nbsp;Combination divides out the r! orderings so &#123;A,B,C&#125; is counted once — not 3! = 6 times.
+        </div>
+        <figure class="visual-figure">
+          <img src="/images/bt-perm-vs-comb.svg" alt="Order matters vs order does not matter" />
+          <figcaption><strong>Self-drawn diagram.</strong> ABC ≠ BAC (permutation, like a PIN) vs ABC = BAC (combination, like a team).</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+<p-card header="5 · Why Permutations Appear in Backtracking">
+      <ng-template #content>
+        <p>Generating all permutations is a <strong>search over every ordering</strong>. Backtracking explores every branch of a decision tree.</p>
+        <div class="callout-box">
+          <strong>The rule:</strong>&nbsp;at every level of recursion we can choose <strong>any unused element</strong> from the input.
+        </div>
+        <p><code>nums = [1, 2, 3]</code> — recursion conceptually:</p>
+        <div class="code-block">
+          <h4>Each level picks one more unused number</h4>
+          <pre><code>                []
+          /      |      \
+         1       2       3
+       /  \     / \     / \
+     1,2  1,3 2,1 2,3 3,1 3,2
+      |    |    |   |    |   |
+  1,2,3 1,3,2 2,1,3 2,3,1 3,1,2 3,2,1</code></pre>
+        </div>
+        <ul class="points">
+          <li>Total permutations of 3 items = <strong>3! = 6</strong></li>
+          <li>List: <code>123 · 132 · 213 · 231 · 312 · 321</code></li>
+          <li>Choices per step: 3 → 2 → 1, so 3 × 2 × 1 = 3! leaf nodes.</li>
+        </ul>
+        <figure class="visual-figure">
+          <img src="/images/bt-permutations-tree.svg" alt="Full recursion tree for permutations of [1,2,3]" />
+          <figcaption><strong>Self-drawn diagram.</strong> Full tree: every level = one position, every leaf = one complete permutation (3! = 6). The indigo path shows the first depth-first journey with its UNDO steps.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+
+    <p-card header="6 · The Backtracking Pattern — CHOOSE → EXPLORE → UNDO">
+      <ng-template #content>
+        <p>Backtracking = <strong>DFS over a decision tree with undo</strong>. Every path you go down, you must be able to walk back cleanly.</p>
+        <table class="compare-table">
+          <thead><tr><th>Step</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><strong>CHOOSE</strong></td><td>Pick the next element and add it to the current result.</td></tr>
+            <tr><td><strong>EXPLORE</strong></td><td>Recurse one level deeper to fill the next position.</td></tr>
+            <tr><td><strong>UNDO</strong></td><td>Remove the element again so the next branch starts clean.</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <h4>Generic C# template</h4>
+          <pre><code>void Backtrack(...)
+&#123;
+    if (condition)
+    &#123;
+        // add answer
+        return;
+    &#125;
+
+    for (...)
+    &#123;
+        // CHOOSE
+
+        // EXPLORE
+        Backtrack(...);
+
+        // UNDO
+    &#125;
+&#125;</code></pre>
+        </div>
+        <h3 class="subhead">Why the UNDO step is necessary</h3>
+        <ul class="points">
+          <li><code>current</code> is <strong>shared</strong> between all branches (not copied). If you never remove the element, the next for-iteration starts polluted (<code>[1,2]</code> becomes <code>[1,2,3]</code> instead of <code>[1,3]</code>).</li>
+          <li><code>used</code> is also shared. If you never free an index, sibling branches can never reuse that element.</li>
+          <li>You only find all n! answers if every branch restores the exact state from before CHOOSE.</li>
+        </ul>
+        <figure class="visual-figure">
+          <img src="/images/bt-backtrack-flow.svg" alt="CHOOSE EXPLORE UNDO cycle" />
+          <figcaption><strong>Self-drawn diagram.</strong> The three steps loop for every candidate — with the state restored after each UNDO.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/bt-undo.svg" alt="Why undo matters - shared current and used arrays" />
+          <figcaption><strong>Self-drawn diagram.</strong> Zoom into the first branch [1] → [1,2] → [1,2,3] saved → UNDO → [1]. Skipping UNDO loses most answers.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+<p-card header="7 · Subsets vs Permutations — LC 78 vs LC 46">
+      <ng-template #content>
+        <p>The two most common backtracking problems teach the contrast: <strong>LeetCode 78 (Subsets)</strong> and <strong>LeetCode 46 (Permutations)</strong>.</p>
+        <div class="two-col">
+          <ul class="points">
+            <li><strong>Subsets — decide include or skip</strong></li>
+            <li>Every current state can be an answer (<code>[]</code>, <code>[1]</code>, <code>[1,3]</code> …).</li>
+            <li>Number of subsets = <strong>2ⁿ</strong></li>
+          </ul>
+          <ul class="points">
+            <li><strong>Permutations — choose any unused</strong></li>
+            <li>You must arrange <strong>all</strong> elements; every answer has length n.</li>
+            <li>Number of permutations = <strong>n!</strong></li>
+          </ul>
+        </div>
+        <table class="compare-table">
+          <thead><tr><th></th><th>Subsets (LC 78)</th><th>Permutations (LC 46)</th></tr></thead>
+          <tbody>
+            <tr><td>Decision at each step</td><td>include or skip the element</td><td>pick any unused element</td></tr>
+            <tr><td>Valid answers for [1,2,3]</td><td><strong>8</strong> (2³)</td><td><strong>6</strong> (3!)</td></tr>
+            <tr><td>Allowed lengths</td><td>any length 0…3</td><td>only length 3</td></tr>
+            <tr><td>Examples</td><td><code>[]</code>, <code>[1]</code>, <code>[2,3]</code></td><td><code>[1,2,3]</code>, <code>[3,1,2]</code></td></tr>
+          </tbody>
+        </table>
+        <figure class="visual-figure">
+          <img src="/images/bt-subsets-vs-perms.svg" alt="Subsets tree vs permutations tree side by side" />
+          <figcaption><strong>Self-drawn diagram.</strong> Same input [1,2,3]: include/skip produces 8 leaves (2ⁿ); any-unused produces 6 leaves (n!).</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+
+    <p-card header="8 · LeetCode 46 — Permutations (C# solution, line by line)">
+      <ng-template #content>
+        <p><strong>Problem:</strong> given an array <code>nums</code> of distinct integers, return <strong>all possible permutations</strong> — every ordering of every element.</p>
+        <div class="code-block">
+          <h4>Full solution</h4>
+          <pre><code>public class Solution
+&#123;
+    private List&lt;IList&lt;int&gt;&gt; result = new();
+
+    public IList&lt;IList&lt;int&gt;&gt; Permute(int[] nums)
+    &#123;
+        Backtrack(nums, new List&lt;int&gt;(), new bool[nums.Length]);
+        return result;
+    &#125;
+
+    private void Backtrack(
+        int[] nums,
+        List&lt;int&gt; current,
+        bool[] used)
+    &#123;
+        if (current.Count == nums.Length)
+        &#123;
+            result.Add(new List&lt;int&gt;(current));
+            return;
+        &#125;
+
+        for (int i = 0; i &lt; nums.Length; i++)
+        &#123;
+            if (used[i])
+                continue;
+
+            // CHOOSE
+            used[i] = true;
+            current.Add(nums[i]);
+
+            // EXPLORE
+            Backtrack(nums, current, used);
+
+            // UNDO
+            current.RemoveAt(current.Count - 1);
+            used[i] = false;
+        &#125;
+    &#125;
+&#125;</code></pre>
+        </div>
+        <h3 class="subhead">Line-by-line explanation</h3>
+        <div class="code-block">
+          <h4>Storage &amp; entry point</h4>
+          <pre><code>private List&lt;IList&lt;int&gt;&gt; result = new();</code></pre>
+        </div>
+        <p>A class-level bag where every <strong>complete</strong> permutation is stored.</p>
+        <div class="code-block">
+          <h4>Kick off the search</h4>
+          <pre><code>Backtrack(nums, new List&lt;int&gt;(), new bool[nums.Length]);</code></pre>
+        </div>
+        <p>Starts with an <strong>empty</strong> <code>current</code> list and an all-<code>false</code> <code>used</code> array (nothing placed yet).</p>
+<div class="code-block">
+          <h4>Base case — a permutation is complete</h4>
+          <pre><code>if (current.Count == nums.Length)
+&#123;
+    result.Add(new List&lt;int&gt;(current));
+    return;
+&#125;</code></pre>
+        </div>
+        <p>
+          <code>current</code> has filled every position, so we save it. We store <code>new List&lt;int&gt;(current)</code> — a
+          <strong>copy</strong> — because UNDO mutates <code>current</code> later; without the copy every saved answer would become the same final list.
+        </p>
+        <div class="code-block">
+          <h4>The loop — try every candidate for this position</h4>
+          <pre><code>for (int i = 0; i &lt; nums.Length; i++)
+&#123;
+    if (used[i])
+        continue;</code></pre>
+        </div>
+        <p>Loop over every index, skipping elements already placed earlier in this path.</p>
+        <div class="code-block">
+          <h4>CHOOSE → EXPLORE → UNDO — the heart of the pattern</h4>
+          <pre><code>// CHOOSE
+used[i] = true;
+current.Add(nums[i]);
+
+// EXPLORE
+Backtrack(nums, current, used);
+
+// UNDO
+current.RemoveAt(current.Count - 1);
+used[i] = false;</code></pre>
+        </div>
+        <table class="compare-table">
+          <thead><tr><th>Step</th><th>Lines</th><th>What physically changes</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>CHOOSE</strong></td>
+              <td><code>used[i] = true;</code> then <code>current.Add(nums[i]);</code></td>
+              <td>Claim element i and append it to the partial permutation.</td>
+            </tr>
+            <tr>
+              <td><strong>EXPLORE</strong></td>
+              <td><code>Backtrack(nums, current, used);</code></td>
+              <td>Descend one level → current has one more element; fill the <strong>next</strong> position. When it returns, all deeper branches are done.</td>
+            </tr>
+            <tr>
+              <td><strong>UNDO</strong></td>
+              <td><code>current.RemoveAt(current.Count - 1);</code> then <code>used[i] = false;</code></td>
+              <td>Remove the last element and unclaim index i — restoring the exact state from before CHOOSE so the next i can be tried.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout-box">
+          <strong>Memorize these four lines in this order.</strong>&nbsp;Every permutation / combination / subsets DFS uses the same CHOOSE → EXPLORE → UNDO structure around the recursive call.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="9 · Recursion Tree for [1,2,3] — each level = one position">
+      <ng-template #content>
+        <div class="code-block">
+          <h4>Full tree</h4>
+          <pre><code>                    []
+             /       |       \
+            1        2        3
+          /   \     / \      / \
+        1,2  1,3  2,1 2,3  3,1 3,2
+         |    |     |   |    |   |
+       123  132   213 231  312 321</code></pre>
+        </div>
+        <ul class="points">
+          <li><strong>Level 0:</strong> no position filled yet → <code>[]</code>.</li>
+          <li><strong>Level 1:</strong> pick a value for position #1 → <code>[1]</code>, <code>[2]</code>, or <code>[3]</code>.</li>
+          <li><strong>Level 2:</strong> pick a value for position #2 among the remaining ones.</li>
+          <li><strong>Level 3 (leaves):</strong> position #3 gets the last unused value → save the complete permutation.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Depth = n = 3, branching 3 → 2 → 1</strong>&nbsp;→ leaves = 3 × 2 × 1 = 3! = 6. The indigo path in the diagram is exactly the code's depth-first order: [] → [1] → [1,2] → [1,2,3] (save) → UNDO → [1,3] → [1,3,2] (save).
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="10 · Complexity">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead><tr><th>Resource</th><th>Cost</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Number of permutations</td><td>n!</td><td>every ordering of all n elements</td></tr>
+            <tr><td>Work to copy each permutation</td><td>O(n)</td><td>each answer has n elements</td></tr>
+            <tr><td><strong>Time complexity</strong></td><td><strong>O(n × n!)</strong></td><td>n! permutations × O(n) work each</td></tr>
+            <tr><td>Recursion depth (call stack)</td><td>O(n)</td><td>one recursive frame per position</td></tr>
+            <tr><td>current list + used array</td><td>O(n)</td><td>temporary scratch space</td></tr>
+            <tr><td>Result storage</td><td>O(n × n!)</td><td>n! lists, each of length n</td></tr>
+          </tbody>
+        </table>
+        <ul class="points">
+          <li><strong>Time:</strong> n! leaves exist, and building/saving each leaf costs O(n) → total ≈ O(n × n!).</li>
+          <li><strong>Auxiliary space (excluding the answer):</strong> one current + one used, both length n → O(n).</li>
+          <li><strong>Output space:</strong> mandatory — the problem asks you to return all n! permutations → O(n × n!).</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Interview note:</strong>&nbsp;for n = 10 → 10! = 3,628,800 permutations. This pattern only fits small inputs (usually n ≤ 8–10).
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="11 · Important Mental Model — Interview Cheat Sheet">
+      <ng-template #content>
+        <div class="code-block">
+          <h4>Memorize this</h4>
+          <pre><code>Factorial:
+n! = n × (n-1)!
+0! = 1
+
+Permutation:
+nPr = n! / (n-r)!
+
+Combination:
+nCr = n! / (r!(n-r)!)
+
+Subsets:
+2^n          (include/exclude each element)
+
+Permutations:
+n!           (arrange all elements, any unused at each step)
+
+Backtracking:
+CHOOSE → EXPLORE → UNDO</code></pre>
+        </div>
+        <h3 class="subhead">How to think during an interview (not just formulas)</h3>
+        <ol class="steps">
+          <li>See "generate all orderings/arrangements"? → permutations → n!, backtracking with a <code>used[]</code> array.</li>
+          <li>See "generate all subsets/combinations"? → inclusion/exclusion → 2ⁿ or nCr, backtracking with a <code>start</code> index.</li>
+          <li>Every backtracking solution = <strong>choose → explore → undo</strong> inside a recursive for-loop, with a base case that saves the answer.</li>
+          <li>Order of results doesn't matter to LeetCode — produce every answer exactly once.</li>
+          <li>The whole trick is the <strong>UNDO step</strong>: shared state must return to exactly what it was before CHOOSE, or branches contaminate each other.</li>
+        </ol>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

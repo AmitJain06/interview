@@ -1,0 +1,202 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/dsa"><i class="pi pi-arrow-left"></i> All algorithms</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-arrows-v"></i></div>
+    <div>
+      <h1>Backtracking</h1>
+      <p>CHOOSE → EXPLORE → UNDO · generate all permutations, subsets, combinations · LeetCode 46 &amp; 78</p>
+    </div>
+    <p-tag class="header-tag" value="Medium" severity="warn" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="Overview — what is backtracking?">
+      <ng-template #content>
+        <p>
+          <strong>Backtracking</strong> = depth-first search over a <strong>decision tree</strong>, where every path is explored and then
+          systematically "undone" so the next branch starts from a clean state. It is the standard tool for
+          <strong>"generate all …"</strong> problems: permutations, subsets, combinations, N-Queens, Sudoku, word search.
+        </p>
+        <ul class="points">
+          <li><strong>State</strong> — the partial answer built so far (e.g. <code>current = [1,2]</code>).</li>
+          <li><strong>Decision at each node</strong> — pick the next candidate (e.g. the next unused element).</li>
+          <li><strong>Recursion</strong> — descend one level per decision, stop when the base case is reached.</li>
+          <li><strong>Undo</strong> — remove the last choice before trying the next candidate (the magic step).</li>
+        </ul>
+        <div class="callout-box">
+          <strong>One-line summary:</strong>&nbsp;go deep, save answers, walk back, try the sibling branches — until every branch has been explored.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="1 · When to use backtracking (recognition)">
+      <ng-template #content>
+        <p>The prompt uses <strong>"all" / "every" / "generate"</strong> together with arrangements or choices:</p>
+        <ol class="steps">
+          <li><strong>"Return all permutations"</strong> → n!, choose any <em>unused</em> element at each level.</li>
+          <li><strong>"Return all subsets / combinations"</strong> → 2ⁿ / nCr, include-or-skip each element.</li>
+          <li><strong>"Return all ways / all valid boards / all paths"</strong> → constraints checked at each node (N-Queens, Sudoku, word search).</li>
+          <li>As soon as a branch can never lead to a valid answer, <strong>prune</strong> it (cut it early) instead of exploring it.</li>
+        </ol>
+        <h3 class="subhead">Backtracking vs DP — quick contrast</h3>
+        <ul class="points">
+          <li><strong>DP</strong> answers <em>"what is the best / the count / the ways"</em> and reuses overlapping subproblems.</li>
+          <li><strong>Backtracking</strong> <em>"list every concrete solution"</em> — the tree usually has no repeated nodes (n! or 2ⁿ leaves).</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="2 · The three steps — CHOOSE → EXPLORE → UNDO">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead><tr><th>Step</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><strong>CHOOSE</strong></td><td>Pick the next candidate and add it to the current state.</td></tr>
+            <tr><td><strong>EXPLORE</strong></td><td>Recurse one level deeper with the updated state.</td></tr>
+            <tr><td><strong>UNDO</strong></td><td>Remove the candidate again so the next iteration starts clean.</td></tr>
+          </tbody>
+        </table>
+        <figure class="visual-figure">
+          <img src="/images/bt-backtrack-flow.svg" alt="CHOOSE EXPLORE UNDO cycle" />
+          <figcaption><strong>Self-drawn diagram.</strong> The loop 1 → 2 → 3 repeats for every candidate at each level of the tree.</figcaption>
+        </figure>
+        <div class="callout-box">
+          <strong>Interview line:</strong>&nbsp;"Every backtracking solution is a recursion inside a for-loop: add → recurse → remove."
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="3 · Example — permutations of [1,2,3]">
+      <ng-template #content>
+        <p>
+          Start with <code>current = []</code> and, at every level, choose <strong>any unused element</strong>.
+          A complete permutation appears when all 3 positions are filled — that is the base case.
+        </p>
+        <figure class="visual-figure">
+          <img src="/images/bt-permutations-tree.svg" alt="Recursion tree for permutations of [1,2,3]" />
+          <figcaption><strong>Self-drawn diagram.</strong> 13 nodes, 6 leaves. Indigo path = first depth-first journey; green leaves = the 6 saved answers.</figcaption>
+        </figure>
+        <ul class="points">
+          <li>Choices per level: <strong>3 → 2 → 1</strong> — that shrinking branch count is exactly how you count <strong>n! = 3! = 6</strong>.</li>
+          <li>Each LEVEL of the tree = one position of the permutation.</li>
+          <li>Leaves are the only nodes worth saving — a permutation must use <em>all</em> elements.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="4 · Why the UNDO step is non-negotiable">
+      <ng-template #content>
+        <ul class="points">
+          <li><code>current</code> and <code>used</code> are <strong>shared</strong> objects — every recursive branch mutates the same lists/arrays.</li>
+          <li>Without UNDO, the next for-iteration starts from a polluted state: <code>[1,2]</code> stays <code>[1,2,3]</code> instead of becoming <code>[1,3]</code>.</li>
+          <li>Without UNDO, <code>used</code> stays <code>true</code> forever → no element can ever be reused by a sibling branch.</li>
+          <li>Restoring the state = <em>"backtracking"</em> — the behaviour the whole technique is named after.</li>
+        </ul>
+        <figure class="visual-figure">
+          <img src="/images/bt-undo.svg" alt="Zoom into choose-explore-undo on one branch" />
+          <figcaption><strong>Self-drawn diagram.</strong> [1] → [1,2] → [1,2,3] saved → UNDO back to [1] → try [1,3]. Skipping UNDO loses most answers.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+
+    <p-card header="5 · Subsets vs Permutations — same input, different trees">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead><tr><th></th><th>Subsets (LC 78)</th><th>Permutations (LC 46)</th></tr></thead>
+          <tbody>
+            <tr><td>Decision each step</td><td>include or skip the element</td><td>pick any unused element</td></tr>
+            <tr><td>Valid answers for [1,2,3]</td><td><strong>8</strong> = 2ⁿ</td><td><strong>6</strong> = n!</td></tr>
+            <tr><td>Answer length</td><td>any (0…n)</td><td>only n (all elements)</td></tr>
+            <tr><td>Extra tool needed</td><td>a <code>start</code> index</td><td>a <code>used[]</code> array</td></tr>
+          </tbody>
+        </table>
+        <figure class="visual-figure">
+          <img src="/images/bt-subsets-vs-perms.svg" alt="Subsets tree versus permutations tree" />
+          <figcaption><strong>Self-drawn diagram.</strong> Include/skip grows a full binary tree (2ⁿ). Any-unused grows a factorial tree (n!).</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+<p-card header="6 · The universal template (C#)">
+      <ng-template #content>
+        <p>Every backtracking problem reduces to this shape. Change only the <em>base case</em> and the <em>choose/undo lines</em>.</p>
+        <div class="code-block">
+          <h4>Generic template</h4>
+          <pre><code>void Backtrack(...)
+&#123;
+    if (condition)              // BASE CASE: answer complete
+    &#123;
+        // save a COPY of the current state
+        return;
+    &#125;
+
+    for (candidate of choices)   // try every option
+    &#123;
+        // CHOOSE  — apply the candidate
+        // EXPLORE — recurse deeper
+        // UNDO    — revert the candidate
+    &#125;
+&#125;</code></pre>
+        </div>
+        <ul class="points">
+          <li><strong>Save a copy</strong>, never the shared <code>current</code> object (it mutates after the return).</li>
+          <li><strong>Sum of first-n recursion:</strong> the loop + recursion runs over the whole tree in DFS order.</li>
+          <li>For permutations add <code>used[]</code>; for subsets/combinations track a <code>start</code> index instead.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="7 · Complexity">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead><tr><th>Resource</th><th>Cost</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Number of permutations</td><td><strong>n!</strong></td><td>every ordering of all n elements</td></tr>
+            <tr><td>Work to copy each permutation</td><td>O(n)</td><td>each answer has n elements</td></tr>
+            <tr><td><strong>Time</strong></td><td><strong>O(n × n!)</strong></td><td>n! leaves × O(n) copying each</td></tr>
+            <tr><td>Recursion depth</td><td>O(n)</td><td>one frame per level</td></tr>
+            <tr><td>Auxiliary space</td><td>O(n)</td><td>one current + one used</td></tr>
+            <tr><td>Result storage</td><td>O(n × n!)</td><td>returning n! lists of length n</td></tr>
+          </tbody>
+        </table>
+        <div class="callout-box">
+          <strong>Interview note:</strong>&nbsp;n = 10 → 10! = 3,628,800 permutations. This pattern is only practical for small n (usually n ≤ 8–10).
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="8 · Terms to memorize">
+      <ng-template #content>
+        <ol class="steps">
+          <li><strong>Decision tree</strong> — nodes are partial answers, edges are choices, leaves are full answers.</li>
+          <li><strong>CHOOSE → EXPLORE → UNDO</strong> — the three-step cycle inside every for-loop + recursion.</li>
+          <li><strong>Base case</strong> — condition that saves the answer and returns (permutation is complete / sum reached).</li>
+          <li><strong>Pruning</strong> — skipping a branch early when it can never be valid (e.g. N-Queens attack check).</li>
+          <li><strong>used[] / start index</strong> — the two ways to keep answers distinct (permuations vs subsets/combinations).</li>
+          <li><strong>Shared state</strong> — one current object reused by all branches; correct only because of UNDO.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Summary:</strong>&nbsp;backtracking = recursion in a for-loop that tries every choice, goes deep, saves completed states, and always undoes the last choice before trying the next.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="9 · Try it — full walkthroughs">
+      <ng-template #content>
+        <ul class="points">
+          <li>
+            <strong>LeetCode 46 – Permutations (C#, line-by-line):</strong>
+            <a class="in-text-link" routerLink="/coding/permutations-backtracking">open the coding module →</a>
+          </li>
+          <li>
+            <strong>LeetCode 46 – Permutations:</strong>
+            <a class="in-text-link" href="https://leetcode.com/problems/permutations/" target="_blank" rel="noopener noreferrer">leetcode.com/problems/permutations ↗</a>
+          </li>
+          <li>
+            <strong>LeetCode 78 – Subsets:</strong>
+            <a class="in-text-link" href="https://leetcode.com/problems/subsets/" target="_blank" rel="noopener noreferrer">leetcode.com/problems/subsets ↗</a>
+          </li>
+        </ul>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

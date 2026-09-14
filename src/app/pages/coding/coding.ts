@@ -35,9 +35,29 @@ export interface Problem {
 export class Coding {
   private readonly router = inject(Router);
 
-  readonly problems: Problem[] = baseProblems.map((problem) =>
-    problem.number === 863 ? { ...problem, route: '/coding/leet-code-863' } : problem,
-  );
+  readonly problems: Problem[] = [
+    ...baseProblems.map((problem) =>
+      problem.number === 863 ? { ...problem, route: '/coding/leet-code-863' } : problem,
+    ),
+    {
+      number: 46,
+      title: 'Permutations',
+      difficulty: 'Medium',
+      severity: 'warn',
+      pattern: 'Backtracking',
+      leetcodeUrl: 'https://leetcode.com/problems/permutations/',
+      route: '/coding/permutations-backtracking',
+    },
+    {
+      number: 78,
+      title: 'Subsets',
+      difficulty: 'Medium',
+      severity: 'warn',
+      pattern: 'Backtracking',
+      leetcodeUrl: 'https://leetcode.com/problems/subsets/',
+      route: '/coding/permutations-backtracking',
+    },
+  ];
 
   private readonly sanitizer = inject(DomSanitizer);
 

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 330" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<defs>
+<marker id="f-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/></marker>
+</defs>
+<rect width="880" height="330" rx="14" fill="#fff" stroke="#e5e7eb"/>
+
+<text x="440" y="34" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Factorial — multiply a number by every whole number below it, down to 1</text>
+<text x="440" y="58" font-size="13" fill="#6b7280" text-anchor="middle">Each step removes one available item · n! = n × (n−1)!</text>
+
+<text x="24" y="92" font-size="14" font-weight="700" fill="#4f46e5">5! = 5 × 4 × 3 × 2 × 1</text>
+<g font-size="28" font-weight="700" text-anchor="middle">
+<rect x="40" y="104" width="76" height="62" rx="10" fill="#eef2ff" stroke="#6366f1"/><text x="78" y="145" fill="#3730a3">5</text>
+<text x="124" y="146" fill="#94a3b8">×</text>
+<rect x="142" y="104" width="76" height="62" rx="10" fill="#eef2ff" stroke="#6366f1"/><text x="180" y="145" fill="#3730a3">4</text>
+<text x="226" y="146" fill="#94a3b8">×</text>
+<rect x="244" y="104" width="76" height="62" rx="10" fill="#eef2ff" stroke="#6366f1"/><text x="282" y="145" fill="#3730a3">3</text>
+<text x="328" y="146" fill="#94a3b8">×</text>
+<rect x="346" y="104" width="76" height="62" rx="10" fill="#eef2ff" stroke="#6366f1"/><text x="384" y="145" fill="#3730a3">2</text>
+<text x="430" y="146" fill="#94a3b8">×</text>
+<rect x="448" y="104" width="76" height="62" rx="10" fill="#eef2ff" stroke="#6366f1"/><text x="486" y="145" fill="#3730a3">1</text>
+</g>
+<rect x="556" y="104" width="150" height="62" rx="10" fill="#dcfce7" stroke="#22c55e"/>
+<text x="631" y="135" font-size="13" font-weight="700" fill="#15803d" text-anchor="middle">= 120</text>
+<text x="631" y="154" font-size="11" fill="#15803d" text-anchor="middle">ways to line up 5 people</text>
+
+<text x="78" y="186" font-size="12" fill="#6b7280" text-anchor="middle">−1 at every step</text>
+<path d="M 78 198 V 214" stroke="#6366f1" stroke-width="2" marker-end="url(#f-arr)"/>
+
+<rect x="24" y="226" width="420" height="84" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="42" y="250" font-size="13" font-weight="700" fill="#b91c1c">Why 0! = 1 — the pattern never breaks</text>
+<text x="42" y="272" font-size="12" fill="#374151">1! = 1 × 0!   →   1 = 1 × 0!   →   0! = 1</text>
+<text x="42" y="294" font-size="12" fill="#374151">Exactly 1 way to arrange ZERO things: do nothing.</text>
+
+<rect x="462" y="226" width="394" height="84" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="480" y="250" font-size="13" font-weight="700" fill="#15803d">Quick examples</text>
+<text x="480" y="272" font-size="12" fill="#374151">3! = 3×2×1 = 6     4! = 4×3×2×1 = 24</text>
+<text x="480" y="294" font-size="12" fill="#374151">5! = 5×4×3×2×1 = 120</text>
+</svg>

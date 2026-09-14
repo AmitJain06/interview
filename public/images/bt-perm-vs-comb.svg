@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="340" rx="14" fill="#fff" stroke="#e5e7eb"/>
+
+<text x="440" y="34" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">One question decides it: does the ORDER of the items matter?</text>
+
+<rect x="24" y="56" width="416" height="200" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="82" font-size="14" font-weight="700" fill="#15803d">Permutation — order matters</text>
+<text x="44" y="104" font-size="12" fill="#374151">Same letters, different codes.</text>
+<g font-size="22" font-weight="700" text-anchor="middle">
+<rect x="44" y="116" width="72" height="44" rx="8" fill="#fff" stroke="#22c55e"/><text x="80" y="145" fill="#15803d">ABC</text>
+<text x="128" y="145" fill="#94a3b8">≠</text>
+<rect x="140" y="116" width="72" height="44" rx="8" fill="#fff" stroke="#22c55e"/><text x="176" y="145" fill="#15803d">BAC</text>
+<text x="224" y="145" fill="#94a3b8">≠</text>
+<rect x="236" y="116" width="72" height="44" rx="8" fill="#fff" stroke="#22c55e"/><text x="272" y="145" fill="#15803d">CAB</text>
+<text x="320" y="145" fill="#94a3b8">…</text>
+</g>
+<text x="44" y="190" font-size="12" font-weight="700" fill="#15803d">Real world: ATM PIN 1234 vs 4321 → different code</text>
+<text x="44" y="212" font-size="12" fill="#374151">Race results: 1st–2nd–3rd — swapping places changes everything.</text>
+<text x="44" y="240" font-size="15" font-weight="800" fill="#16a34a">nPr = n! / (n−r)!</text>
+
+<rect x="460" y="56" width="396" height="200" rx="12" fill="#fffbeb" stroke="#fde68a"/>
+<text x="480" y="82" font-size="14" font-weight="700" fill="#b45309">Combination — order does NOT matter</text>
+<text x="480" y="104" font-size="12" fill="#374151">Same team, written any way.</text>
+<g font-size="22" font-weight="700" text-anchor="middle">
+<rect x="480" y="116" width="72" height="44" rx="8" fill="#fff" stroke="#f59e0b"/><text x="516" y="145" fill="#b45309">ABC</text>
+<text x="564" y="145" fill="#94a3b8">=</text>
+<rect x="576" y="116" width="72" height="44" rx="8" fill="#fff" stroke="#f59e0b"/><text x="612" y="145" fill="#b45309">BAC</text>
+<text x="660" y="145" fill="#94a3b8">=</text>
+<rect x="672" y="116" width="72" height="44" rx="8" fill="#fff" stroke="#f59e0b"/><text x="708" y="145" fill="#b45309">CBA</text>
+<text x="756" y="145" fill="#94a3b8">…</text>
+</g>
+<text x="480" y="190" font-size="12" font-weight="700" fill="#b45309">Real world: pick 3 friends for a team → same team no matter the order</text>
+<text x="480" y="212" font-size="12" fill="#374151">Fruit salad: {apple, banana, cherry} = {banana, cherry, apple}.</text>
+<text x="480" y="240" font-size="15" font-weight="800" fill="#d97706">nCr = n! / (r! × (n−r)!)</text>
+
+<rect x="24" y="272" width="832" height="48" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="44" y="293" font-size="13" font-weight="700" fill="#3730a3">The ONLY difference is the r! in the denominator.</text>
+<text x="44" y="313" font-size="12" fill="#4f46e5">Combination divides out the r! orderings, so {A,B,C} is counted once (not 3! = 6 times).</text>
+</svg>
