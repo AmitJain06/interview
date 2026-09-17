@@ -1,0 +1,454 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-globe"></i></div>
+    <div>
+      <h1>Network Fundamentals</h1>
+      <p>Core networking concepts for System Design interviews — layered cake, key protocols, load balancing and failure handling.</p>
+    </div>
+    <p-tag class="header-tag" value="Core" severity="success" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="How to use this page (your interview cheat sheet)">
+      <ng-template #content>
+        <p>
+          Notes built from the video <em>Networking Essentials for System Design Interviews</em> (Hello Interview, Ex-Meta Senior
+          Manager — video file in <code>/public</code>), following my own study notes as the outline. The video has four parts:
+        </p>
+        <ol class="steps">
+          <li><strong>The basics</strong> — the OSI model: how networking works fundamentally as a layered cake.</li>
+          <li><strong>Each layer, at the protocol level</strong> — IP → TCP/UDP → HTTP → REST/GraphQL/gRPC → SSE → WebSockets → WebRTC, plus when to use which.</li>
+          <li><strong>Load balancing</strong> — where networking and scaling meet (client-side vs dedicated, Layer 4 vs Layer 7).</li>
+          <li><strong>Deep dives</strong> — regionalization, timeouts / backoff / retries, cascading failures and circuit breakers.</li>
+        </ol>
+        <div class="callout-box callout-box--gold">
+          <strong>The golden defaults (remember these):</strong>&nbsp;TCP over UDP · REST over HTTP as the default API · Layer 7 load
+          balancer as the default (Layer 4 for WebSockets / stateful connections) · timeouts + retries with <strong>exponential backoff
+          + jitter</strong> · minimize statefulness in your design.
+        </div>
+        <div class="callout-box">
+          <strong>Two facts that drive every networking decision:</strong>&nbsp;(1) establishing a connection has a cost — a TCP
+          connection needs a <strong>3-way handshake</strong> (SYN → SYN-ACK → ACK), so lots of connections = lots of latency; (2)
+          connections are <strong>stateful</strong> — a connection exists between "established" and "terminated", and that state is
+          not cheap to set up or keep alive. Manage it deliberately.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="The OSI model — networking as a layered cake">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/01_osl.png" alt="OSI model: 7 layers from Physical (1) to Application (7)" />
+          <figcaption><strong>All 7 layers</strong> — Physical, Data Link, Network, Transport, Session, Presentation, Application. For system design interviews only three layers matter: <strong>3 · Network</strong>, <strong>4 · Transport</strong> and <strong>7 · Application</strong> — everything below (wires, switches, sessions, codecs) is abstracted away.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Layers are abstractions</strong> — like calling <code>open()</code>/<code>write()</code> instead of moving voltages to disk. Each layer builds on the one below and stays oblivious to its details.</li>
+          <li><strong>They build on one another:</strong> HTTP (L7) depends on a TCP connection (L4) being established; TCP (L4) depends on IP (L3) to route packets. Neither knows how the other's internals work.</li>
+          <li><strong>Real example — an HTTP request:</strong> TCP 3-way handshake (SYN, SYN-ACK, ACK) → now a connection exists → client sends requests over that TCP stream → server responds. All the back-and-forth <em>before</em> your request even goes out is latency to account for in your design.</li>
+        </ul>
+        <div class="chip-row">
+          <span class="chip">L3 Network · IP</span>
+          <span class="chip">L4 Transport · TCP / UDP / QUIC</span>
+          <span class="chip">L7 Application · HTTP, WebSockets, gRPC</span>
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Layer 3 — Network layer: Internet Protocol (IP)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/02_network_layer_01.png" alt="Network layer: IPv4 vs IPv6 addresses and public vs private IPs" />
+          <figcaption><strong>IP gives nodes a name and routes data between them.</strong> IPv4 addresses are 4 bytes (dotted notation like 192.168.0.1); IPv6 addresses are 16 bytes arranged in 2-byte pairs. Public IPs are known to the world (routers route to them globally); private IPs exist inside your own networks only.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Jobs of the network layer:</strong> give usable <em>names</em> (addresses) to nodes, and <em>route</em> — transfer data from one address to another.</li>
+          <li><strong>IPv4 vs IPv6:</strong> we have run out of IPv4 addresses, not IPv6. Externally you typically use <strong>IPv4</strong> (more compatible); internally <strong>IPv6</strong> (more modern).</li>
+          <li><strong>Public IPs</strong> — assigned by a central body; routers around the world are aware of them. Example: Apple owns every address starting with <code>18</code> (first 8 bits), so any packet to <code>18.x.x.x</code> gets routed to Apple's routers.</li>
+          <li><strong>Private IPs</strong> — you can assign nodes any name you like (e.g., <code>192.168.16.x</code>, the special range for local networks); the only rules: you remember where they are and your routers know them. Purpose: guarantee no overlap with public addresses — you don't want a crate that sends "Google's" packets to your toaster.</li>
+        </ul>
+        <h3 class="subhead">Where you'll see each in an interview diagram</h3>
+        <table class="summary-table">
+          <tr><th>IP type</th><th>Used for</th><th>Why</th></tr>
+          <tr>
+            <td><strong>Public</strong></td>
+            <td>API Gateway, load balancers, externally facing components</td>
+            <td>People on the outside must be able to reach them.</td>
+          </tr>
+          <tr>
+            <td><strong>Private</strong></td>
+            <td>Microservices, all internal hosts</td>
+            <td>Only your network needs to find them. You allocate them and keep track of which host lives where.</td>
+          </tr>
+        </table>
+        <div class="callout-box">
+          <strong>Why it matters:</strong>&nbsp;to load balance across IP addresses you must know which hosts exist, where they are, and which ones to use — this bookkeeping is the seed of every service-discovery / load-balancing discussion later on this page.
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Layer 4 — Transport layer: TCP vs UDP">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/03_trasport_layer_01.png" alt="Transport layer: TCP guarantees vs UDP fire-and-forget" />
+          <figcaption><strong>IP alone is not enough.</strong> It can move a block of binary data to a host, but it is missing (1) <em>context</em> — which application a packet belongs to (solved with <strong>ports</strong>) and (2) <em>ordering + delivery</em> guarantees. The transport layer fills that gap with TCP, UDP and, increasingly, QUIC.</figcaption>
+        </figure>
+        <h3 class="subhead">TCP — the default: reliable delivery + ordering</h3>
+        <ul class="points">
+          <li>Every packet gets a <strong>sequence number</strong>; sender and receiver can detect packets that are lost or out of order.</li>
+          <li><strong>Lost packet:</strong> got packet 1 and 3 → assume 2 is missing → ask the sender to retransmit 2.</li>
+          <li><strong>Out of order:</strong> got 5 right after 3 → wait for 4 before emitting 5 to the application layer above.</li>
+          <li><strong>Guarantees are network-level only:</strong> TCP guarantees "the other host received the packet" — not "the data reached disk" on the other side. It is insight into the network, not absolute delivery (relevant when reasoning about CAP-theorem style failures).</li>
+          <li><strong>Engineering cost:</strong> guarantees cost throughput and latency — a lost packet must be retransmitted before the stream continues; across far-apart hosts a retransmission round trip is expensive.</li>
+        </ul>
+        <h3 class="subhead">UDP — the machine gun: spray and pray</h3>
+        <ul class="points">
+          <li>Fire-and-forget: send data, wish it a good voyage, hope it arrives. No ordering, no retransmission — great when <strong>latency is paramount</strong> and you <strong>can tolerate loss / out-of-order</strong>.</li>
+          <li><strong>Video conference frame dropped?</strong> Don't go back to the host for that frame — drop it from the view, stabilize the audio, keep going. You might still tell the sender "you're dropping the connection, lower the bitrate" — but you don't care about any individual packet.</li>
+          <li><strong>Classic UDP homes:</strong> multiplayer games, audio/video conferencing, live streaming — real-time, lossy applications.</li>
+          <li><strong>Gotcha:</strong> browsers do not support UDP natively — for any browser client you need a TCP-based version alongside the UDP flow (e.g., mobile app).</li>
+        </ul>
+        <h3 class="subhead">TCP vs UDP at a glance</h3>
+        <table class="summary-table">
+          <tr><th></th><th>TCP</th><th>UDP</th></tr>
+          <tr><td><strong>Connection</strong></td><td>Connection-oriented (3-way handshake)</td><td>Connectionless, fire-and-forget</td></tr>
+          <tr><td><strong>Delivery</strong></td><td>Guaranteed (with retransmission)</td><td>Best-effort — packets may drop</td></tr>
+          <tr><td><strong>Ordering</strong></td><td>Guaranteed via sequence numbers</td><td>None — out of order is possible</td></tr>
+          <tr><td><strong>Latency / overhead</strong></td><td>Higher (handshake, ACKs, retransmits)</td><td>Lower — just send</td></tr>
+          <tr><td><strong>Use when</strong></td><td>Default for almost everything (APIs, web, RPC)</td><td>Latency paramount + loss tolerated (A/V, games, live)</td></tr>
+          <tr><td><strong>Browser support</strong></td><td>Native</td><td>Not natively</td></tr>
+        </table>
+        <div class="callout-box">
+          <strong>Interview rule:</strong>&nbsp;your default is <strong>TCP</strong>. Move to <strong>UDP</strong> only when both hold — latency is critical <em>and</em> you can handle missing or out-of-order data. <strong>QUIC</strong> is a modern TCP replacement (higher performance, increasingly used for web) but looks like TCP in interviews — you can name-drop it, not design around it.
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Layer 7 — Application layer: HTTP">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/04_application_layer_01.png" alt="HTTP request and response breakdown with headers and status codes" />
+          <figcaption><strong>HTTP is simple text-formatted requests and responses.</strong> A request is a <strong>method / verb</strong> (GET, POST, PUT, PATCH…) + a <strong>path</strong> + an <strong>HTTP version</strong> + <strong>headers</strong> (a key-value dict — standard ones like <code>Accept-Encoding</code> or your own custom headers). The response carries a <strong>status code</strong>, headers and the body (HTML, JSON, XML…).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Most popular protocol</strong> — not just websites: even RPC systems run on HTTP. It is versatile and battle-tested over decades.</li>
+          <li><strong>The verb tells intent</strong> — am I reading, updating, creating data? The path names what; the headers describe how/what I can accept; the body carries the payload.</li>
+          <li><strong>Works on top of TCP</strong> — remember the layered cake: the HTTP layer depends on a TCP connection; TCP assumes IP can route packets — L7 builds on L4 builds on L3.</li>
+          <li><strong>Content negotiation</strong> — the client says <em>what it can receive</em> (compressed? which encodings?) and the server replies <em>what it actually gave you</em>. This is what makes HTTP forward/backwards compatible as new versions roll out.</li>
+          <li><strong>The name is misleading</strong> — "hypertext transport" sounds like web pages only, but HTTP is the base for APIs too: REST, SOAP, GraphQL — all ride on HTTP.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Example request you should be able to read aloud:</strong>&nbsp;<code>GET /users/1 HTTP/1.1</code> + headers → 200 OK with a JSON body, plus headers telling you the content type and encoding. That is the entire HTTP contract — method, path, version, headers, status, body.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="REST — Representational State Transfer">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/05_restful_01.png" alt="REST: HTTP verbs over resource URLs returning JSON" />
+          <figcaption><strong>REST = HTTP verbs + resources.</strong> Read user 1 → <code>GET /users/1</code> returns the user as JSON. Update → <code>PUT /users/1</code> with the replacement body (replace username + email). Create → <code>POST /users</code> (no ID yet, so you post to the resource root, e.g. <code>&#123; name: "Stefan", email: "stefan@hellointerview.com" &#125;</code>). Nesting works too — <code>GET /users/1/posts</code> returns that user's posts.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Think in resources + verbs, not function calls</strong> — <code>/update-user</code> is <em>not</em> RESTful (an action, not a resource). An update operation → <code>PUT</code> / <code>PATCH</code> on the thing being changed. Example: start a game → <code>PATCH /games/1234</code> changing status from <code>pending</code> → <code>running</code>.</li>
+          <li><strong>Returns JSON</strong> (typically) — data to render the resource the URL describes.</li>
+          <li><strong>The default API choice in interviews</strong> — wide generality, everyone knows it, reasonably performant for most applications.</li>
+          <li><strong>Trade-offs</strong> — there is overhead (URL + verb thinking) and, as we'll see next, REST can under-fetch or over-fetch when a single UI needs many resources.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+  <p-card header="GraphQL — let the client describe the exact data it needs">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/06_graphQL_01.png" alt="REST problem: a profile view needs five or more separate requests" />
+          <figcaption><strong>Problem with REST — under-fetching.</strong> A mobile view showing profile + status + a list of groups needs <strong>5+ separate requests</strong>. The screen only completes when all return, and every request pays the cost of a fresh HTTP call + serialization. Alternatively a kitchen-sink endpoint (<code>/everything-you-need</code>) over-fetches — one request, but it returns way too much data for long.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/01_networking/07_graphQL_02.png" alt="GraphQL query request and response shape: clients pick exact entities and fields" />
+          <figcaption><strong>GraphQL fixes both.</strong> The front end describes <em>exactly the shape</em> of the data it wants — which entities and which properties (<code>users</code> → <code>id</code>, <code>username</code>, <code>profile</code> → <code>avatar</code>, <code>fullName</code>, <code>groups</code> → <code>name</code>, <code>description</code>, <code>category</code>). The backend then figures out how to fetch it and returns exactly that — nothing more.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Key idea:</strong> instead of "resources I tell you about", the client declares <em>the view it wants to materialize</em>; the server decides where every field comes from — one round-trip, minimal payload.</li>
+          <li><strong>When it's genuinely valuable:</strong> (a) your front end changes constantly / you run experiments and requirements aren't firm; (b) multiple teams — a front-end team consuming several backends through one graph.</li>
+          <li><strong>Costs:</strong> backend must resolve arbitrary query shapes (N+1 problems, resolver planning), caching gets harder, and one "handy" client can abuse the query cost budget.</li>
+          <li><strong>In interviews:</strong> useful when the interviewer signals requirements will change quickly, or you need arbitrary query patterns — e.g., a newsfeed endpoint whose views aren't known up front. Otherwise REST is the default you should reach for.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="gRPC — high-performance binary RPC (Google RPC)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/02_grpc_01.png" alt="gRPC: protobuf schema compiled into stubs, compact binary over the wire" />
+          <figcaption><strong>Built on Protocol Buffers.</strong> You write a schema (looks like a C struct) for messages and services, it compiles into stubs in many languages (Java, C++, Node, Ruby…), and everything on the wire is <strong>compact binary</strong> instead of text JSON. The video's numbers: a JSON representation of a user is ~40 bytes; the same in protobuf is ~15 bytes — the savings compound at gigabytes of traffic.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Serialization is compact and efficient</strong> — no JSON key-value parsing per request; the compiler already knows the schema. gRPC services can be up to <strong>~10× faster / more throughput</strong> than equivalent REST JSON endpoints.</li>
+          <li><strong>Extra features built in:</strong> client-side load balancing, streaming, and rudimentary authentication.</li>
+          <li><strong>Two real problems:</strong> (1) browsers don't support gRPC natively, so external clients can't talk to it directly; (2) binaries over the wire are hard for dev teams to debug.</li>
+          <li><strong>Interview recommendation:</strong> gRPC is mostly an <em>internal</em> tool. Bring it up only when tightly optimizing performance — e.g., high-throughput interconnects between your own services — not for the client edge.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Best-of-both-worlds pattern:</strong>&nbsp;clients → HTTP/REST into your API server; your internal microservices ↔ microservices talk <strong>gRPC</strong> (or internal REST). External surface stays debuggable and browser-safe; internal connections stay fast.
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Choosing your protocol — REST vs plain HTTP vs gRPC">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/08_where_grpc_rest_http_01.png" alt="Where each protocol fits: REST to the client for data, HTTP for HTML, gRPC between microservices" />
+          <figcaption><strong>Right tool, right connection.</strong> Client ↔ server <em>for structured data</em> → <strong>REST</strong>. Client ↔ server <em>for HTML / static pages</em> → plain <strong>HTTP</strong>. Internal microservice ↔ microservice (high-performance, controlled hosts) → <strong>gRPC</strong>. Most designs are a hybrid like this.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>HTTP:</strong> serves web pages and static content — the browser's native language.</li>
+          <li><strong>REST:</strong> the JSON API every external client and mobile app understands — your default API gateway contract.</li>
+          <li><strong>gRPC:</strong> where you own both ends and need speed (binary, streaming, client-side LB) — internal service-to-service calls.</li>
+          <li><strong>GraphQL:</strong> when clients (or teams) need flexible, arbitrary data shapes over one endpoint instead of fixed resources.</li>
+          <li><strong>In an interview diagram:</strong> say "clients hit an API gateway over REST; gateway fans out to microservices, and I'd use gRPC internally for the hottest path." Interviewers love that precision.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="SSE — Server-Sent Events (server pushes to client)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/09_SSE_01.png" alt="SSE: one long-lived HTTP response streaming events; polling vs SSE comparison" />
+          <figcaption><strong>Server → client, one direction, streaming.</strong> Why not just poll? Polling delays your data by up to the polling interval <em>and</em> pays the overhead of opening a TCP connection + request/response every single time. SSE reuses the already-open connection: the server keeps the HTTP response open and streams newline-delimited events as they happen.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>It's still HTTP</strong> — an HTTP response with headers like <code>Transfer-Encoding: chunked</code>; events separated by newlines. All existing proxies/gateways forward the stream, so you need <strong>no new infrastructure</strong>.</li>
+          <li><strong>Different latency profile than a normal response:</strong> in a typical API you can't process the response until the whole body arrives; with SSE the first event arrives the moment the server writes it (chunked encoding), so a list of events spread over 10 seconds is processed <em>as it streams</em>.</li>
+          <li><strong>Severed frequently:</strong> routers/proxies expect HTTP requests to finish in ~30–60 s and cut long connections. Clients such as <code>EventSource</code> auto-reconnect and can pass the <strong>ID of the last event received</strong> so nothing is missed between disconnect and reconnect — clunky, but it works.</li>
+          <li><strong>Where it shines:</strong> short-lived UI updates (purchase status over ~15 s), notifications, live stock tickers, and — very modern — <strong>AI responses streaming tokens</strong> to the user as tokens are generated.</li>
+          <li><strong>Rule of thumb:</strong> unidirectional push, moderate frequency → consider SSE before launching into heavy WebSocket infra.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+  <p-card header="WebSocket — bidirectional, full-duplex, but stateful">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/10_web-socket_01.png" alt="WebSocket: a persistent bidirectional connection between client and server" />
+          <figcaption><strong>WebSocket = TCP's guarantees made available to browsers.</strong> Both sides push at any time over one persistent connection; messages arrive in order and reliably. Compare with SSE: SSE is unidirectional (server → client); WebSocket is bidirectional (client ⇄ server).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Design its API in messages, not request/response</strong> — "receive ticker update" / "send subscribe", "send unsubscribe". You can still get a "subscription accepted" ack, but don't design a function-call style — that's what HTTP is for.</li>
+          <li><strong>What "stateful" means here:</strong> a WebSocket connects <em>one client to one specific server</em> for the whole session. If a user stays connected for an hour, that server keeps that connection (socket, buffers, memory) alive for the whole hour. Rolling deployments kill sockets → users reconnect; a failed node drops all its connections; 1000s of users = 1000s of open connections = serious infrastructure.</li>
+          <li><strong>Caveat — don't overuse:</strong> for a narrow feature ("show me a live bid on this page") prefer polling or SSE. WebSockets are powerful but demand infra; reserve them for genuinely high-frequency bidirectional needs: chat, realtime games, live dashboards, collaborative editing.</li>
+          <li><strong>Interview pattern — push state to the edge:</strong> put a <strong>websocket gateway / notification service on the periphery</strong>; all users connect to it; internal (stateless) services call into it via RPC and it relays messages down the sockets. Your internal design stays stateless; only the edge holds connections.</li>
+          <li><strong>In interviews this also decides your load balancer:</strong> long-lived connections want <strong>Layer 4</strong> load balancing (see below), not Layer 7.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Chat vs WebRTC (common confusion):</strong>&nbsp;text chat is almost always <strong>WebSocket</strong> — messages must be ordered, reliably delivered and persisted server-side. <strong>WebRTC is for audio/video</strong>, where a dropped frame matters less than latency.
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="WebRTC — peer-to-peer audio/video over UDP">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/11_web-rtc_01.png" alt="WebRTC setup: signaling server, STUN hole punching, TURN relay fallback" />
+          <figcaption><strong>The unique one: it runs over UDP and connects clients directly to each other.</strong> Clients first meet on a lightweight <strong>signaling server</strong> (central, tiny — it only exchanges connection metadata, not media). Then they learn routable addresses via a <strong>STUN server</strong> (NAT hole punching) and finally stream audio/video peer-to-peer over UDP. If hole punching fails, a <strong>TURN server</strong> relays packets between them — the least efficient fallback.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why the dance:</strong> most clients won't accept inbound connections (security — you don't want random internet hosts connecting to your laptop). Signaling + STUN create a way for two firewalled/NAT'd clients to open a real peer-to-peer channel.</li>
+          <li><strong>Why UDP:</strong> real-time media prefers latency over reliability — a dropped frame is skipped gracefully, while TCP head-of-line blocking would stall the call. This is the same "UDP for realtime/lossy" rule from the transport section.</li>
+          <li><strong>Roles:</strong> <strong>signaling server</strong> — coordinates who connects to whom; <strong>STUN</strong> — "give me a usable address + punch the NAT"; <strong>TURN</strong> — relay when P2P can't be established (last resort).</li>
+          <li><strong>Use it for:</strong> video/audio calling (Google Meet / Zoom style) — this is how they work; and collaborative editors / whiteboards, where peers exchange document updates and converge with <strong>CRDTs</strong> (conflict-free replicated data types).</li>
+          <li><strong>Interview rule:</strong> avoid WebRTC unless the feature is literally audio/video calling (or a P2P collaborative editor). For plain chat you stay on WebSockets; for 95%+ of interview problems WebRTC is unnecessary.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Application-layer cheat sheet">
+      <ng-template #content>
+        <table class="summary-table">
+          <tr><th>Protocol</th><th>Transport</th><th>Direction</th><th>Pick it when</th></tr>
+          <tr><td><strong>HTTP</strong></td><td>TCP</td><td>Request → response</td><td>Everything web; base for all the APIs below.</td></tr>
+          <tr><td><strong>REST</strong></td><td>TCP (HTTP)</td><td>Request → response</td><td>Default API for external clients — verbs + resources + JSON.</td></tr>
+          <tr><td><strong>GraphQL</strong></td><td>TCP (HTTP)</td><td>Request → response</td><td>Flexible/arbitrary client data shapes, changing front ends.</td></tr>
+          <tr><td><strong>gRPC</strong></td><td>TCP (HTTP/2)</td><td>Request → response / streaming</td><td>High-performance internal service-to-service; binary + streaming + client-side LB.</td></tr>
+          <tr><td><strong>SSE</strong></td><td>TCP (HTTP)</td><td>Server → client (one-way)</td><td>Push notifications / streaming tokens; simplest realtime.</td></tr>
+          <tr><td><strong>WebSocket</strong></td><td>TCP</td><td>Bidirectional</td><td>High-frequency two-way (chat, live games) — pay for infra + state.</td></tr>
+          <tr><td><strong>WebRTC</strong></td><td>UDP</td><td>Peer ↔ peer</td><td>Audio/video calling, P2P collaborative editing.</td></tr>
+        </table>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Scaling &amp; the load balancing problem">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/12_laod_balancing_01.png" alt="Load balancer spreading client requests across multiple servers for scale and availability" />
+          <figcaption><strong>Horizontal scaling creates the routing problem.</strong> With one host, every client connects directly. Add more servers and something must decide <em>which server handles a request</em> — a load balancer. It does two jobs: <strong>(1) spreads load</strong> so the fleet handles way more traffic than one box, and <strong>(2) high availability</strong> — if server 1 dies, traffic flows to servers 2 and 3.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Vertical scaling</strong> — bigger hosts (more memory/CPU). Modern hardware goes far (servers with terabytes of RAM exist), so start here — it's simpler and often enough.</li>
+          <li><strong>Horizontal scaling</strong> — duplicate servers + balance requests and data between them. This is where the interview usually lands, and it forces you to solve load balancing.</li>
+          <li><strong>Two ways to load balance:</strong> (a) <em>client-side</em> — the client knows all servers and picks one; (b) <em>dedicated appliance</em> — a device sits between clients and servers. Both are legitimate; the choice depends on who your clients are.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Client-side load balancing (registry, Redis, DNS)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/12_client-side_laod_balancing_01.png" alt="Client-side load balancing: the client queries a registry and connects straight to a chosen server" />
+          <figcaption><strong>No middleman.</strong> The client is aware of all candidate servers — it queries a <strong>registry</strong> (e.g., DNS) or asks a known server for its peers (that's how a <strong>Redis cluster</strong> client discovers master nodes, and how gRPC does client-side load balancing natively). Then it connects directly to the server it picks.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why it's attractive:</strong> no extra hop — the request goes straight to the server that handles it, so you save the latency a dedicated LB adds.</li>
+          <li><strong>The price:</strong> clients must learn about servers, so they tolerate <strong>update delays</strong> (a client won't instantly know a new/removed server), and you can't run sophisticated strategies (clients can't know server health/state).</li>
+          <li><strong>DNS as client-side LB:</strong> resolving <code>hellointerview.com</code> returns a <em>shuffled list</em> of IPs; clients hit the first, fall back to the second, and so on — aggregate DNS traffic balances itself. But DNS is heavily cached: an IP-list change can take <strong>5 minutes to a day</strong> to propagate — too slow for rapid scaling events or failovers.</li>
+          <li><strong>Redis cluster:</strong> the client asks any known node for every master's address and then talks to the right shard directly — same pattern, no load balancer in the path.</li>
+          <li><strong>Use when:</strong> you have <strong>few clients</strong> (classic internal microservices — great fit) or <strong>many clients that tolerate update delays</strong>. gRPC supports it out of the box — another reason gRPC shines internally.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Dedicated load balancer — health checks &amp; routing algorithms">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/14_dedicated_laod_balancing_03.png" alt="Dedicated load balancer with health checks deciding which servers receive traffic" />
+          <figcaption><strong>An appliance between clients and servers.</strong> Hardware (F5 — scales to hundreds of millions of TPS), software (HAProxy / Apache — ~1M TPS), or cloud (AWS ELB / ALB / NLB). A server announces itself on startup; the LB runs <strong>health checks</strong> (from shallow "can I open a TCP connection?" to deep "does this HTTP response return 2xx?") and only routes to servers that pass enough checks in a row — then pulls them off when they stop responding.</figcaption>
+        </figure>
+        <h3 class="subhead">Which server gets the next request?</h3>
+        <table class="summary-table">
+          <tr><th>Algorithm</th><th>How it works</th><th>Good for</th></tr>
+          <tr>
+            <td><strong>Round robin</strong></td>
+            <td>Servers take turns; or random assignment</td>
+            <td>Stateless, roughly equal request-cost services — with random request durations, load stays approximately even with near-zero LB work.</td>
+          </tr>
+          <tr>
+            <td><strong>Least connections</strong></td>
+            <td>Route to the server with the fewest open connections</td>
+            <td>A new server scaling up (gets traffic until it matches the fleet), and <strong>long-lived/stateful connections</strong> (WebSockets can last an hour — some requests take minutes, others hours, so counts matter more than counts-per-second).</td>
+          </tr>
+        </table>
+        <ul class="points">
+          <li><strong>Shallow vs deep health checks are configurable</strong> — TCP connect (shallow) vs inspecting the HTTP status code in a real response (deep).</li>
+          <li><strong>Client-side vs dedicated — the deciding question:</strong> a <em>dedicated LB</em> when you have many external clients that must learn about server changes quickly (only the LB needs updates); <em>client-side</em> when clients are few (internal) or can tolerate slow updates (DNS-like).</li>
+          <li><strong>When to round-robin vs least-connections in interviews:</strong> stateless REST API → round-robin/random; WebSocket / long polling / stateful sessions → least connections.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Layer 4 vs Layer 7 load balancers">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/15_layer_4_vs_7_dedicated_laod_balancing_04.png" alt="Layer 4 vs Layer 7 load balancer: TCP passthrough vs per-request HTTP routing" />
+          <figcaption><strong>Layer 4 (transport level):</strong> for every inbound TCP connection it opens a parallel TCP connection to a server and passes bytes through — the client effectively has a direct connection to the server; the LB barely inspects anything. <strong>Layer 7 (HTTP level):</strong> it terminates requests, reads the full HTTP request, and picks an origin per <em>request</em> — so many client requests on one TCP connection can be fanned out to many servers.</figcaption>
+        </figure>
+        <table class="summary-table">
+          <tr><th></th><th>L4 load balancer (e.g., AWS NLB)</th><th>L7 load balancer (e.g., AWS ALB)</th></tr>
+          <tr><td><strong>Operates at</strong></td><td>TCP level — forwards connections</td><td>HTTP level — parses requests</td></tr>
+          <tr><td><strong>Performance</strong></td><td>Very high — no packet content inspection</td><td>More expensive — must handle full HTTP requests (headers/body)</td></tr>
+          <tr><td><strong>Routing</strong></td><td>Per connection</td><td>Per request (can fan out one TCP connection's requests to many servers)</td></tr>
+          <tr><td><strong>Extra features</strong></td><td>Fewer (no HTTP awareness)</td><td>Routing rules, path/header-based routing, HTTPS termination, etc.</td></tr>
+          <tr><td><strong>Best for</strong></td><td>WebSockets / any long-lived, stateful, connection-oriented protocol</td><td>Stateless HTTP APIs — the default</td></tr>
+        </table>
+        <div class="callout-box">
+          <strong>Interview default:</strong>&nbsp;start with a <strong>Layer 7</strong> load balancer (it's the default because it routes and terminates HTTPS for you). The exception is WebSockets / stateful connections — those want a <strong>Layer 4</strong> load balancer that moves whole connections instead of individual requests.
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Deep dive — Regionalization: latency &amp; where data lives">
+      <ng-template #content>
+        <p><strong>The problem:</strong> a US-based server serving a client from India pays ~20–80&nbsp;ms of round-trip latency per request (the video's example: London ↔ New York is ~80&nbsp;ms minimum, because the speed of light in fiber is finite). Lots of requests back and forth across an ocean = slow app, no matter how fast the code is.</p>
+        <h3 class="subhead">1 · Split the problem by region — partition your data</h3>
+        <ul class="points">
+          <li><strong>Uber-style partition:</strong> a rider only requests drivers in the city they're in today. So the whole system can be replicated per region/city — each region is small, self-contained, and gives its users near-instant responses.</li>
+          <li>In reality you run data centers in <strong>regions</strong> that cluster nearby cities (East Coast, West Coast, EU, APAC…), not one server per city.</li>
+          <li>This only works when access is naturally regional. If a global product's users in Japan read posts written in the UK and commented on in the US, you can't neatly shard by location.</li>
+        </ul>
+        <h3 class="subhead">2 · Collocate data and processing</h3>
+        <div class="callout-box">
+          <strong>The classic mistake:</strong>&nbsp;put a web server in London (to be "close to the user") while the database stays in New York. Every request then does many short DB round-trips across the Atlantic before the response is built — the web-to-DB hop usually dwarfs the user-to-web hop. Keep your data and processing in the same region.
+        </div>
+        <h3 class="subhead">3 · Global data, three tools</h3>
+        <ul class="points">
+          <li><strong>Local / partitioned data</strong> — keep data in the region where it's most used (UK users access US data less often anyway, e.g., due to time zones).</li>
+          <li><strong>Replication</strong> — write to your local region, then replicate asynchronously to others for fast <em>reads</em>. Cost: a lag window — a US post appears in Europe moments later. Fine for many products.</li>
+          <li><strong>CDN (Content Delivery Network)</strong> — edge servers in hundreds of cities act like a cache: a recently requested front page is served instantly from the nearest edge point, saving the trip to your origin. Cache misses fall through to the <strong>origin server</strong> (the CDN becomes a proxy). A CDN also reduces backend load by absorbing repeated requests.</li>
+        </ul>
+        <h3 class="subhead">4 · Sharding by location — only when the boundary is fixed</h3>
+        <ul class="points">
+          <li>Sharding data across shards per region works <em>if every query stays inside one shard</em> (location-bound access, e.g., "orders in my city").</li>
+          <li>It breaks when the region boundary isn't fixed or queries <strong>fan out</strong> across many shards — every cross-shard read adds latency and becomes a scatter-gather problem.</li>
+          <li>Practical recipe: <strong>cache the cacheable (CDN), replicate what must be global, and only shard by location for truly regional access patterns.</strong></li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+  <p-card header="Deep dive — Timeouts, retries, exponential backoff &amp; jitter">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/01_networking/16_network_issue_timeout_backoff_reties_01.png" alt="Network failure handling: fixed 100ms retries bunch up, exponential backoff spreads, jitter randomizes" />
+          <figcaption><strong>Network failures come in three flavors:</strong> the request never reaches the server, the request is slow, or the response never comes back. Without a <strong>timeout</strong>, your client can wait forever. With a timeout, you need a sane <strong>retry</strong> strategy — and naive fixed-interval retries (left) make things worse. <strong>Exponential backoff</strong> grows the gap between retries; <strong>jitter</strong> randomizes it so synchronized clients un-stick themselves.</figcaption>
+        </figure>
+        <h3 class="subhead">1 · Timeout — first, bound the wait</h3>
+        <ul class="points">
+          <li>The worst case is a request that got acknowledged and then never answered — the client hangs forever. Always set a sensible timeout.</li>
+          <li>Too short is just as bad: a server that takes 4&nbsp;s will fail against a 3&nbsp;s timeout no matter how many times you retry. Timeouts must be <em>long enough for your server, short enough to bound the wait</em>.</li>
+        </ul>
+        <h3 class="subhead">2 · Retry — but naive retries cause a herd</h3>
+        <ul class="points">
+          <li>Simple idea: a request fails → try again 5&nbsp;s later. Repeating every fixed interval is naive because (a) the server probably hasn't changed, and (b) it <strong>synchronizes</strong>: if three clients all retry at the same moment against a server that handles 2 req/s, all three fail together — and then all three retry together <em>forever</em>.</li>
+        </ul>
+        <h3 class="subhead">3 · Exponential backoff + jitter = the gold standard</h3>
+        <ul class="points">
+          <li><strong>Exponential backoff:</strong> double the wait each failure — 2&nbsp;s → 4&nbsp;s → 8&nbsp;s. The first retry stays fast (transient blips like a solar flare hitting a disk), but repeated failures imply something substantial is wrong, and the server gets <em>half the load each round</em>.</li>
+          <li><strong>Jitter (randomness):</strong> even with backoff, synchronized clients still hit in lockstep. Randomize the delay — one retries at 2.5&nbsp;s, another at 1.9&nbsp;s, a third waits longer — so retries decouple and spread across the timeline.</li>
+          <li><strong>Say it verbatim in interviews:</strong> "timeouts and retries with <strong>exponential backoff and jitter</strong>" — that's the gold standard for connections between servers.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Deep dive — Cascading failures &amp; circuit breakers">
+      <ng-template #content>
+        <h3 class="subhead">The failure cascade</h3>
+        <ol class="steps">
+          <li><strong>Start healthy:</strong> Server A → Server B → Database. All fast.</li>
+          <li><strong>A trigger:</strong> an operator kicks off a DB snapshot for a backup → the database runs at ~50% efficiency and starts timing out B's queries.</li>
+          <li><strong>B retries politely:</strong> B has timeouts (good practice!) and retries its failing DB queries (also good practice!) — but those retries <em>fail too, so B starts failing its own callers.</em></li>
+          <li><strong>A punishes B:</strong> A times out requests to B and retries them. Now B is overwhelmed by A's retries while it's already failing. B goes down.</li>
+          <li><strong>Restart B:</strong> B comes back — and instantly drowns again — because the DB is still slow <em>and A is still hammering it.</em> No party knows to stop; no one recovers.</li>
+        </ol>
+        <h3 class="subhead">The fix — a circuit breaker between A and B</h3>
+        <ul class="points">
+          <li><strong>Circuit breaker:</strong> like a house breaker that trips at too much current — software trips when failures exceed a threshold → the circuit "opens", and A <em>fails fast</em> (returns an error immediately, no traffic to B).</li>
+          <li>B finally gets a break from traffic, which gives the <em>database a break</em> — enough silence for someone to notice the snapshot and stop it, fix the DB, let it recover.</li>
+          <li><strong>Self-healing:</strong> the breaker periodically resets automatically / lets a little test traffic through; once B responds in time again, the breaker closes and normal traffic resumes.</li>
+          <li><strong>Operational bonus:</strong> alarm on tripped breakers so humans learn "something is egregiously wrong" instead of discovering B is down at 3&nbsp;a.m. Failing fast and loud is <em>safer than failing slowly.</em></li>
+        </ul>
+        <div class="callout-box">
+          <strong>Interview gold:</strong>&nbsp;name this pattern by name — <strong>circuit breakers turn a silent death spiral into a controlled, visible, recoverable outage.</strong> (Bonus points for senior+ questions: also mention timeouts, retries with backoff + jitter, bulkheads and graceful degradation.)
+        </div>
+      </ng-template>
+    </p-card>
+
+  <p-card header="60-second recap (say this to close)">
+      <ng-template #content>
+        <ol class="steps">
+          <li><strong>OSI = a layered cake.</strong> Only layers 3 (Network/IP), 4 (Transport/TCP-UDP) and 7 (Application/HTTP) matter; layers build on each other — and connection setup costs latency (3-way handshake) plus state.</li>
+          <li><strong>L3 — IP:</strong> IPv4 (4 bytes, we ran out) vs IPv6 (16 bytes). Public IPs for the internet-facing edge (API gateway, load balancers); private IPs for internal microservices.</li>
+          <li><strong>L4 — Transport:</strong> TCP = default (reliable, ordered, but costs throughput/latency); UDP = when latency is paramount and loss is tolerable (A/V, games); QUIC = modern TCP lookalike.</li>
+          <li><strong>L7 — Application protocols:</strong> HTTP (base), REST (default API — verbs + resources), GraphQL (flexible data shapes), gRPC (fast binary, internal only), SSE (server→client push, one-way), WebSocket (bidirectional push, stateful), WebRTC (P2P audio/video over UDP).</li>
+          <li><strong>Load balancing:</strong> horizontal scaling creates it. Client-side (Redis, DNS — few clients or tolerant of slow updates) vs dedicated (health checks + round-robin / least-connections). Default LB: Layer 7; Layer 4 for WebSockets/stateful.</li>
+          <li><strong>Regionalization:</strong> partition data by region when access is regional (Uber), keep data+processing collocated, replicate what's global, CDN-cache the cacheable; shard by location only when queries stay regional.</li>
+          <li><strong>Failures:</strong> always timeout → retry with <strong>exponential backoff + jitter</strong> (gold standard) → circuit breakers to stop cascading failures and self-heal.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Rapid-fire checklist:</strong>&nbsp;TCP not UDP · REST not GraphQL/gRPC by default · Layer 7 LB by default · timeouts + retries + backoff + jitter · collocate data &amp; processing · stateful → edge; say all five and you've covered the networking core of almost any system design interview.
+        </div>
+        <div class="callout-box callout-box--gold">
+          <strong>Source:</strong>&nbsp;Hello Interview — <em>Networking Essentials for System Design Interviews (Ex-Meta Senior Manager).</em> Video in <code>/public</code>; diagrams in <code>/public/01_networking/</code>.
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

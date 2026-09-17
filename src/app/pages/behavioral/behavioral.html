@@ -1,0 +1,47 @@
+@if (onIndexPage()) {
+  <div class="content-wrapper">
+    <header class="page-header">
+      <div class="page-icon"><i class="pi pi-comments"></i></div>
+      <div>
+        <h1>Behavioral</h1>
+        <p>Practice behavioral and situational questions and revisit model answers.</p>
+      </div>
+    </header>
+
+    @if (questions.length === 0) {
+      <div class="empty-state">
+        <p-card>
+          <ng-template #title>
+            <span class="empty-state-title">
+              <i class="pi pi-megaphone" aria-hidden="true"></i>
+              Questions coming soon
+            </span>
+          </ng-template>
+          <ng-template #content>
+            <p class="empty-state-text">
+              The behavioral question list is being curated and will appear here. Each question will
+              link to a dedicated page with a full model answer.
+            </p>
+          </ng-template>
+        </p-card>
+      </div>
+    } @else {
+      <div class="question-grid">
+        @for (question of questions; track question.route) {
+          <a class="question-card" [routerLink]="question.route">
+            <p-card [header]="question.title">
+              <ng-template #content>
+                <p>{{ question.description }}</p>
+              </ng-template>
+              <ng-template #footer>
+                <p-tag [value]="question.category" />
+              </ng-template>
+            </p-card>
+          </a>
+        }
+      </div>
+    }
+  </div>
+}
+
+<router-outlet />

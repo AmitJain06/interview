@@ -25,6 +25,14 @@ export class SystemDesign {
 
   readonly problems: Problem[] = [
     {
+      title: 'Network Fundamentals',
+      route: '/system-design/network-fundamentals',
+      description:
+        'Core networking concepts for interviews: OSI layers, IP/TCP/UDP, HTTP, REST, GraphQL, gRPC, SSE, WebSockets, load balancing, and failure handling.',
+      difficulty: 'Core',
+      severity: 'success',
+    },
+    {
       title: 'Top-K Elements',
       route: '/system-design/top-k',
       description: 'Continuously surface the K highest-ranked items from a large stream.',

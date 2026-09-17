@@ -47,6 +47,14 @@ export const routes: Routes = [
     title: 'Interview App | System Design',
     children: [
       {
+        path: 'network-fundamentals',
+        loadComponent: () =>
+          import('./pages/system-design/network-fundamentals/network-fundamentals').then(
+            (m) => m.NetworkFundamentals,
+          ),
+        title: 'Interview App | Network Fundamentals',
+      },
+      {
         path: 'top-k',
         loadComponent: () => import('./pages/system-design/top-k/top-k').then((m) => m.TopK),
         title: 'Interview App | Top-K',
@@ -86,6 +94,20 @@ export const routes: Routes = [
           import('./pages/dsa/backtracking/backtracking').then((m) => m.Backtracking),
         title: 'Interview App | Backtracking',
       },
+    ],
+  },
+  {
+    path: 'behavioral',
+    loadComponent: () => import('./pages/behavioral/behavioral').then((m) => m.Behavioral),
+    title: 'Interview App | Behavioral',
+    children: [
+      // Question-answer pages are registered here as questions are added to
+      // src/app/pages/behavioral/questions.data.ts, e.g.:
+      // {
+      //   path: 'tell-me-about-yourself',
+      //   loadComponent: () => import('./pages/behavioral/tell-me-about-yourself/tell-me-about-yourself').then((m) => m.TellMeAboutYourself),
+      //   title: 'Interview App | Tell Me About Yourself',
+      // },
     ],
   },
   {
