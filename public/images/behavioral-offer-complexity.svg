@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <rect width="900" height="480" rx="16" fill="#ffffff"/>
+  <rect width="900" height="480" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">The offer system — complexity comes from interactions, not from features</text>
+  <text x="450" y="54" text-anchor="middle" font-size="13" fill="#6b7280">An offer can mix ANY dimension with ANY rule, and offers can exclude or combine with each other</text>
+
+  <rect x="20" y="82" width="200" height="252" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="120" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#6366f1">WHAT AN OFFER IS BASED ON</text>
+  <g>
+    <rect x="26" y="118" width="188" height="32" rx="8" fill="#eef2ff" stroke="#6366f1"/><text x="120" y="139" text-anchor="middle" font-size="13" fill="#3730a3">Order value</text>
+    <rect x="26" y="158" width="188" height="32" rx="8" fill="#eef2ff" stroke="#6366f1"/><text x="120" y="179" text-anchor="middle" font-size="13" fill="#3730a3">Line items</text>
+    <rect x="26" y="198" width="188" height="32" rx="8" fill="#eef2ff" stroke="#6366f1"/><text x="120" y="219" text-anchor="middle" font-size="13" fill="#3730a3">Brand</text>
+    <rect x="26" y="238" width="188" height="32" rx="8" fill="#eef2ff" stroke="#6366f1"/><text x="120" y="259" text-anchor="middle" font-size="13" fill="#3730a3">Category</text>
+    <rect x="26" y="278" width="188" height="32" rx="8" fill="#eef2ff" stroke="#6366f1"/><text x="120" y="299" text-anchor="middle" font-size="13" fill="#3730a3">Individual item</text>
+  </g>
+
+  <rect x="320" y="82" width="260" height="252" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="450" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#f59e0b">RULES &amp; CUSTOMER CONTEXT</text>
+  <g>
+    <rect x="326" y="118" width="118" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="385" y="139" text-anchor="middle" font-size="12.5" fill="#92400e">Must-buy</text>
+    <rect x="458" y="118" width="118" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="517" y="139" text-anchor="middle" font-size="12.5" fill="#92400e">Customer activity</text>
+    <rect x="326" y="166" width="118" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="385" y="187" text-anchor="middle" font-size="12.5" fill="#92400e">Purchase history</text>
+    <rect x="458" y="166" width="118" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="517" y="187" text-anchor="middle" font-size="12.5" fill="#92400e">Instant discount</text>
+    <rect x="326" y="214" width="118" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="385" y="235" text-anchor="middle" font-size="12.5" fill="#92400e">Wallet points</text>
+    <rect x="458" y="214" width="118" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="517" y="235" text-anchor="middle" font-size="12.5" fill="#92400e">Free items</text>
+  </g>
+
+  <rect x="660" y="82" width="220" height="252" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="770" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#f97316">OFFER-TO-OFFER BEHAVIOUR</text>
+  <rect x="666" y="130" width="208" height="34" rx="8" fill="#ffedd5" stroke="#f97316"/><text x="770" y="151" text-anchor="middle" font-size="12.5" fill="#9a3412">Combinable together</text>
+  <rect x="666" y="196" width="208" height="34" rx="8" fill="#ffedd5" stroke="#f97316"/><text x="770" y="217" text-anchor="middle" font-size="12.5" fill="#9a3412">Mutually exclusive</text>
+
+  <text x="270" y="205" text-anchor="middle" font-size="30" font-weight="700" fill="#94a3b8">×</text>
+  <text x="625" y="205" text-anchor="middle" font-size="30" font-weight="700" fill="#94a3b8">×</text>
+
+  <rect x="8" y="352" width="884" height="106" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="24" y="376" fill="#111827" font-weight="700">Why it exploded: it is not 5 + 6 + 2 = 13 features — it is 5 × 6 = 30 base combos, and every offer pair adds more.</text>
+  <text x="24" y="398" fill="#6b7280">Each combination can also carry its own conditions (history, order context), so the valid space grows faster than the code can hide it.</text>
+  <text x="24" y="420" fill="#991b1b">My failure: I optimised for implementing each rule, not for the interaction matrix — that is what made the system hard to extend.</text>
+  <text x="24" y="442" fill="#065f46">Now: I list dimensions and interactions first, design the stages, then estimate — complexity is talked about before it is coded.</text>
+</svg>

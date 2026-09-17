@@ -101,7 +101,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/behavioral/behavioral').then((m) => m.Behavioral),
     title: 'Interview App | Behavioral',
     children: [
-      // Question-answer pages are registered here as questions are added to
+      {
+        path: 'biggest-failure',
+        loadComponent: () =>
+          import('./pages/behavioral/biggest-failure/biggest-failure').then((m) => m.BiggestFailure),
+        title: 'Interview App | Tell Me About Your Biggest Failure',
+      },
+      // Further question-answer pages are registered here as questions are added to
       // src/app/pages/behavioral/questions.data.ts, e.g.:
       // {
       //   path: 'tell-me-about-yourself',

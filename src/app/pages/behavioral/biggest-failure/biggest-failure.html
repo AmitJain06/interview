@@ -1,0 +1,251 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/behavioral"><i class="pi pi-arrow-left"></i> All behavioral questions</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-question-circle"></i></div>
+    <div>
+      <h1>Tell Me About Your Biggest Failure</h1>
+      <p>Frame the answer with STAR + a lesson — and a full model answer for a real engineering failure.</p>
+    </div>
+    <p-tag class="header-tag" value="Failure &amp; Learning" severity="warn" />
+  </header>
+
+  <div class="card-stack">
+    <!-- 1 · Quick guide -->
+    <p-card header="1 · Quick guide — memorize the 5-line story skeleton">
+      <ng-template #content>
+        <p>Do not memorize every sentence. Remember one skeleton and fill it with your own story:</p>
+        <ol class="steps">
+          <li><strong>Situation</strong> — redesigned a complex offer system → 1.5-month deadline.</li>
+          <li><strong>Complexity</strong> — order / line item / brand / category / item + customer history + wallet + discounts + free items + combinations / exclusions.</li>
+          <li><strong>Failure</strong> — underestimated the interaction complexity and committed to the architecture and timeline too early.</li>
+          <li><strong>Impact</strong> — application / evaluation logic became complicated and harder to extend and scale.</li>
+          <li><strong>Learning</strong> — for complex rule systems, understand the dimensions and interactions first; separate evaluation from application; validate with complex scenarios before committing.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>One-line answer:</strong>&nbsp;“I committed to a timeline before fully understanding how dozens of offer rules would interact — I take responsibility, and it changed how I estimate any rule-heavy system.”
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- 2 · Why the interviewer asks -->
+    <p-card header="2 · Why the interviewer asks this">
+      <ng-template #content>
+        <ol class="steps">
+          <li><strong>They want proof you have committed a mistake in the past</strong> — which means you are open to learning new things. Someone who claims “no mistakes” is usually not open to growing or changing.</li>
+          <li><strong>They check your self-awareness</strong> — if you at least know what the mistake was and remember it, they can trust you will not repeat it.</li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <!-- 3 · The 3 rules -->
+    <p-card header="3 · The 3 rules while answering">
+      <ng-template #content>
+        <ol class="steps">
+          <li>
+            <strong>Make it reasonable.</strong> It must be a mistake anyone could make — never a “stupid” mistake. Good examples: underestimating a scope/change, over-committing to a time period, or agreeing to implement a functionality you do not know yet.
+          </li>
+          <li>
+            <strong>Own what you did wrong.</strong> Say clearly “I did X wrong” and take responsibility. Never blame teammates, the PM, or the business.
+          </li>
+          <li>
+            <strong>Show the learning.</strong> State what you learned and — more importantly — what you do differently now, so you will not make the same mistake again.
+          </li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <!-- 4 · How to frame -->
+    <p-card header="4 · How to frame your answer">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/behavioral-star-frame.svg" alt="The S -> C -> F -> I -> L frame: Situation, Complexity, Failure, Impact, Learning with time budget" />
+          <figcaption><strong>The frame.</strong> Five boxes = your whole answer. Situation → Complexity → Failure → Impact → Learning. The lesson gets the most time.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Use “I” statements</strong> and own the mistake inside the first 20 seconds — hesitation reads as an excuse.</li>
+          <li><strong>Weight the ending:</strong> roughly 60–70% of the answer on ownership and the lesson, not on the problem details.</li>
+          <li><strong>Keep it to 60–90 seconds.</strong> Pause between boxes; do not rush.</li>
+          <li><strong>Bridge to the role:</strong> “I now do X, which is exactly how I would approach <em>this problem</em> here.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+<!-- 5 · Model answer -->
+    <p-card header="5 · Full model answer — “Tell me about your biggest failure”">
+      <ng-template #content>
+        <div class="answer-section">
+          <span class="answer-label situation">1 · SITUATION (15 s)</span>
+          <p>
+            One of my biggest failures as an engineer was during the redesign of an offer system. We had a
+            timeline of around one and a half months, and I initially underestimated the complexity of the
+            problem. I believed that if we designed the different offer types properly, we could implement
+            them within that timeline.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label complexity">2 · COMPLEXITY (20 s)</span>
+          <p>
+            The actual requirements were quite complex. An offer could be based on order value, line items,
+            brand, category, or individual items. There could also be conditions such as must-buy rules,
+            customer purchase history, customer activity, wallet points, instant discounts, or free items.
+            On top of that, some offers could be combined with others, while some were mutually exclusive.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label failure">3 · FAILURE — what I did wrong (15 s)</span>
+          <p>
+            My mistake was that I focused too much on implementing the individual offer rules and didn’t
+            spend enough time upfront understanding the interaction between all these rules. In particular,
+            I didn’t properly separate the different stages of the system — defining an offer, determining
+            whether a customer was eligible, evaluating competing offers, and finally applying the benefits
+            to an order.
+          </p>
+          <p>
+            I take responsibility for that. The requirements were complex, but I should have recognized that
+            complexity earlier instead of committing to the timeline before fully decomposing the problem.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label impact">4 · IMPACT (10 s)</span>
+          <p>
+            As we moved closer to launch, this became a problem. The application logic became increasingly
+            complicated because it had to consider customer history, order context, and interactions between
+            multiple offers. The system became harder to extend and scale than I had originally anticipated.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label learning">5 · LEARNING (30 s)</span>
+          <p>
+            The biggest lesson I learned was that in a rule-heavy system, complexity doesn’t come only from
+            the number of features. It comes from the interaction between different rules and different
+            dimensions of context.
+          </p>
+          <p>
+            Since then, when I work on a complex backend system, I first identify the dimensions of
+            variability and their interactions. I separate evaluation from execution, identify dependencies
+            and failure scenarios, and validate the design against a few complex real-world scenarios before
+            committing to the implementation timeline.
+          </p>
+          <p>
+            That experience changed the way I approach architecture and estimation. As an engineer becomes
+            more senior, it is not enough to ask, “Can I implement these requirements?” I also need to ask,
+            “Have I understood the complexity well enough to commit to this design and timeline?”
+          </p>
+        </div>
+
+        <div class="callout-box">
+          <strong>Adapt, don’t copy:</strong>&nbsp;replace the story details with one of your own failures, but keep the skeleton and the three rules — reasonable mistake, take responsibility, show the learning.
+        </div>
+      </ng-template>
+    </p-card>
+<!-- 6 · The failure explained in pictures -->
+    <p-card header="6 · Why this failure happened — explained in pictures">
+      <ng-template #content>
+        <p>
+          The system looked simple if you counted <strong>features</strong>. It was complex because of the
+          <strong>interactions</strong> between every dimension, rule, and offer pair:
+        </p>
+        <figure class="visual-figure">
+          <img src="/images/behavioral-offer-complexity.svg" alt="Offer complexity: any dimension can mix with any rule, and offers combine or exclude each other" />
+          <figcaption><strong>The interaction explosion.</strong> 5 dimensions × 6 rules × offer pairs — the need to handle all combinations is why the evaluator became one tangled block.</figcaption>
+        </figure>
+        <p>The fix I would apply now: separate the system into four clean stages so each one stays simple and testable:</p>
+        <figure class="visual-figure">
+          <img src="/images/behavioral-offer-stages.svg" alt="The four stages: define, check eligibility, evaluate, apply" />
+          <figcaption><strong>Define → Check eligibility → Evaluate → Apply.</strong> Mixing these four stages was my mistake; separating them is the lesson.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+
+    <!-- 7 · Dos and Don'ts -->
+    <p-card header="7 · Dos and Don’ts">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead>
+            <tr><th scope="col">✔ Do</th><th scope="col">✘ Don’t</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pick a real, work-related failure — moderate severity, believable.</td>
+              <td>Pick a fake, trivial, or “stupid” mistake — it kills credibility.</td>
+            </tr>
+            <tr>
+              <td>Take full responsibility: “I should have recognized…”, “I take responsibility…”.</td>
+              <td>Blame teammates, the PM, or the business for the outcome.</td>
+            </tr>
+            <tr>
+              <td>Explain the root cause — <em>why</em> you underestimated (e.g. counted features, not interactions).</td>
+              <td>Make the failure catastrophic (firing, big data loss) without a strong recovery framing.</td>
+            </tr>
+            <tr>
+              <td>Spend most of the answer on the lesson and the behaviour change.</td>
+              <td>Spend most of the answer on the problem — the lesson needs the airtime.</td>
+            </tr>
+            <tr>
+              <td>Quantify the impact: timeline, scale, cost, complexity growth.</td>
+              <td>Say “I have no big failure” or “I can’t think of one”.</td>
+            </tr>
+            <tr>
+              <td>Mention the process you now follow and tie it to this job.</td>
+              <td>End without the lesson — that turns the answer into a red flag.</td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </p-card>
+
+    <!-- 8 · What to tell / what not to tell -->
+    <p-card header="8 · What to tell vs what not to tell">
+      <ng-template #content>
+        <div class="two-col">
+          <div class="tell-box good">
+            <h4>► Say this</h4>
+            <ul>
+              <li>“I take responsibility for that.”</li>
+              <li>“I should have recognized the complexity earlier.”</li>
+              <li>“I committed to the timeline before fully decomposing the problem.”</li>
+              <li>“Since then, when I work on a complex system I…” (concrete new behaviour).</li>
+              <li>“I now ask: have I understood the complexity well enough to commit?”</li>
+            </ul>
+          </div>
+          <div class="tell-box bad">
+            <h4>► Avoid this</h4>
+            <ul>
+              <li>“The requirements kept changing.”</li>
+              <li>“The manager forced the deadline.”</li>
+              <li>“The team didn’t tell me earlier.”</li>
+              <li>“It was a stupid typo / I was careless” — unprofessional framing.</li>
+              <li>“I have never made a big mistake.”</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout-box">
+          <strong>Golden rule:</strong>&nbsp;whatever happened, the interviewer should hear <em>one</em> “I” taking ownership and <em>three</em> “now I…” sentences showing the change.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- 9 · Cheat sheet -->
+    <p-card header="9 · Cheat sheet — memorize this">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead>
+            <tr><th scope="col">Bite</th><th scope="col">Trigger words</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Frame</td><td>Situation → Complexity → Failure → Impact → Learning</td></tr>
+            <tr><td>3 rules</td><td>Reasonable mistake · take responsibility · show the learning</td></tr>
+            <tr><td>Ownership lines</td><td>“I underestimated…” · “I take responsibility…” · “I should have recognized…”</td></tr>
+            <tr><td>Change lines</td><td>“Since then I…”, “I now ask myself…” , “I validate before committing…”</td></tr>
+            <tr><td>Time</td><td>60–90 s total · lesson gets the most time (~30 s)</td></tr>
+            <tr><td>Failure examples</td><td>Underestimated scope · over-committed timeline · said yes to a feature you didn’t know</td></tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

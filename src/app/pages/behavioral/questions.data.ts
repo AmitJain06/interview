@@ -3,8 +3,6 @@ import type { BehavioralQuestion } from './behavioral';
 /**
  * Behavioral & situational interview questions.
  *
- * The list is intentionally empty for now — questions will be added here in the future.
- *
  * To add a new question:
  *   1. Push an entry to this array, e.g.:
  *      {
@@ -22,5 +20,10 @@ import type { BehavioralQuestion } from './behavioral';
  *      }
  */
 export const questions: BehavioralQuestion[] = [
-  // Questions will be added here soon.
+  {
+    title: 'Tell me about your biggest failure',
+    route: '/behavioral/biggest-failure',
+    category: 'Failure & Learning',
+    description: 'STAR-framed answer about underestimating a complex offer-system redesign — owning the mistake and showing how it changed your approach.',
+  },
 ];
