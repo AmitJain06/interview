@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <rect width="900" height="700" rx="16" fill="#ffffff"/>
+  <rect width="900" height="700" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">Detection &amp; Analysis — a P0 found by elimination, not by luck</text>
+  <text x="450" y="54" text-anchor="middle" font-size="13" fill="#6b7280">Every step ruled something out — narrating that method is what the interviewer is actually grading</text>
+
+  <line x1="30" y1="88" x2="30" y2="644" stroke="#cbd5e1" stroke-width="2"/>
+
+  <circle cx="30" cy="117" r="7" fill="#6366f1"/>
+  <rect x="50" y="78" width="800" height="78" rx="10" fill="#f8fafc" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="66" y="100" font-size="13" font-weight="700" fill="#3730a3">T+0 · L2 raises P1 — “login failing in driver app” (24 h SLA)</text>
+  <text x="66" y="121" font-size="12.5" fill="#334155">Impact looks narrow → we scope to the driver app first. Assumption — and it costs us time.</text>
+  <text x="66" y="139" font-size="12.5" fill="#334155">Interview line: “we concentrated on the reported area; escalation taught us to verify reach early.”</text>
+
+  <circle cx="30" cy="205" r="7" fill="#f59e0b"/>
+  <rect x="50" y="166" width="800" height="78" rx="10" fill="#f8fafc" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="66" y="188" font-size="13" font-weight="700" fill="#92400e">T+5 min · Reporter tries a WhatsApp OTP — it works</text>
+  <text x="66" y="209" font-size="12.5" fill="#334155">Ruled out: authentication + OTP generation are fine. Suspect now: delivery channels only.</text>
+  <text x="66" y="227" font-size="12.5" fill="#334155">This tiny experiment split “login is broken” from “OTP is not arriving” in minutes.</text>
+
+  <circle cx="30" cy="293" r="7" fill="#ef4444"/>
+  <rect x="50" y="254" width="800" height="78" rx="10" fill="#f8fafc" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="66" y="276" font-size="13" font-weight="700" fill="#991b1b">T+30 min · Escalations from buyer app + vendor portal → promoted to P0</text>
+  <text x="66" y="297" font-size="12.5" fill="#334155">All three apps affected → immediate attention. Severity grows, scope widens — now it is a P0.</text>
+  <text x="66" y="315" font-size="12.5" fill="#334155">Incident priorities: P1 = resolve inside SLA (~24 h) · P0 = service down, immediate action.</text>
+
+  <circle cx="30" cy="381" r="7" fill="#6366f1"/>
+  <rect x="50" y="342" width="800" height="78" rx="10" fill="#f8fafc" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="66" y="364" font-size="13" font-weight="700" fill="#3730a3">T+35 min · As the owner: check deployments and recent changes</text>
+  <text x="66" y="385" font-size="12.5" fill="#334155">Nothing deployed, nothing changed in the code → ruled out: a regression from our own release.</text>
+  <text x="66" y="403" font-size="12.5" fill="#334155">“No code change + service degraded” pointed outside our app — to delivery and the provider.</text>
+
+  <circle cx="30" cy="469" r="7" fill="#f59e0b"/>
+  <rect x="50" y="430" width="800" height="78" rx="10" fill="#f8fafc" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="66" y="452" font-size="13" font-weight="700" fill="#92400e">T+40 min · Server logs — not sufficient</text>
+  <text x="66" y="473" font-size="12.5" fill="#334155">Provider responses were never logged, so “sent” looked normal. Detection gap identified.</text>
+  <text x="66" y="491" font-size="12.5" fill="#334155">Lesson said out loud: monitor at the dependency boundary, not only inside your own logs.</text>
+
+  <circle cx="30" cy="557" r="7" fill="#f59e0b"/>
+  <rect x="50" y="518" width="800" height="78" rx="10" fill="#f8fafc" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="66" y="540" font-size="13" font-weight="700" fill="#92400e">T+50 min · Data platform: query login-success rate over the last hours</text>
+  <text x="66" y="561" font-size="12.5" fill="#334155">Success rate has collapsed → ruled out: narrow blast radius or user error. It is delivery-wide.</text>
+  <text x="66" y="579" font-size="12.5" fill="#334155">Data before guesses — a strong, interview-visible habit for root-cause analysis.</text>
+
+  <circle cx="30" cy="645" r="7" fill="#ef4444"/>
+  <rect x="50" y="606" width="800" height="78" rx="10" fill="#f8fafc" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="66" y="628" font-size="13" font-weight="700" fill="#991b1b">T+60 min · Provider portal → root cause found</text>
+  <text x="66" y="649" font-size="12.5" fill="#334155">DLT registration was BLOCKED — every SMS OTP is rejected at the operator, silently.</text>
+  <text x="66" y="667" font-size="12.5" fill="#334155">A fresh DLT registration takes ~4 days → waiting is impossible, the fix must reroute.</text>
+</svg>

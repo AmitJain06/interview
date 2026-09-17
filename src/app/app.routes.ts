@@ -107,6 +107,14 @@ export const routes: Routes = [
           import('./pages/behavioral/biggest-failure/biggest-failure').then((m) => m.BiggestFailure),
         title: 'Interview App | Tell Me About Your Biggest Failure',
       },
+      {
+        path: 'production-incident',
+        loadComponent: () =>
+          import('./pages/behavioral/production-incident/production-incident').then(
+            (m) => m.ProductionIncident,
+          ),
+        title: 'Interview App | Tell Me About a Major Production Incident',
+      },
       // Further question-answer pages are registered here as questions are added to
       // src/app/pages/behavioral/questions.data.ts, e.g.:
       // {

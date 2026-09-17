@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <rect width="900" height="520" rx="16" fill="#ffffff"/>
+  <rect width="900" height="520" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">Post-Incident Activity — five changes so this class of failure can’t repeat</text>
+  <text x="450" y="54" text-anchor="middle" font-size="13" fill="#6b7280">Recovery restores the service; post-incident work restores the trust — and this is where “senior” is heard</text>
+
+  <rect x="20" y="82" width="276" height="126" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <rect x="20" y="82" width="276" height="30" rx="12" fill="#6366f1"/>
+  <text x="158" y="101" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ffffff">RE-REGISTERED DLT</text>
+  <text x="158" y="136" text-anchor="middle" font-size="12.5" fill="#1e293b">Applied for a fresh registration</text>
+  <text x="158" y="158" text-anchor="middle" font-size="12.5" fill="#1e293b">and fixed the compliance cause;</text>
+  <text x="158" y="180" text-anchor="middle" font-size="12.5" fill="#1e293b">template approvals are now</text>
+  <text x="158" y="196" text-anchor="middle" font-size="9.5" fill="#64748b">monitored</text>
+
+  <rect x="312" y="82" width="276" height="126" rx="12" fill="#ecfdf5" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="312" y="82" width="276" height="30" rx="12" fill="#22c55e"/>
+  <text x="450" y="101" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ffffff">COMMS SERVICE CONFIGURABLE</text>
+  <text x="450" y="136" text-anchor="middle" font-size="12.5" fill="#065f46">Provider + channel per template</text>
+  <text x="450" y="158" text-anchor="middle" font-size="12.5" fill="#065f46">and per app live in configuration</text>
+  <text x="450" y="180" text-anchor="middle" font-size="12.5" fill="#065f46">— changing channels needs no</text>
+  <text x="450" y="196" text-anchor="middle" font-size="9.5" fill="#64748b">code change or release</text>
+
+  <rect x="604" y="82" width="276" height="126" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="604" y="82" width="276" height="30" rx="12" fill="#f59e0b"/>
+  <text x="742" y="101" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ffffff">FEATURE FLAGS</text>
+  <text x="742" y="136" text-anchor="middle" font-size="12.5" fill="#1e293b">Channel routing, fallback and</text>
+  <text x="742" y="158" text-anchor="middle" font-size="12.5" fill="#1e293b">rollout gates sit behind runtime</text>
+  <text x="742" y="180" text-anchor="middle" font-size="12.5" fill="#1e293b">toggles for every critical flow,</text>
+  <text x="742" y="196" text-anchor="middle" font-size="9.5" fill="#64748b">not just login</text>
+
+  <rect x="20" y="232" width="424" height="126" rx="12" fill="#ffedd5" stroke="#f97316" stroke-width="1.5"/>
+  <rect x="20" y="232" width="424" height="30" rx="12" fill="#f97316"/>
+  <text x="232" y="251" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ffffff">FALLBACKS FOR IMPORTANT FLOWS</text>
+  <text x="232" y="286" text-anchor="middle" font-size="12.5" fill="#1e293b">SMS → WhatsApp → in-app OTP,</text>
+  <text x="232" y="308" text-anchor="middle" font-size="12.5" fill="#1e293b">with a circuit breaker that rotates</text>
+  <text x="232" y="330" text-anchor="middle" font-size="12.5" fill="#1e293b">channels on repeated failures</text>
+  <text x="232" y="346" text-anchor="middle" font-size="9.5" fill="#64748b">instead of retrying a dead provider</text>
+
+  <rect x="460" y="232" width="420" height="126" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <rect x="460" y="232" width="420" height="30" rx="12" fill="#6366f1"/>
+  <text x="670" y="251" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ffffff">NO HARDCODED CODES</text>
+  <text x="670" y="286" text-anchor="middle" font-size="12.5" fill="#1e293b">Sender IDs, headers, retry counts and</text>
+  <text x="670" y="308" text-anchor="middle" font-size="12.5" fill="#1e293b">templates moved out of the codebase</text>
+  <text x="670" y="330" text-anchor="middle" font-size="12.5" fill="#1e293b">into application configuration</text>
+  <text x="670" y="346" text-anchor="middle" font-size="9.5" fill="#64748b">one source of truth for delivery ops</text>
+
+  <rect x="20" y="382" width="860" height="118" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="36" y="406" fill="#111827" font-weight="700">Also closed the detection gap that cost us 30 minutes:</text>
+  <text x="36" y="428" fill="#6b7280">Provider response codes + delivery status are now logged, and an alert fires when the login-success rate drops</text>
+  <text x="36" y="450" fill="#6b7280">below threshold — the next occurrence is a dashboard alert, not a discovery by the L2 desk.</text>
+  <text x="36" y="472" fill="#065f46" font-weight="700">Postmortem written and shared: timeline · root cause · action items with owners · follow-up reviewed in the next sprint.</text>
+</svg>

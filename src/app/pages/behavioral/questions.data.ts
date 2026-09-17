@@ -26,4 +26,10 @@ export const questions: BehavioralQuestion[] = [
     category: 'Failure & Learning',
     description: 'STAR-framed answer about underestimating a complex offer-system redesign — owning the mistake and showing how it changed your approach.',
   },
+  {
+    title: 'Tell me about a major production incident',
+    route: '/behavioral/production-incident',
+    category: 'Incident & Ownership',
+    description: 'Four-phase P0 walkthrough: a login outage where a blocked telecom DLT registration killed SMS OTP — detected with data, contained with a feature flag, hardened with config and fallbacks.',
+  },
 ];

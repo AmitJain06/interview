@@ -1,0 +1,403 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/behavioral"><i class="pi pi-arrow-left"></i> All behavioral questions</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <div>
+      <h1>Tell Me About a Major Production Incident</h1>
+      <p>Own a P0 with a four-phase response — prep, detect, contain, learn. Structure over panic, ownership over blame, system change over one-off fixes.</p>
+    </div>
+    <p-tag class="header-tag" value="Incident &amp; Ownership" severity="danger" />
+  </header>
+
+  <div class="card-stack">
+    <!-- 1 · Quick guide -->
+    <p-card header="1 · Quick guide — memorize the 4-phase story skeleton">
+      <ng-template #content>
+        <p>Do not memorize every sentence. Remember four phases and fill them with your own story:</p>
+        <ol class="steps">
+          <li><strong>Preparation</strong> — know the policy before anything breaks: “any user must be able to log in by OTP; the OTP is delivered by <em>SMS or WhatsApp</em>; max 3 retries is sufficient.” This baseline is what “working” means.</li>
+          <li><strong>Detection &amp; Analysis</strong> — P1 reported (driver app) → confirmed WhatsApp works → 30 min later all three apps escalate → P0 → no deployments, nothing changed → logs insufficient → data-platform login-success query → provider portal → DLT blocked → fresh DLT registration takes ~4 days.</li>
+          <li><strong>Containment, Eradication &amp; Recovery</strong> — WhatsApp is healthy but only some apps had the retry flag; no feature flag, no fallback → ship a config-driven route behind a feature flag → users log in again, success rate back to baseline.</li>
+          <li><strong>Post-Incident Activity</strong> — re-apply for DLT, make the comms service configurable, add feature flags and fallbacks for critical flows, remove hardcoded codes from config, write the postmortem.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>One-line answer:</strong>&nbsp;“A P0 login outage: a blocked telecom DLT registration silently killed every SMS OTP across our buyer, driver and vendor apps. I drove a four-phase response — detected it with data in about 30 minutes, restored login with a feature-flagged WhatsApp fallback, and rebuilt the OTP path to be config-driven with automatic fallbacks.”
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- 2 · Why the interviewer asks -->
+    <p-card header="2 · Why the interviewer asks this">
+      <ng-template #content>
+        <ol class="steps">
+          <li><strong>They want to see how you behave under pressure</strong> — do you panic and guess, or follow a method?</li>
+          <li><strong>They assess ownership</strong> — were you driving the incident, or just tangentially involved?</li>
+          <li><strong>They assess engineering judgement</strong> — how did you isolate a failure that produced no obvious error?</li>
+          <li><strong>They assess growth</strong> — did you change the <em>system</em>, or just patch the symptom?</li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <!-- 3 · The 3 rules -->
+    <p-card header="3 · The 3 rules while answering">
+      <ng-template #content>
+        <ol class="steps">
+          <li>
+            <strong>Structure with the four-phase model.</strong> Naming “Preparation → Detection &amp; Analysis → Containment, Eradication &amp; Recovery → Post-Incident Activity” instantly signals senior incident ownership — do not tell it as a confused story.
+          </li>
+          <li>
+            <strong>Prove method, not luck.</strong> At each step say what you <em>ruled out</em>: “nothing deployed → not a regression”, “WhatsApp OTP worked → auth is fine, delivery only”, “provider portal → DLT blocked”.
+          </li>
+          <li>
+            <strong>End on the system-level lesson.</strong> Feature flags, config, fallbacks, monitoring — then bridge to their team: “which is exactly how I’d handle incident response here.”
+          </li>
+        </ol>
+      </ng-template>
+    </p-card>
+
+    <!-- 4 · How to frame -->
+    <p-card header="4 · How to frame your answer">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/incident-4-phases.svg" alt="The four phases of incident response: Preparation, Detection and Analysis, Containment Eradication and Recovery, Post-Incident Activity — with a time budget" />
+          <figcaption><strong>The frame.</strong> Four phases = the whole answer. Detection is the story; the post-incident work carries the seniority signal.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Name the severity up front:</strong> “raised as P1, promoted to P0 within 30 minutes.”</li>
+          <li><strong>Say “I was the on-call owner” inside the first 20 seconds</strong> — it locks in ownership for the whole answer.</li>
+          <li><strong>Keep it to 60–90 seconds.</strong> Pause between phases; never rush the post-incident part.</li>
+          <li><strong>End on the change:</strong> “Since then the comms service is configurable, with fallbacks — and provider delivery is monitored.”</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <!-- 5 · Full model answer -->
+    <p-card header="5 · Full model answer — “Tell me about a major production incident”">
+      <ng-template #content>
+        <div class="answer-section">
+          <span class="answer-label setup">0 · SETUP — who I am, what the system is (10 s)</span>
+          <p>
+            I work on the identity and login platform of a commerce marketplace with three apps — buyer,
+            driver, and vendor portal. Login is OTP-based: a user requests an OTP, receives it by SMS as the
+            primary channel or WhatsApp as the alternate, and completes login within three attempts.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label prep">1 · PREPARATION — the policy that defined “working” (10 s)</span>
+          <p>
+            Our standing policy was simple: every user must be able to log in with an OTP; the OTP is
+            delivered by SMS or WhatsApp; max 3 retries is sufficient to log in. That baseline mattered
+            during the incident — it let us split “auth is broken” from “delivery is broken” in minutes
+            instead of hours.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label detection">2 · DETECTION &amp; ANALYSIS (25 s)</span>
+          <p>
+            L2 raised the issue as a P1 — users could not log in to the driver app. Because the impact
+            looked narrow, we concentrated on that area first; that assumption cost us time. We asked the
+            reporter to try a WhatsApp OTP and it worked, which immediately ruled out the auth pipeline —
+            the problem was delivery, not login itself.
+          </p>
+          <p>
+            Within about 30 minutes, escalations came in from the buyer app and the vendor portal too, so
+            the issue was promoted to P0. As the owner, I first confirmed the obvious: nothing had been
+            deployed and nothing in the code had changed — so this was not a regression from a release. Our
+            server logs were not sufficient — they did not capture the provider’s response. So I queried the
+            data platform for successful logins over the last couple of hours, and the success rate had
+            dropped sharply. That pointed at OTP delivery.
+          </p>
+          <p>
+            On the SMS provider’s portal I found the root cause: our DLT registration was blocked. DLT — the
+            telecom registry that validates SMS senders — was rejecting every request, so every SMS OTP was
+            silently dropped at the operator. And a fresh DLT registration takes about four days, so waiting
+            was not an option.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label containment">3 · CONTAINMENT, ERADICATION &amp; RECOVERY (20 s)</span>
+          <p>
+            WhatsApp was still working, but only some flows had the WhatsApp retry flag — there was no
+            feature flag and no automatic fallback in the OTP path. So we made one safe change behind a
+            feature flag: the OTP channel became config-driven — prefer SMS when the DLT is healthy, fall
+            back to WhatsApp, and always allow a retry via WhatsApp. We enabled it progressively per app,
+            watching the login success rate as we flipped. Users could log in again within a few hours, and
+            the success rate returned to baseline. Because it stayed behind the flag, we could toggle it
+            without another deploy.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label postincident">4 · POST-INCIDENT ACTIVITY (15 s)</span>
+          <p>
+            After the incident we fixed the system, not just the symptom: we applied for the DLT again and
+            corrected the compliance issue; we made the comms service fully configurable — provider and
+            channel per template and per app now live in configuration, not code; we standardized feature
+            flags for critical flows; we wrote automatic fallbacks for important flows, SMS to WhatsApp to
+            in-app OTP; and we removed hardcoded codes like sender IDs and retry counts from the codebase.
+          </p>
+          <p>
+            We also closed the detection gap that had cost us time: provider response codes and delivery
+            status are now logged, and an alert fires when the login success rate drops — so the next time
+            this class of failure starts, we get a dashboard alert instead of a P0.
+          </p>
+        </div>
+
+        <div class="answer-section">
+          <span class="answer-label lesson">5 · THE LESSON (15 s)</span>
+          <p>
+            The biggest lesson: when your critical path crosses a third-party dependency, incident readiness
+            is about knowing the provider’s failure modes, having a fallback built into the flow — not a
+            hack that lives in one app — and monitoring at the boundary of that dependency, not just in your
+            own logs. I now ask one question on every design I touch: “if this provider goes down tomorrow,
+            can the user still complete this flow?” And I start triage by checking data and provider status,
+            not only application logs.
+          </p>
+        </div>
+
+        <div class="callout-box">
+          <strong>Adapt, don’t copy:</strong>&nbsp;keep your own timeline and numbers honest, but keep the skeleton — preparation, detection, containment, recovery, post-incident — and the demo of method: at every step, say what you ruled out.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- 6 · The incident in pictures -->
+    <p-card header="6 · The incident in pictures — know these, even if you don’t say all of them">
+      <ng-template #content>
+        <p>
+          An interviewer who has been through incidents themselves will probe the details below. You do not
+          have to narrate every one — but you must <strong>know them</strong>, because they are exactly the parts
+          people miss when they tell this story.
+        </p>
+        <figure class="visual-figure">
+          <img src="/images/incident-otp-policy.svg" alt="The OTP login happy path: any user from buyer, driver or vendor apps requests an OTP; the auth and OTP service generates a 6-digit code; a config-driven router delivers via SMS through the telecom DLT check or via WhatsApp; the user enters the OTP with max 3 retries and is logged in" />
+          <figcaption><strong>Preparation — the happy path.</strong> One login path, two delivery channels, three retries. When the interviewer asks “what does working mean?”, this is your answer.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/incident-detection-timeline.svg" alt="Detection timeline: T+0 L2 raises P1 for the driver app with a 24 hour SLA; a WhatsApp OTP works so auth is ruled out; T+30 minutes buyer and vendor escalate so it becomes P0; no deployments and no code changes rule out a regression; server logs are insufficient; a data platform query shows login success rate collapsing; the SMS provider portal shows the DLT registration is blocked; a fresh registration takes about four days" />
+          <figcaption><strong>Detection &amp; analysis.</strong> Each step <em>ruled something out</em> — deploy history, auth pipeline, blast radius — until only the provider was left. That is the method the interviewer is really testing.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/incident-root-cause-dlt.svg" alt="Root cause: the SMS path passes through a DLT registry check where the header and template must be approved; blocked means every SMS OTP is dropped, while WhatsApp OTPs bypass DLT and keep working" />
+          <figcaption><strong>The root cause — DLT.</strong> SMS is regulated at the telecom operator (header + template must be approved); WhatsApp bypasses that registry. This is the “why”, and it is also why only some users were hit.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/incident-fix-before-after.svg" alt="Before: only the driver app had a retry-via-WhatsApp flag, no feature flag and no fallback, so buyer and vendor stayed stuck. After: one configuration-driven change behind a feature flag routes OTP to WhatsApp when the DLT is unhealthy, enabling all apps progressively" />
+          <figcaption><strong>Containment — before and after.</strong> The inconsistency (one retry flag in one app) explains why only some apps recovered — and why the fix had to be config + flag, not a new hardcoded path per app.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/incident-post-incident.svg" alt="Post-incident actions: re-register the DLT and fix the compliance cause; make the comms service configurable; adopt feature flags for critical flows; write fallbacks for important flows; remove hardcoded codes; and close the monitoring gap so a repeat is an alert, not a P0" />
+          <figcaption><strong>Post-incident activity.</strong> Recovery alone sounds like luck. Re-registering DLT, config-first comms, flags, fallbacks, and provider delivery monitoring are what make it sound like engineering.</figcaption>
+        </figure>
+      </ng-template>
+    </p-card>
+
+    <!-- 7 · Terms to define -->
+    <p-card header="7 · Terms you must be able to define in one breath">
+      <ng-template #content>
+        <p>You will use these words in the answer, so be ready to explain any of them if asked. One-answer definitions:</p>
+        <ul class="def-list">
+          <li><span class="def-term">P1 / P0</span>Priority of the ticket: P1 = impact contained, resolve within the SLA window (commonly ~24 h). P0 = service down or broad impact — immediate attention and escalation (often 2–4 h).</li>
+          <li><span class="def-term">DLT</span>Distributed Ledger Technology — the telecom registry (mandated by TRAI in India) that validates SMS sender headers and content templates before an operator delivers anything.</li>
+          <li><span class="def-term">Feature flag</span>A runtime configuration toggle that changes behaviour without a deployment — enables progressive rollout and instant rollback.</li>
+          <li><span class="def-term">Fallback</span>An alternate path invoked automatically when the primary one fails — here SMS → WhatsApp → in-app OTP.</li>
+          <li><span class="def-term">Data platform</span>The analytics/warehouse layer you query for behaviour (here: login success rate) when service logs alone are not enough.</li>
+          <li><span class="def-term">Circuit breaker</span>A pattern that stops hammering a failing dependency and instead rotates channels or degrades gracefully.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <!-- 8 · Dos and Don'ts -->
+    <p-card header="8 · Dos and Don’ts">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead>
+            <tr><th scope="col">✔ Do</th><th scope="col">✘ Don’t</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Lead with severity and impact: all three apps, P1 raised then P0.</td>
+              <td>Start with “users couldn’t log in” and wander into timeline trivia.</td>
+            </tr>
+            <tr>
+              <td>Narrate method — name what each check ruled out: deploy history, WhatsApp test, provider portal.</td>
+              <td>Skip the analysis and jump to “so we changed the config”.</td>
+            </tr>
+            <tr>
+              <td>Own your specific actions as the on-call owner, and use “we” only for team decisions.</td>
+              <td>Say “the team did” everything — the interviewer can’t see you in the story.</td>
+            </tr>
+            <tr>
+              <td>Give both the one-off fix (flag + WhatsApp fallback) and the system fix (config, fallbacks, monitoring, DLT re-applied).</td>
+              <td>End at “users could log in again” — recovery without hardening sounds like luck.</td>
+            </tr>
+            <tr>
+              <td>Quantify honestly: ~30 min to root cause, a few hours to restored login, success rate back to baseline.</td>
+              <td>Invent precise uptime/revenue numbers, or inflate the outage duration.</td>
+            </tr>
+            <tr>
+              <td>Close with the lesson and tie it to their team: “which is how I’d run incident response here.”</td>
+              <td>End without the lesson, or blame the provider/L2 for the detection delay.</td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </p-card>
+
+    <!-- 9 · Cross questions -->
+    <p-card header="9 · Cross questions that may come — and how to answer them">
+      <ng-template #content>
+        <p>
+          However polished the main answer, an interviewer who has lived through outages will dig into the
+          same spots. Prepare these — each has “why they ask”, “how to answer”, and a sample line to adapt.
+        </p>
+        <ul class="qa-list">
+          <li>
+            <span class="qa-question">“What is DLT, and why did the block break SMS but not WhatsApp?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> they want proof you understand your own root cause, not just that you read it off a portal.</li>
+              <li><strong>How to answer:</strong> explain the validation step, then the channel difference in one breath.</li>
+              <li><strong>Sample line:</strong> “DLT — Distributed Ledger Technology — is the telecom registry that validates SMS senders: every message must match a registered header and an approved template. When our registration was blocked, the operator dropped every SMS. WhatsApp is an OTT channel that bypasses DLT, so those OTPs still arrived.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“Why didn’t you notice sooner? What was the monitoring gap?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> detection time is the real grading curve in incidents; they want self-awareness.</li>
+              <li><strong>How to answer:</strong> own the gap, name the exact missing signal, and state the fix.</li>
+              <li><strong>Sample line:</strong> “Our logs showed the OTP as sent, but we never logged the provider’s response or delivery status, so a provider-side block looked normal. That’s the gap we closed — delivery status logged and an alert on login-success drops.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“What was your personal role in this incident?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> ownership — they need to see you driving, not attending.</li>
+              <li><strong>How to answer:</strong> one line of role, then a short list of concrete actions; split “I” (execution) from “we” (decisions).</li>
+              <li><strong>Sample line:</strong> “I was the on-call owner from P1 to closure: I confirmed nothing was deployed, pulled the login-success series from the data platform, found the DLT block on the provider portal, and drove the feature-flagged fallback and its staged rollout.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“Why didn’t you just switch everyone to WhatsApp immediately?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> they want to hear risk judgement under pressure, not heroics.</li>
+              <li><strong>How to answer:</strong> name why a blanket change was risky and how the flag kept the change small, reversible, and observable.</li>
+              <li><strong>Sample line:</strong> “The retry-via-WhatsApp path existed only in some flows — flipping everyone meant deploying to three apps during an outage. That’s exactly when you don’t make broad changes. We made routing config-driven behind a flag and enabled it per app while watching the success rate.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“What would you have done if WhatsApp had also failed?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> failure trees — can you design resilience, or only follow a script?</li>
+              <li><strong>How to answer:</strong> give a layered fallback chain and one degradation/grace idea.</li>
+              <li><strong>Sample line:</strong> “In-app/email OTP as a third channel, a second SMS gateway with pre-approved templates, a circuit breaker that rotates channels after repeated failures — and for the extreme case, session grace so recently authenticated users keep working while we restore delivery.”</li>
+            </ul>
+          </li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <!-- 9b · Cross questions part 2 -->
+    <p-card header="9 · Cross questions that may come — second batch">
+      <ng-template #content>
+        <ul class="qa-list">
+          <li>
+            <span class="qa-question">“How long was the outage and how many users were affected?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> impact sizing and honesty under pressure.</li>
+              <li><strong>How to answer:</strong> rounded, honest magnitudes; translate impact into user/business terms.</li>
+              <li><strong>Sample line:</strong> “Order of tens of thousands of users across the three apps; login success fell sharply and returned to baseline a few hours after the flag was enabled. The business impact was real: drivers couldn’t go online for work and vendors couldn’t manage orders.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“Why didn’t you have a feature flag before, and would one have prevented this?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> they want precision about what tools do and don’t solve.</li>
+              <li><strong>How to answer:</strong> define the flag, be honest that it wouldn’t have stopped the DLT block, and show what it does change.</li>
+              <li><strong>Sample line:</strong> “A feature flag is a runtime toggle that changes behaviour without a deploy. It wouldn’t have prevented the DLT block — but it would have turned a multi-hour recovery into a minutes-long toggle with instant rollback.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“How did you communicate during the incident?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> tactical communication is a senior skill; they want to see you managed stakeholders, not just code.</li>
+              <li><strong>How to answer:</strong> name the channel, the cadence, and who got what.</li>
+              <li><strong>Sample line:</strong> “A named incident channel for the team, short status updates to L2 and stakeholders at checkpoints instead of constant chatter, user-facing messaging on the affected apps, and a written postmortem with timeline, root cause, and action items after closure.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“If you could change one thing about how this was handled, what would it be?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> judgement — can you find the highest-leverage improvement?</li>
+              <li><strong>How to answer:</strong> pick one thing, say why it outranks the others, and connect it to a system change.</li>
+              <li><strong>Sample line:</strong> “Detection speed. The recovery itself was clean, but finding the failure took too long because delivery wasn’t observable. We closed that with provider response logging and a success-rate alert — the same class of problem now shows up as a dashboard alert, not a P0.”</li>
+            </ul>
+          </li>
+          <li>
+            <span class="qa-question">“Was the initial P1 a mistake? Why wasn’t it P0 from the start?”</span>
+            <ul class="qa-answer">
+              <li><strong>Why they ask:</strong> they want to see fair, systems thinking — not blame of L2.</li>
+              <li><strong>How to answer:</strong> defend the escalation path, then show what should have been better.</li>
+              <li><strong>Sample line:</strong> “No — P1 was right for a single-app report with a 24-hour SLA. It became P0 the moment escalations showed all three apps. The process worked; what we improved is earlier verification of impact instead of scoping from one report.”</li>
+            </ul>
+          </li>
+        </ul>
+      </ng-template>
+    </p-card>
+
+    <!-- 10 · What to tell vs what not to tell -->
+    <p-card header="10 · What to tell vs what not to tell">
+      <ng-template #content>
+        <div class="two-col">
+          <div class="tell-box good">
+            <h4>► Say this</h4>
+            <ul>
+              <li>“I was the on-call owner.”</li>
+              <li>“Nothing was deployed and nothing had changed, so I looked outside our code.”</li>
+              <li>“The logs weren’t enough, so I queried login success in the data platform.”</li>
+              <li>“The provider portal showed our DLT registration was blocked.”</li>
+              <li>“I shipped the fallback behind a feature flag and enabled it progressively per app.”</li>
+              <li>“Since then, provider delivery is logged, success-rate alerts fire, and the path is SMS → WhatsApp → in-app OTP.”</li>
+            </ul>
+          </div>
+          <div class="tell-box bad">
+            <h4>► Avoid this</h4>
+            <ul>
+              <li>“It was the vendor’s fault” — even if true, you own the system that depended on it.</li>
+              <li>“Users couldn’t log in for days” — don’t inflate; if it was long, explain what took time.</li>
+              <li>“Ops handled it / I just watched” — you were the owner, show yourself working.</li>
+              <li>“We had no monitoring” without immediately adding how you closed the gap.</li>
+              <li>Untranslated jargon (team names, internal tools) and precise revenue-loss or uptime figures you can’t actually stand behind.</li>
+              <li>Colleague or vendor names — keep it about the system.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout-box">
+          <strong>Golden rule:</strong>&nbsp;one sentence of impact, three of method, two of system change. The interviewer should hear an owner who was calm, methodical, and made the system better afterwards.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- 11 · Cheat sheet -->
+    <p-card header="11 · Cheat sheet — memorize this">
+      <ng-template #content>
+        <table class="compare-table">
+          <thead>
+            <tr><th scope="col">Bite</th><th scope="col">Trigger words</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Frame</td><td>Preparation → Detection &amp; Analysis → Containment, Eradication &amp; Recovery → Post-Incident Activity</td></tr>
+            <tr><td>One-liner</td><td>“No deploy + WhatsApp worked + SMS dead → DLT blocked → feature flag + config fallback”</td></tr>
+            <tr><td>Method lines</td><td>“I checked X, which ruled out Y” — deploy history · WhatsApp test · provider portal</td></tr>
+            <tr><td>Change lines</td><td>“comms reads config · flags for critical flows · fallbacks · provider delivery monitored · DLT re-applied”</td></tr>
+            <tr><td>Time</td><td>60–90 s total · post-incident + lesson get ~30 s</td></tr>
+            <tr><td>Key terms</td><td>P1/P0 · DLT · feature flag · fallback · circuit breaker · data platform</td></tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </p-card>
+  </div>
+</article>
