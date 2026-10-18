@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 540" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="540" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Deep dive 2 — NFR4: data is toxic sludge (storage budget + the 30-day purge)</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">we only do math when the number changes a decision — here it sizes the DB and justifies the cleanup job</text>
+<rect x="24" y="84" width="832" height="120" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="110" font-size="13" font-weight="700" fill="#92400e">Back-of-envelope (recite it exactly like this):</text>
+<text x="40" y="134" font-size="11.5" fill="#78350f">1B users × 100 messages/day = 100B messages/day × 1 KB cap = 100 TB/day</text>
+<text x="40" y="154" font-size="11.5" fill="#78350f">IF we kept everything × 30 days that would balloon — but most messages are ACKed and deleted the same second,</text>
+<text x="40" y="172" font-size="11.5" fill="#78350f">so the live database ends up around a few hundred TB. Large but ordinary — modern systems do this daily.</text>
+<text x="40" y="194" font-size="10.5" fill="#92400e" font-weight="700">the number isn't the point — the DERIVATION is: units → daily rate → what's deleted early.</text>
+<rect x="24" y="224" width="832" height="180" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="250" font-size="13.5" font-weight="700" fill="#15803d">Cleanup service (cron) — delete early, delete often</text>
+<text x="44" y="276" font-size="11.5" fill="#374151">① messages table carries timestamp (server-stamped). Add a secondary index on it →</text>
+<text x="44" y="294" font-size="11.5" fill="#374151">   DELETE rows where ts &lt; now − 30 days. Hard guarantee, no per-row bookkeeping.</text>
+<text x="44" y="320" font-size="11.5" fill="#374151">② inbox rows die on ACK (they're the delivery state). Add a timestamp there too, so</text>
+<text x="44" y="338" font-size="11.5" fill="#374151">   forgotten/stale undelivered rows are purged the same way.</text>
+<text x="44" y="364" font-size="11.5" fill="#374151">③ when the LAST inbox row for a message is deleted, delete the message row as well</text>
+<text x="44" y="382" font-size="11.5" fill="#374151">   (everyone has it → nobody needs the server copy).</text>
+<text x="44" y="400" font-size="10.5" fill="#6b7280">race conditions exist — the 30-day guard rail absorbs them: worst case we keep an extra copy for a day. harmless.</text>
+<rect x="24" y="428" width="832" height="92" rx="10" fill="#fef2f2" stroke="#fecaca"/>
+<text x="40" y="452" font-size="12.5" font-weight="700" fill="#991b1b">Why WhatsApp is the right product for aggressive deletion</text>
+<text x="40" y="476" font-size="11.5" fill="#374151">· privacy liability is expensive (Meta pays dearly when it gets this wrong) — the server should hold plaintext as little as possible.</text>
+<text x="40" y="496" font-size="11.5" fill="#374151">· messages are E2E-encrypted anyway: "the ideal is to either delete it, or encrypt it so even we can't read it" (Stefan, verbatim).</text>
+<text x="40" y="514" font-size="11" fill="#6b7280">bonus tie-in: this is the same muscle as ticketmaster's TTL lock and the 30-day media expiry from HLD v3.</text>
+</svg>

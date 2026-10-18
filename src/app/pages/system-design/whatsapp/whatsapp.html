@@ -1,0 +1,232 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-whatsapp"></i></div>
+    <div>
+      <h1>WhatsApp — Chat App</h1>
+      <p>The stateful fan-out problem: ~100B messages/day over ~2B WebSocket connections, guaranteed delivery, and nothing stored past 30 days — notes from the Hello Interview breakdown (Ex-Meta Senior Manager).</p>
+    </div>
+    <p-tag class="header-tag" value="Hard" severity="danger" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="How to use this page (your interview script)">
+      <ng-template #content>
+        <p>
+          Full step-by-step notes for the video <em>Design WhatsApp w/ an Ex-Meta Senior Manager: System Design Interview breakdown</em>.
+          Read in order: requirements → entities → API → working high-level design → deep dives (scaling, inter-server routing, storage purge, extensions).
+          Each HLD step is an <strong>improvement of the previous drawing — one requirement at a time</strong> — and every deep dive compares alternative components with their trade-offs before picking one.
+        </p>
+        <h3 class="subhead">Delivery framework (identical to Top-K, Ticketmaster &amp; Uber — reuse it every time)</h3>
+        <ol class="steps">
+          <li><strong>Requirements</strong> (~5 min) — functional (what) + non-functional (how well). 4 small FRs, quantified NFRs.</li>
+          <li><strong>Core entities</strong> (~2-4 min) — User, Chat, ChatParticipant, Message, Inbox. Bullet each; fill the schema later.</li>
+          <li><strong>API</strong> (~5 min) — pick the transport first (WebSockets), then name the commands.</li>
+          <li><strong>High-level design</strong> (~10-15 min) — simplest system satisfying the <em>functional</em> reqs. Deliberately imperfect.</li>
+          <li><strong>Deep dives</strong> — return to the NFR list and fix what's missing. One deep dive per NFR.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Golden rule from the video:</strong>&nbsp;improve the design ONE problem at a time instead of jumping straight to the optimal system — you can't lose track of the functional requirements, and the interviewer watches you derive the design instead of reciting one.
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="1 — Functional requirements (4, deliberately small)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-requirements.svg" alt="Functional and non-functional requirements for WhatsApp" />
+          <figcaption><strong>Requirements board.</strong> FRs come from "open the app and look": start chats, send/receive, media, read after offline. The heavyweight is in the quantified NFRs — each one maps to a deep dive later (500 ms → routing · 30 days → cleanup · billions → scaling).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>FR1 — start group chats:</strong> anyone can create a chat with a list of users. A group of two IS a 1:1 chat — one entity, no special-casing DM vs group.</li>
+          <li><strong>FR2 — send + receive messages:</strong> send once → it fans out to every member; whenever another member sends, you receive. The natural interviewer question — do we support video/audio/images? Yes — that becomes FR3.</li>
+          <li><strong>FR3 — media attachments:</strong> images, video and audio live in messages; uploads can be hundreds of MB. This single requirement forces the S3 redesign (HLD v3).</li>
+          <li><strong>FR4 — read messages after being offline:</strong> switch the phone off, come back, everything is there. Key insight from the video: a DEVICE goes offline, not a person — that is what creates the Client entity.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Keep it short:</strong>&nbsp;calling, presence, spam and scraping all sit in the out-of-scope box unless the interviewer pulls them in. The video's rule: if you're low on time, don't enumerate everything you're cutting — ask what the interviewer has in mind and move on.
+        </div>
+      </ng-template>
+    </p-card>
+    <p-card header="2 — Non-functional requirements (quantified, in context)">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>NFR1 — low latency ≈ 500 ms delivery.</strong> Perceivable threshold: the difference between 100 ms and 500 ms is invisible in a chat app, so 500 ms is the real budget. This exact number comes back to pick the routing mechanism in deep dive 1b.</li>
+          <li><strong>NFR2 — guaranteed delivery.</strong> "It would be weird if I sent a message and they said they never got it." Server-side persistence + client ACKs make delivery provable.</li>
+          <li><strong>NFR3 — high throughput: billions of users.</strong> WhatsApp serves a couple of billion users; many messages per user per day. Defer the exact message count until the design needs it (≈100B/day in deep dive 2).</li>
+          <li><strong>NFR4 — data is toxic sludge.</strong> Privacy: don't keep messages longer than needed; either delete them or encrypt them "so even you can't read them". Drives the 30-day purge service.</li>
+          <li><strong>NFR5 — fault tolerance.</strong> At this scale components fail constantly; no single-server failure may take the app down.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>CAP takeaway (say this unprompted):</strong>&nbsp;availability + eventual consistency for delivery (inbox retries until ACK), with exactness kept only for the tiny transaction window. Chat is the opposite shape from Ticketmaster's booking lock — worth saying out loud.
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="3 — Core entities (2-4 min, bullets first)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-entities-api.svg" alt="Core entities and WebSocket API for WhatsApp" />
+          <figcaption><strong>Five nouns + the transport decision.</strong> Entities map 1:1 to tables. The CLIENT entity is the one candidates forget — "a person isn't offline, a device is offline" — and delivery ACKs are per-device, not per-person.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>User</strong> — the only ACTOR, and all users are peers: no privileged actor. (Uber has riders/drivers, YouTube has creators/viewers; WhatsApp is flat.)</li>
+          <li><strong>Chat</strong> — id, name, metadata. ONE entity for 1:1 and groups — an em-dash sized detail your interviewer will notice.</li>
+          <li><strong>ChatParticipant</strong> — chatId + participantId. Composite PK answers "who's in this chat"; a Global Secondary Index on participantId answers "which chats am I in" — both lookups stay single-hop.</li>
+          <li><strong>Message</strong> — id, contents, senderId, timestamp. The chat server stamps the time, not the client, so clocks stay consistent across senders.</li>
+          <li><strong>Inbox</strong> — recipientId, messageId: one row per UNDELIVERED copy. This row is the entire delivery guarantee — delete-on-ACK makes retries free (HLD v4).</li>
+          <li><strong>Client (device)</strong> — userId + clientId. Named here conceptually, promoted to a first-class key in the multi-device extension.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="4 — API: connectivity first, then commands">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>Reason to WebSockets in 3 steps (say them in order):</strong> ① latency-sensitive (500 ms) → no polling; ② frequent bidirectional traffic → no SSE (it's one-way); ③ no peer-to-peer or media-call requirement → no WebRTC. Persistent WebSocket/TLS connection it is. (Real WhatsApp uses a plain TLS connection — same principle, less overhead.)</li>
+          <li><strong>Why not REST:</strong> half of chat traffic is server → client events; HTTP request/response only covers the client → server half. A RESTful API alone can't deliver a message.</li>
+          <li><strong>Client → server commands:</strong> <code>create_chat</code> · <code>send_message</code> · <code>create_attachment</code> · <code>modify_participants</code>.</li>
+          <li><strong>Server → client pushes:</strong> <code>new_message</code> · <code>chat_created</code> · <code>participants_changed</code>.</li>
+          <li><strong>Iterate out loud:</strong> "this is just the scaffolding — I'll refine it as the design firms up." Never leave an obvious mistake sitting unacknowledged: the interviewer will assume you missed it even if you didn't.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+<p-card header="5 — HLD v1: start group chats (FR1, functional)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v1-chats.svg" alt="High-level design v1: create chat flow" />
+          <figcaption><strong>v1 answers FR1 only.</strong> Client → chat server (ONE node, on purpose) → DynamoDB with chat + chat_participant tables. The composite PK and GSI make both membership queries single-hop.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Single chat server on purpose:</strong> the video's discipline — build the simplest thing that satisfies the FR, then evolve it. Jumping straight to a distributed system leaves gaps AND loses the interviewer's thread.</li>
+          <li><strong>DynamoDB, or any KV store:</strong> reads are pure key lookups. SQL also scales (the video calls out Shopify's MySQL Black Friday numbers) — pick one and justify it out loud.</li>
+          <li><strong>Two queries, two index shapes:</strong> composite PK on (chatId, participantId) → "members of chat X" · GSI on participantId → "chats I'm in".</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="6 — HLD v2: send + receive (FR2) — improve v1 with a connection map">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v2-messages.svg" alt="High-level design v2: send and receive messages" />
+          <figcaption><strong>Same drawing, one addition:</strong> the chat server holds a hashmap clientId → live websocket. send_message → participants (PK) → hashmap → push on each open socket. Works, while it works.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why it works:</strong> with ONE server every socket is local — the fan-out is a loop over a hashmap. A live chat room with sub-second delivery.</li>
+          <li><strong>Why it's broken (say it yourself before the interviewer does):</strong> zero durability — a user not connected at send time sees nothing. NFR2 (guaranteed delivery) fails and FR4 (offline reads) is impossible.</li>
+          <li><strong>Media doesn't fit either:</strong> a 500 MB video as a message would saturate the same pipe. → v3 swaps the media path, v4 adds durability.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="7 — HLD v3: media (FR3) — rather than this component, use that one">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v3-media.svg" alt="High-level design v3: media with S3 pre-signed URLs" />
+          <figcaption><strong>The component swap.</strong> Naive: blobs through the chat server into a DynamoDB attachments table — fails twice. Fix: S3 blob storage + pre-signed URLs, so the heavy bytes go AROUND the chat server, not through it.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why the naive version dies (two reasons, say both):</strong> ① DynamoDB is a row store, not a blob store — videos are hundreds of MB; ② the chat server saturates on gigabyte uploads while its real job is shuttling kilobyte messages — the payload disparity is the smell.</li>
+          <li><strong>Pre-signed URL flow:</strong> ① client asks the chat server for an upload target → ② chat server (authenticated) gets an S3 URL with embedded auth + TTL (~1 h) → ③ client uploads DIRECTLY to S3 → ④ the message body now carries the URL → ⑤ recipients fetch from S3 when rendering.</li>
+          <li><strong>Expiry or it becomes a free Google Drive:</strong> purge media after every recipient has fetched it, with a ~30-day ceiling that also aligns with NFR4.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="8 — HLD v4: offline reads (FR4) — add messages + inbox">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v4-offline.svg" alt="High-level design v4: messages and inbox tables" />
+          <figcaption><strong>The backbone of the whole design.</strong> messages (contents, server timestamp) + inbox (one row per undelivered recipient). Send = one atomic transaction; delivery = push online + drain inbox on reconnect; ACK deletes the row.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Guaranteed eventual delivery:</strong> a row survives until the client ACKs each message. Offline user reconnects → server drains their un-acked inbox → delivers → ACKs → deletes. NFR2 is now satisfied.</li>
+          <li><strong>The 100-record transaction cap:</strong> DynamoDB transactions support ~100 records — message row plus one inbox row per member ⇒ group chats cap at ~100 members. Name this constraint before the interviewer does.</li>
+          <li><strong>Checkpoint out loud:</strong> all 4 FRs plus NFR1 (500 ms push) and NFR2 (durable) hold on ONE node — "and I know exactly where it breaks: billions of users." → deep dives.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="9 — The final design: everything on one board (FR1–FR4 + all deep dives)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-final-design.svg" alt="Final WhatsApp design with all components wired together" />
+          <figcaption><strong>One board of truth.</strong> Every component from every step, wired together. Read it as: devices → L4 LB → chat-server pool (socket hashmaps) ↔ Redis fast lane → DynamoDB (durability) + S3 (media) + cleanup (privacy). The four numbered flows along the top are send, offline catch-up, media and purge.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>How the deep dives upgrade this drawing:</strong> deep dive 1 replaces "one chat server" with the L4 LB + pool and adds Redis Pub/Sub for the routing problem; deep dive 2 adds S3 (media offload) and the cleanup service (30-day purge). Everything else — the websocket hashmap, messages + inbox, ACK-deletes-row — was already there from HLD v2–v4.</li>
+          <li><strong>The four flows you narrate from this one board:</strong> ① send = transaction + push (local socket or Redis route) + ACK cleans up · ② offline = drain inbox on reconnect · ③ media = pre-signed URL → direct S3 upload → URL in message · ④ purge = cron deletes past 30 days.</li>
+          <li><strong>Whiteboard tip:</strong> draw v1 first, and show this board in the last five minutes — it's the "final answer" picture an interviewer wants to see once, whole: every requirement traced to a component.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="10 — Deep dive 1: scale to billions (NFR3) — the layer-4 load balancer">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-scale-routing.svg" alt="Scaling chat servers and the routing problem" />
+          <figcaption><strong>One server → ~1 000.</strong> WhatsApp serves ~2M connections per server, so ~2B users lands near a thousand chat servers. Stateful connections change the load-balancer rules — and after the split, chat servers must talk to each other.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Layer-7 HTTP LB doesn't work here:</strong> web servers are stateless, so an HTTP LB can terminate a request and forward it to ANY server. A websocket is a live connection — you cannot forward "the rest of it" to a different box mid-stream.</li>
+          <li><strong>Layer-4 TCP LB does:</strong> the LB holds a symmetric TCP pair (client ↔ LB ↔ server), invisible to both ends — "as if the client connected directly". Choose servers by LEAST CONNECTIONS, because the connection IS the scarce resource; a fresh server saturates fast, which makes rollouts smooth.</li>
+          <li><strong>The routing problem (the heart of this interview):</strong> A is on server 1, B is on server 2. A sends → S1 looks up participants ✓ and writes message + inbox ✓ — but B's socket lives on S2, so S1 cannot push. The chat servers need a way to hand messages to whichever server owns the recipient's websocket.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="11 — Deep dive 1b: routing between servers — three options, three trade-offs">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-routing-options.svg" alt="Kafka vs consistent hashing vs Redis Pub/Sub for inter-server routing" />
+          <figcaption><strong>Present the ladder in order.</strong> Kafka per-user topics ✗ (topic overhead + churn) → consistent hashing ~ (correct but orchestration-heavy) → Redis Pub/Sub ✓ (thin at-most-once fast lane over the durable store).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Kafka — the tempting first instinct, and why it loses:</strong> topics-per-user sounds clean, but each topic costs ~50–100 KB of overhead — billions of users ⇒ terabytes of metadata just to exist — and Kafka isn't built for the short-lived, churn-heavy topics a chat app creates on every connect/disconnect.</li>
+          <li><strong>Consistent hashing — correct, expensive to operate:</strong> a chat registry + shared config (ZooKeeper/etcd) lets any server compute "user B ↦ server 2" and write directly (2 hops). But growing 4 → 5 servers moves ~20% of users: disconnect → re-register → reconnect, drained slowly, with double-sends in the window — plus the risk of hot servers.</li>
+          <li><strong>Redis Pub/Sub — the winner:</strong> each chat server subscribes to the topics of the users it serves; a publish fans out to the owning server's socket. At-most-once delivery is FINE because the messages + inbox tables already guarantee delivery — pub/sub is only the &lt;500 ms fast lane. Costs: n×m server↔node connections, and the same migration chore if the Redis cluster itself grows.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Say this sentence (it's the whole deep dive):</strong>&nbsp;"We keep the realtime path thin and lean on the durable store — worst case the message is already sitting in the inbox."
+        </div>
+      </ng-template>
+    </p-card>
+<p-card header="12 — Deep dive 2: storage budget + the 30-day purge (NFR4)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-storage-expiry.svg" alt="Storage math and cleanup service for WhatsApp" />
+          <figcaption><strong>Do math only when it changes a decision.</strong> 1B users × 100 msgs/day × 1 KB ≈ 100 TB/day — but ACKed rows die instantly, so the live database settles at a few hundred TB. A cleanup service enforces the 30-day ceiling.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Messages:</strong> add a secondary index on the server-stamped timestamp → delete rows older than 30 days, no per-row bookkeeping.</li>
+          <li><strong>Inbox:</strong> rows die on ACK (they ARE the delivery state); add a timestamp so stale undelivered rows get purged too. When the LAST inbox row for a message is deleted, delete the message row — every recipient already has it.</li>
+          <li><strong>Race conditions don't matter:</strong> the 30-day guard rail absorbs them — worst case one extra copy exists for a day. This is what "data is toxic sludge" means in practice: delete early, or encrypt it "so even you can't access it" (Meta's liability framing, verbatim).</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="13 — Extensions the interviewer may throw at you">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-extensions.svg" alt="Multi-device and presence extensions" />
+          <figcaption><strong>Multi-device + presence slot right into the existing design</strong> because Client tables and pub/sub already exist — that's the tell of a good base. Both trade on the same theme: per-device fan-out, and constraining fan-out.</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Multi-device:</strong> add Client (userId, clientId); re-key inbox rows and pub/sub topics from user → client; fan out per participant × per device. Row blow-up — 100 people × 5 devices = 500 rows &gt; the 100-row transaction cap → cap devices at 2–3 and shrink group limits alongside.</li>
+          <li><strong>Presence (green orbs):</strong> availability table (userId · status), flipped available/unavailable on connect/disconnect. Poll it for a cheap contact list, or subscribe watchers via the existing pub/sub for live updates. The hard part is fan-out again: one disconnect must not notify 10 000 watchers — product caps who watches whom.</li>
+        </ul>
+      </ng-template>
+    </p-card>
+    <p-card header="60-second recap + what to remember first (say this to close)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-remember.svg" alt="Pre-interview memorization cheat sheet" />
+          <figcaption><strong>The cheat sheet.</strong> One-liner → framework → numbers → routing ladder → entities → level calibration. Memorize in THIS order so you never blank in the room.</figcaption>
+        </figure>
+        <ol class="steps">
+          <li>Requirements: FR1-4 (chats → messages → media → offline) · NFRs: 500 ms · guaranteed delivery · ~2B users · 30-day toxic-sludge purge · fault tolerance.</li>
+          <li>Entities: User (peers) · Chat · ChatParticipant · Message · Inbox (+ Client for devices). The inbox row-per-recipient IS the delivery guarantee.</li>
+          <li>API: WebSockets (latency ⇒ no polling · bidirectional ⇒ no SSE · no P2P ⇒ WebRTC out). Commands, not REST.</li>
+          <li>HLD evolution: v1 single node + chat tables → v2 + connection hashmap → v3 swap blobs for S3 pre-signed URLs → v4 + messages/inbox transactions (group ≤ 100).</li>
+          <li>Deep dive 1 (scale): L4 TCP LB + least-connections → the routing problem. Options: Kafka ✗ → consistent hash ~ → Redis Pub/Sub ✓ over the durable store.</li>
+          <li>Deep dive 2 (data): 100 TB/day math → few hundred TB live · cleanup service enforces 30 days · delete-on-ACK + last-row-deletes-message.</li>
+          <li>Extensions: multi-device = re-key everything to Client · presence = status table + pub/sub, capped fan-out.</li>
+        </ol>
+        <div class="callout-box">
+          <strong>Source:</strong>&nbsp;Hello Interview "Design WhatsApp w/ an Ex-Meta Senior Manager" (video file in public/). Every number (500 ms · 2M connections/server · 100-record transactions · 100B msgs/day · 30-day purge) and every diagram above follows that video's whiteboard step by step — redrawn and improved so the flow reads clearly.
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

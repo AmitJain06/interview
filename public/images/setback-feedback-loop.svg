@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker>
+  </defs>
+  <rect width="900" height="560" rx="16" fill="#ffffff"/>
+  <rect width="900" height="560" rx="16" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">Adaptability — the short feedback loop that turns rejection into improvement</text>
+  <text x="450" y="54" text-anchor="middle" font-size="13" fill="#6b7280">Silence and “no” are data points about the funnel — never a verdict on you</text>
+
+  <rect x="350" y="110" width="200" height="70" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="450" y="136" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3730a3">1 · APPLY</text>
+  <text x="450" y="156" text-anchor="middle" font-size="12.5" fill="#1e293b">send a tailored</text>
+  <text x="450" y="172" text-anchor="middle" font-size="12.5" fill="#1e293b">application</text>
+
+  <rect x="540" y="186" width="220" height="88" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="650" y="212" text-anchor="middle" font-size="13.5" font-weight="700" fill="#92400e">2 · OBSERVE</text>
+  <text x="650" y="232" text-anchor="middle" font-size="12.5" fill="#1e293b">silence or a “no”</text>
+  <text x="650" y="252" text-anchor="middle" font-size="12.5" fill="#1e293b">is data, not a verdict</text>
+
+  <rect x="330" y="376" width="240" height="96" rx="12" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+  <text x="450" y="402" text-anchor="middle" font-size="13.5" font-weight="700" fill="#991b1b">3 · ANALYZE</text>
+  <text x="450" y="422" text-anchor="middle" font-size="12.5" fill="#1e293b">where is the funnel</text>
+  <text x="450" y="442" text-anchor="middle" font-size="12.5" fill="#1e293b">leaking? resume →</text>
+  <text x="450" y="462" text-anchor="middle" font-size="12.5" fill="#1e293b">DSA → system design</text>
+
+  <rect x="140" y="186" width="220" height="88" rx="12" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+  <text x="250" y="212" text-anchor="middle" font-size="13.5" font-weight="700" fill="#9a3412">4 · ADJUST</text>
+  <text x="250" y="232" text-anchor="middle" font-size="12.5" fill="#1e293b">target precisely that</text>
+  <text x="250" y="252" text-anchor="middle" font-size="12.5" fill="#1e293b">gap in preparation</text>
+
+  <circle cx="450" cy="283" r="46" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+  <text x="450" y="283" text-anchor="middle" font-size="13.5" font-weight="700" fill="#334155">SHORT</text>
+  <text x="450" y="303" text-anchor="middle" font-size="13.5" font-weight="700" fill="#334155">LOOP</text>
+
+  <line x1="560" y1="150" x2="630" y2="195" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="640" y1="270" x2="588" y2="385" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="335" y1="415" x2="257" y2="290" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="255" y1="195" x2="345" y2="150" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="16" y="500" width="868" height="44" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="32" y="520" fill="#111827" font-weight="700">Rule: never run the same experiment twice — each cycle targets one specific gap, re-measures, and shortens the loop.</text>
+  <text x="32" y="538" fill="#065f46">Interview line: “I keep the feedback loop short rather than repeatedly doing the same thing.”</text>
+</svg>

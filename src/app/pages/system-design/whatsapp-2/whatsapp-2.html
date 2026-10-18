@@ -1,0 +1,272 @@
+<article class="content-wrapper">
+  <a class="back-link" routerLink="/system-design"><i class="pi pi-arrow-left"></i> All designs</a>
+
+  <header class="page-header">
+    <div class="page-icon"><i class="pi pi-whatsapp"></i></div>
+    <div>
+      <h1>WhatsApp — Chat App II</h1>
+      <p>Step-by-step breakdown following the Hello Interview video transcript (Ex-Meta Senior Manager): start group chats → send/receive → media → read after offline. FRs below, design sections in progress.</p>
+    </div>
+    <p-tag class="header-tag" value="Hard" severity="danger" />
+  </header>
+
+  <div class="card-stack">
+    <p-card header="1 — Functional requirements (4, from the transcript — 'open the app and look')">
+      <ng-template #content>
+        <p>
+          Stefan's method in the video: <em>"I open up the WhatsApp app — what do I see?"</em>
+          Requirements are the ~5-minute step; the FRs are deliberately small and then used as
+          <strong>stepping stones for the high-level design</strong> — each one becomes exactly one design
+          step later (v1 → v4). Everything heavy (latency, users, retention) belongs to the NFRs, not here.
+        </p>
+        <ul class="points">
+          <li><strong>FR1 — start group chats:</strong> the app opens on a list of chats, and for those chats to exist someone has to create them. Anyone can create a chat with a list of users; a group of two IS a 1:1 chat — one entity, no special-casing DM vs group. <em>What we want to achieve: a user can create a 1:1 or group chat and it shows up in their chat list.</em></li>
+          <li><strong>FR2 — send + receive messages between users:</strong> send once → the message fans out to every member; whenever another member sends, you receive it. The natural interviewer question — "do we support images/video/voice?" — becomes FR3 instead of growing FR2. <em>What we want to achieve: two users in any chat can exchange messages reliably.</em></li>
+          <li><strong>FR3 — media attachments:</strong> images, video and voice notes live inside messages, and uploads can be hundreds of MB. This single requirement later forces the S3 media path (HLD v3): a chat server shuttles kilobyte messages, not gigabyte blobs. <em>What we want to achieve: attach and share media in a chat without breaking the message path.</em></li>
+          <li><strong>FR4 — read messages after being offline:</strong> switch the phone off, come back, everything is still there. The video's key insight: a DEVICE goes offline, not a person — that is what creates the Client entity and per-device delivery. <em>What we want to achieve: no message is lost while a recipient is offline; delivery resumes on reconnect.</em></li>
+          <li><strong>Out of scope (the video's rule):</strong> calling, presence, spam and scraping sit in the out-of-scope box unless the interviewer pulls them in. If you're short on time, don't enumerate everything you're cutting — ask what the interviewer has in mind and move on.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Why these four:</strong>&nbsp;the transcript builds the HLD in exactly this order, one FR at a time — FR1 → chat + participant tables (v1) · FR2 → in-memory connection map (v2) · FR3 → S3 pre-signed media path (v3) · FR4 → messages + inbox with ACK-delete (v4).
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="2 — Non-functional requirements (quantified — 'how well', with numbers)">
+      <ng-template #content>
+        <ul class="points">
+          <li><strong>NFR1 — low latency ≈ 500 ms delivery.</strong> The perceivable threshold: the difference between 100 ms and 500 ms is invisible in a chat app, so 500 ms is the real budget. This exact number comes back later to pick the routing mechanism between chat servers. <em>What we want to achieve: the recipient sees a sent message within ~0.5 s.</em></li>
+          <li><strong>NFR2 — guaranteed delivery.</strong> "It would be weird if I sent a message and they said they never got it." Server-side persistence + client ACKs make delivery provable, even when the recipient is offline at send time. <em>What we want to achieve: no sent message is ever lost — delivery is retried until the device ACKs it.</em></li>
+          <li><strong>NFR3 — high throughput: billions of users.</strong> WhatsApp serves a couple of billion users and many messages per user per day (~100B messages/day — the exact number is needed later for the storage budget). <em>What we want to achieve: the design scales to ~2B users without a redesign; scaling is one deep dive, not a new problem.</em></li>
+          <li><strong>NFR4 — data is toxic sludge (privacy).</strong> Don't keep messages longer than needed: either delete them or encrypt them "so even you can't read them". Drives the 30-day purge service — messages are kept at most ~30 days. <em>What we want to achieve: nothing stays in the system past ~30 days.</em></li>
+          <li><strong>NFR5 — fault tolerance.</strong> At this scale components fail constantly; no single-server failure may take the app down. <em>What we want to achieve: losing any one server is invisible to users — they only re-connect, and nothing is lost.</em></li>
+        </ul>
+        <div class="callout-box">
+          <strong>CAP takeaway (say this unprompted):</strong>&nbsp;availability + eventual consistency for delivery — the inbox retries until ACK — with exactness kept only for the tiny transaction window. Chat is the opposite shape from Ticketmaster's booking lock: worth saying out loud.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="3 — Core entities (six tables — one entity, one table)">
+      <ng-template #content>
+        <p>
+          <strong>Entities map 1:1 to tables.</strong> The CLIENT entity is the one candidates forget —
+          "a person isn't offline, a device is offline" — and delivery ACKs are per-device, not per-person.
+          Capture the important properties now; refine the schema later as the design evolves.
+        </p>
+
+        <h3 class="subhead">User — the only actor (all users are peers)</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Property</th><th>Type</th><th>Purpose / note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>userId</code></td><td>key (PK)</td><td>Unique identity for every user. No privileged actor — the same entity for everyone (Uber has riders/drivers; WhatsApp is flat).</td></tr>
+            <tr><td><code>name</code></td><td>string</td><td>Display name shown in chats.</td></tr>
+            <tr><td><code>createdAt</code></td><td>timestamp</td><td>Account creation time.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead">Chat — ONE entity for 1:1 and groups</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Property</th><th>Type</th><th>Purpose / note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>chatId</code></td><td>key (PK)</td><td>Unique chat ID.</td></tr>
+            <tr><td><code>name</code></td><td>string</td><td>Optional chat name (groups).</td></tr>
+            <tr><td><code>metadata</code></td><td>object</td><td>Avatar, creation time, settings.</td></tr>
+            <tr><td colspan="3"><em>Note:</em> there is no "1:1 vs group" field — a chat with two participants IS a 1:1 chat. One entity, no special-casing DM vs group.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead">ChatParticipant — the membership join table</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Property</th><th>Type</th><th>Purpose / note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>chatId</code></td><td>composite PK</td><td>Half of the composite key → answers "who's in this chat?"</td></tr>
+            <tr><td><code>participantId</code></td><td>composite PK + GSI</td><td>Half of the composite key; the GSI on it answers "which chats am I in?"</td></tr>
+            <tr><td><code>joinedAt</code></td><td>timestamp</td><td>When the member joined.</td></tr>
+            <tr><td colspan="3"><em>Note:</em> composite PK (chatId, participantId) + GSI on participantId keep BOTH membership queries single-hop.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead">Message — the content (server-stamped time)</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Property</th><th>Type</th><th>Purpose / note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>messageId</code></td><td>key (PK)</td><td>Unique message ID.</td></tr>
+            <tr><td><code>contents</code></td><td>text / ref</td><td>Message body, or a media reference/URL when the message has an attachment (FR3).</td></tr>
+            <tr><td><code>senderId</code></td><td>fk → User</td><td>Who sent it.</td></tr>
+            <tr><td><code>chatId</code></td><td>fk → Chat</td><td>Which chat it belongs to (index for "scroll a chat").</td></tr>
+            <tr><td><code>createdAt</code></td><td>timestamp</td><td><em>Stamped by the SERVER, not the client</em> — keeps clocks consistent across senders.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead">Inbox — the delivery guarantee (one row per undelivered copy)</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Property</th><th>Type</th><th>Purpose / note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>recipientId</code></td><td>key</td><td>The user the message is queued for.</td></tr>
+            <tr><td><code>messageId</code></td><td>key</td><td>Which message is pending.</td></tr>
+            <tr><td><code>ackedAt</code></td><td>timestamp (null until delivered)</td><td>Set on ACK; the row is then deleted.</td></tr>
+            <tr><td colspan="3"><em>Note:</em> this row IS the whole delivery guarantee (NFR2) — delete-on-ACK makes retries free. The timestamp also lets stale undelivered rows be purged later (30-day cleanup, NFR4).</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead">Client (device) — the entity candidates forget</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Property</th><th>Type</th><th>Purpose / note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>clientId</code></td><td>key</td><td>One instance of the app — phone, tablet, web, desktop.</td></tr>
+            <tr><td><code>userId</code></td><td>fk → User</td><td>Which user the device belongs to.</td></tr>
+            <tr><td colspan="3"><em>Note:</em> "a person isn't offline, a device is offline" (FR4) — delivery ACKs are per-device, not per-person. Named conceptually here, promoted to a first-class key in the multi-device extension.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-box">
+          <strong>Say this out loud:</strong>&nbsp;five base tables (User · Chat · ChatParticipant · Message · Inbox) plus the Client entity candidates forget. The inbox row-per-recipient is the entire delivery guarantee.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="4 — API: connectivity first, then commands">
+      <ng-template #content>
+        <p>
+          <strong>Pick the transport first, name the commands second.</strong> Half of chat traffic is
+          server → client, so the API is mostly WebSocket pushes, not HTTP responses.
+        </p>
+
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-api.svg" alt="WebSocket transport decision tree and command contract for WhatsApp" />
+          <figcaption><strong>Redrawn from the video (frames at 13:20 + 15:40).</strong> Top-left: the 3 yes/no questions that eliminate Simple Polling, SSE and WebRTC and land on WebSocket. Top-right: the command contract — SENT createChat · SendMessage · createAttachment · modifyParticipants, RECEIVED newMessage · chatUpdate. Bottom: why a plain REST API can't deliver chat.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-frames/api-transport-t0.jpg" alt="Actual whiteboard frame: WebSocket transport decision tree" />
+          <figcaption><strong>The actual whiteboard (transport, ~13:20):</strong> Latency Sensitive? → Yes · Frequent, Bi-Directional? → Yes · Peer to Peer? / Audio-video? → No ⇒ WebSocket. Copy this layout when you draw it live.</figcaption>
+        </figure>
+
+        <h3 class="subhead">How to explain the diagram aloud</h3>
+        <ul class="points">
+          <li><strong>Start with the transport, not the commands</strong> — "half of chat traffic is server → client, so the connection decides everything".</li>
+          <li>Walk the 3 questions in order: 500 ms latency ⇒ no polling · bidirectional ⇒ no SSE · no P2P/calls ⇒ no WebRTC ⇒ <strong>WebSocket</strong>.</li>
+          <li>Then name the commands straight off the board and say "this is just the start — I'll refine it as the design firms up."</li>
+          <li>Say why not REST unprompted — request/response can't push server → client; the WebSocket is what lets the server deliver.</li>
+        </ul>
+
+        <h3 class="subhead">Transport — reason to WebSockets in 3 steps (say them in order)</h3>
+        <ul class="points">
+          <li>① <strong>Latency-sensitive (500 ms, NFR1)</strong> → no polling: polling adds seconds of delay and server load.</li>
+          <li>② <strong>Frequent bidirectional traffic</strong> → no SSE: SSE pushes only one way (server → client), so it can't carry sends.</li>
+          <li>③ <strong>No peer-to-peer / media-call requirement</strong> → no WebRTC (calling is out of scope, per the FR section).</li>
+          <li><strong>Why not REST:</strong> half of chat traffic is server → client events, and HTTP request/response only covers the client → server half — a RESTful API alone can't deliver a message.</li>
+          <li><strong>Conclusion:</strong> a persistent WebSocket/TLS connection it is. (Real WhatsApp uses a plain TLS connection — same principle, less overhead.)</li>
+        </ul>
+
+        <h3 class="subhead">Commands (the contract that exercises the FRs)</h3>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Command</th><th>Direction</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>createChat</code></td><td>client → server</td><td>Create a chat with a list of users (FR1).</td></tr>
+            <tr><td><code>SendMessage</code></td><td>client → server</td><td>Send a message; the server fans it out to every member (FR2).</td></tr>
+            <tr><td><code>createAttachment</code></td><td>client → server</td><td>Ask for a media upload target — the S3 pre-signed URL (FR3, HLD v3).</td></tr>
+            <tr><td><code>modifyParticipants</code></td><td>client → server</td><td>Add or remove members of a chat.</td></tr>
+            <tr><td><code>newMessage</code></td><td>server → client</td><td>Push a received message to a participant (FR2).</td></tr>
+            <tr><td><code>chatUpdate</code></td><td>server → client</td><td>One push for both "chat created" and "participants changed" — the whiteboard folds them into a single event (verbatim).</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-box">
+          <strong>Iterate out loud:</strong>&nbsp;"this is just the scaffolding — I'll refine it as the design firms up." Never leave an obvious mistake sitting unacknowledged: the interviewer will assume you missed it even if you didn't.
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="5 — HLD v1: one chat server, three clients (FR1 + FR2 — functional first)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v1.svg" alt="HLD v1: single chat server with clients A, B, C and createChat / SendMessage flows" />
+          <figcaption><strong>Step 1 — the simplest design that works.</strong> Three WebSocket clients (A, B, C) on ONE chat server. ① A sends <code>createChat(group-1, [B, C])</code> · ② server writes a chat row + 3 chatParticipant rows · ③ server pushes <code>chatUpdate</code> to B and C · ④ A sends <code>SendMessage("Hi All")</code> · ⑤ server pushes <code>newMessage</code> to B and C — every push is a lookup in the local connection map (A→WS1 · B→WS2 · C→WS3).</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-frames/hld-v1-t0.jpg" alt="Actual whiteboard frame: single chat server with connection map and DynamoDB tables" />
+          <figcaption><strong>The actual whiteboard (~23:40):</strong> client → chat Server (with the connection labels clientA: WS1, clientB: WS2) → Database (DynamoDB) holding chat (id · name · metadata) and chatParticipant (chatId · participantId). The redraw above adds the third client C and labels the two flows (createChat → chatUpdate, SendMessage → newMessage).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Single chat server ON PURPOSE</strong> — the video's discipline: build the simplest thing that satisfies the FRs, then evolve it one problem at a time. Never jump straight to a distributed system.</li>
+          <li><strong>The connection map is the whole trick:</strong> the server keeps <code>client → WS</code> (A→WS1 · B→WS2 · C→WS3). FR1 (createChat): A asks, the server adds B and C as participants (createChat internally implies modifyParticipants), then pushes <code>chatUpdate</code> to B and C over their live sockets.</li>
+          <li><strong>FR2 (SendMessage):</strong> A sends "Hi All" once → the server fans out <code>newMessage</code> to B and C — a loop over the map. Sub-second, so NFR1 (500 ms) ✓.</li>
+          <li><strong>DynamoDB (or any KV store):</strong> chat + chatParticipant tables. Composite PK (chatId, participantId) → "who's in this chat" · GSI on participantId → "which chats am I in" — both single-hop reads.</li>
+          <li class="fail"><strong>Why it's broken (say it yourself before the interviewer does):</strong> zero durability — B or C offline at send time sees nothing → NFR2 (guaranteed delivery) and FR4 (offline reads) fail. Media doesn't fit either — a 500 MB video would saturate the same pipe (FR3).</li>
+        </ul>
+        <div class="redesign-banner">
+          <strong>→ So we REDESIGN.</strong>&nbsp;This step lives only for the functional requirements — it breaks NFR2 (guaranteed delivery) and FR4 (offline reads) the moment anyone is offline. Let's fix that in the next step.
+        </div>
+        <div class="callout-box">
+          <strong>Checkpoint out loud:</strong>&nbsp;all 4 FRs plus 500 ms delivery hold on ONE node — "and I know exactly where it breaks: a user who's offline, then billions of users." → next steps fix durability (messages + inbox), then media, then scale.
+        </div>
+      </ng-template>
+        </p-card>
+
+    <p-card header="6 — HLD v2: durable send + offline reads (FR2 + FR4, fixing NFR2)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v2-durability.svg" alt="HLD v2: messages + inbox tables, online push + offline catch-up" />
+          <figcaption><strong>Step 2 — the same single server, now durable.</strong> One change from v1: a send no longer just loops over the connection map — it first writes atomically to two tables. ① A → <code>send_message(chatId, "Hi All")</code> · ② server transacts <code>messages</code>&#123;1 row&#125; + <code>inbox</code>&#123;one row per member&#125; · ③ push <code>new_message</code> to whoever is online now → they ACK → the inbox row is deleted. If B or C was offline, they reconnect later → the server drains their remaining inbox rows → delivers → they ACK → rows gone. The inbox row per recipient IS the delivery guarantee.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-frames/hld-v2-t0.jpg" alt="Actual whiteboard frame: messages and inbox tables being added to the durable design" />
+          <figcaption><strong>The actual whiteboard (~31:20):</strong> the chat server now writes to two DynamoDB tables — Messages (id · contents · senderId · chatId · timestamp) and Inbox (recipientId · messageId). Server-stamped timestamp on messages; one inbox row per UNDELIVERED recipient. (The redraw above adds the two-path flow: online push + reconnect/drain, which the video walks through after this frame.)</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>The component change (one at a time, says the video):</strong> nothing is replaced — the single node and its connection map stay. We only add two tables and switch the send path from "loop and forget" to a write-then-push transaction. NFR1 (500 ms) still holds; NFR2 (guaranteed delivery) is now true too.</li>
+          <li><strong>Messages table:</strong> <code>id</code> (PK) · <code>contents</code> · <code>chatId</code> · <code>senderId</code> · <code>timestamp</code>. The server stamps the time — not the client — so clocks stay consistent across senders, and the row outlives the connection.</li>
+          <li><strong>Inbox table:</strong> <code>recipientId</code> · <code>messageId</code> — one row per undelivered copy. This row is the entire delivery guarantee: it lives until the client ACKs, which makes retries free (the sender doesn't care; on reconnect the server just drains un-acked rows).</li>
+          <li><strong>The delivery contract:</strong> send = transact (messages + inbox) → if recipient online, push immediately → client ACKs → server deletes the inbox row. If recipient was offline, the message is already sitting in their inbox; on reconnect the server drains it → deliver → ACK → delete. Eventual, but guaranteed as long as the device connects.</li>
+          <li><strong>ACKs are per device, not per chat:</strong> "B got it, C didn't" is a real state — that is why the inbox key is keyed by recipientId, and a row per recipient IS that state. This is the insight behind the Client entity: a person isn't offline, a device is offline.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Say this checkpoint out loud:</strong>&nbsp;"All FRs plus NFR1 (500 ms) and NFR2 (durable) now hold — even for users who reconnect later. But it still lives on ONE chat server. NFR3 (billions of users) does not — which is exactly where deep dives take over."
+        </div>
+      </ng-template>
+        </p-card>
+
+    <p-card header="7 — HLD v3: media offload to S3 (FR3 — the payload problem)">
+      <ng-template #content>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-hld-v3-media.svg" alt="HLD v3: naive media path vs S3 pre-signed URL offload" />
+          <figcaption><strong>Step 3 — keep the single server, but stop it carrying bytes.</strong> Same chat-server + connection-map + messages/inbox drawing as v2, but media (images/video/voice, 100s of MB) bypasses the server. ① Sender app asks the chat server for an upload URL → ② chat server (authenticates, authorizes) fetches a pre-signed S3 URL with embedded auth + ~1 h TTL → ③ Sender uploads DIRECTLY to S3 → ④ the new message body carries the S3 URL, not the bytes → ⑤ recipients get the tiny message, fetch the attachment straight from S3 when rendering.</figcaption>
+        </figure>
+        <figure class="visual-figure">
+          <img src="/images/whatsapp-frames/hld-v3-t0.jpg" alt="Actual whiteboard frame: the Blob ($3) S3 component being added" />
+          <figcaption><strong>The actual whiteboard (~34:45):</strong> the video stamps the server a "Blob ($3)" icon and redraws the same single-server diagram — the chat server now talks to S3 blob storage as well as DynamoDB. "Rather than this component [in-chat-server], use that one [S3]." The redraw above makes the pre-signed URL handshake explicit (auth at the server, bytes around the server, URL in the message).</figcaption>
+        </figure>
+        <ul class="points">
+          <li><strong>Why the naive version dies (two reasons — say both):</strong> ① DynamoDB is a row store, not a blob store — a 500 MB video blows the row-size budget and turns the DB into a CDN; ② the chat server saturates on gigabyte uploads while its real job is shuttling kilobyte messages — the 1:500 payload disparity is the smell. The fix is a component swap, not a rewrite.</li>
+          <li><strong>Pre-signed URL handshake (5 steps, name them in order):</strong> ① Sender asks the chat server for an upload target · ② chat server (already authenticated/authenticated) gets an S3 pre-signed URL — auth is baked into the URL with a ~1 h TTL · ③ Sender uploads DIRECTLY to S3 (bytes never touch the chat server) · ④ the message body carries the URL, not the bytes · ⑤ recipients fetch from S3 when rendering.</li>
+          <li><strong>The chat server stays the orchestrator, not the carrier:</strong> it authorizes the upload (is this sender in the chat? do they have permission?), issues an expiring, scoped URL ("you may PUT to this exact key, before this time"), then carries on with small messages. S3 handles the heavy lifting; the server handles the trust boundary.</li>
+          <li><strong>You must also design EXPIRY:</strong> "or users get free Google Drive" — purge media shortly after every recipient has fetched it, with a ~30-day ceiling (the  NFR4 "data is toxic sludge" safety net). Media outlives messages, so deletion has two levers: fetch-based and time-based.</li>
+        </ul>
+        <div class="callout-box">
+          <strong>Improvement over v2:</strong>&nbsp;nothing is replaced — the single node and its connection map, the messages + inbox tables, the ACK-delete policy all stay. The ONLY change is the media path: "the payload goes around the bottleneck, not through it."
+        </div>
+      </ng-template>
+    </p-card>
+
+    <p-card header="Next up (coming soon)">
+      <ng-template #content>
+        <p>Roadmap for this page: <strong>1 — Functional Requirements</strong> ✓ → <strong>2 — Non-Functional Requirements</strong> ✓ → <strong>3 — Entities</strong> ✓ → <strong>4 — APIs</strong> ✓ → <strong>5 — HLD v1 (single server)</strong> ✓ → <strong>6 — HLD v2 (durability)</strong> ✓ → <strong>7 — HLD v3 (media)</strong> ✓ → 8+ — Design evolution (scale + deep dives) → Cheat sheet.</p>
+      </ng-template>
+    </p-card>
+  </div>
+</article>

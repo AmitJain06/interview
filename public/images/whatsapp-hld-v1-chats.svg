@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="500" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">HLD v1 — satisfying FR1: start group chats</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">deliberately degenerate: ONE chat server, ONE database. we will break it on purpose in deep dive 1</text>
+<text x="24" y="96" font-size="12" font-weight="700" fill="#0f172a">FR1 flow: create the chat record + its membership in one shot</text>
+<rect x="24" y="116" width="110" height="56" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="79" y="142" font-size="11.5" font-weight="700" fill="#0f172a" text-anchor="middle">User A app</text>
+<text x="79" y="160" font-size="9" fill="#6b7280" text-anchor="middle">iOS / Android</text>
+<line x1="134" y1="144" x2="162" y2="144" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<text x="136" y="136" font-size="9" fill="#374151">create_chat</text>
+<rect x="162" y="110" width="180" height="84" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="252" y="132" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">Chat server</text>
+<text x="252" y="152" font-size="10" fill="#374151" text-anchor="middle">single node (on purpose)</text>
+<text x="252" y="168" font-size="9.5" fill="#6b7280" text-anchor="middle">websocket connections</text>
+<text x="252" y="183" font-size="9.5" fill="#6b7280" text-anchor="middle">live here</text>
+<line x1="342" y1="152" x2="372" y2="152" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<text x="340" y="144" font-size="9" fill="#374151">write</text>
+<rect x="372" y="122" width="200" height="60" rx="26" fill="#fff" stroke="#0ea5e9" stroke-width="2.5"/>
+<text x="472" y="146" font-size="12.5" font-weight="700" fill="#0369a1" text-anchor="middle">DynamoDB</text>
+<text x="472" y="164" font-size="9.5" fill="#6b7280" text-anchor="middle">any key-value store works</text>
+<line x1="252" y1="194" x2="252" y2="252" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+<rect x="140" y="252" width="225" height="76" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="253" y="274" font-size="11.5" font-weight="700" fill="#0f172a" text-anchor="middle">chat — PK: chatId</text>
+<text x="253" y="294" font-size="10" fill="#374151" text-anchor="middle">name · owner · metadata</text>
+<text x="253" y="312" font-size="9.5" fill="#6b7280" text-anchor="middle">"what is this chat?"</text>
+<line x1="342" y1="194" x2="420" y2="252" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+<rect x="420" y="252" width="240" height="110" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="540" y="274" font-size="11.5" font-weight="700" fill="#0f172a" text-anchor="middle">chat_participant</text>
+<text x="540" y="294" font-size="10" fill="#374151" text-anchor="middle">composite PK (chatId, participantId)</text>
+<text x="540" y="312" font-size="9.5" fill="#6b7280" text-anchor="middle">→ query 1: members of a chat</text>
+<text x="540" y="330" font-size="9.5" fill="#6b7280" text-anchor="middle">GSI on participantId</text>
+<text x="540" y="348" font-size="9.5" fill="#6b7280" text-anchor="middle">→ query 2: chats I'm in</text>
+<rect x="24" y="388" width="404" height="92" rx="10" fill="#fef2f2" stroke="#fecaca"/>
+<text x="44" y="412" font-size="12.5" font-weight="700" fill="#991b1b">FR1 ✓ — with an asterisk</text>
+<text x="44" y="434" font-size="10.5" fill="#374151">one node = one point of failure (NFR5) and ~2M</text>
+<text x="44" y="452" font-size="10.5" fill="#374151">connections max (NFR3). Fine — this is the baseline</text>
+<text x="44" y="468" font-size="10" fill="#6b7280">we intentionally evolve one problem at a time.</text>
+<rect x="452" y="388" width="404" height="92" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="472" y="412" font-size="12.5" font-weight="700" fill="#3730a3">Why DynamoDB (say it, then move on)</text>
+<text x="472" y="434" font-size="10.5" fill="#374151">key-value store is sufficient — reads are "give me</text>
+<text x="472" y="452" font-size="10.5" fill="#374151">the rows with this key". SQL scales fine too (Shopify</text>
+<text x="472" y="468" font-size="10" fill="#6b7280">Black Friday) — pick one and justify it out loud.</text>
+<defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker>
+<marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/></marker>
+</defs>
+</svg>

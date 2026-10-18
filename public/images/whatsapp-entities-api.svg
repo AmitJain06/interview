@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="560" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Core entities + API — the nouns, then the transport that shapes the contract</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">pick the CONNECTION first (it decides whether the API can even exist) · then name commands, not REST resources</text>
+<rect x="24" y="80" width="410" height="332" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="44" y="106" font-size="14" font-weight="700" fill="#3730a3">Core entities (bullets first, schema later)</text>
+<text x="44" y="132" font-size="12" font-weight="700" fill="#0f172a">Actor — User: all users are PEERS</text>
+<text x="44" y="150" font-size="10.5" fill="#6b7280">  no privileged actor — no Uber driver/rider split, no creator/viewer</text>
+<text x="44" y="176" font-size="12" font-weight="700" fill="#0f172a">Chat — id · name · metadata</text>
+<text x="44" y="194" font-size="10.5" fill="#6b7280">  ONE entity for 1:1 and groups — a 2-person chat is still a chat</text>
+<text x="44" y="220" font-size="12" font-weight="700" fill="#0f172a">ChatParticipant — chatId + participantId</text>
+<text x="44" y="238" font-size="10.5" fill="#6b7280">  composite PK (chatId) → "who's in this chat" ·</text>
+<text x="44" y="254" font-size="10.5" fill="#6b7280">  GSI on participantId → "which chats am I in"</text>
+<text x="44" y="280" font-size="12" font-weight="700" fill="#0f172a">Message — id · contents · senderId · timestamp</text>
+<text x="44" y="298" font-size="10.5" fill="#6b7280">  server stamps the time (consistent clocks across senders)</text>
+<text x="44" y="324" font-size="12" font-weight="700" fill="#0f172a">Inbox — recipientId · messageId</text>
+<text x="44" y="342" font-size="10.5" fill="#6b7280">  one row per UNDELIVERED copy → makes delivery provable</text>
+<text x="44" y="368" font-size="12" font-weight="700" fill="#0f172a">Client — userId + clientId (a DEVICE)</text>
+<text x="44" y="386" font-size="10.5" fill="#6b7280">  "a person isn't offline — a device is offline" (verbatim)</text>
+<rect x="446" y="80" width="410" height="332" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="466" y="106" font-size="14" font-weight="700" fill="#15803d">API — connectivity first, commands second</text>
+<text x="466" y="132" font-size="12" fill="#374151">1 · latency-sensitive? YES (500 ms)  → not polling</text>
+<text x="466" y="152" font-size="12" fill="#374151">2 · frequent BIDIRECTIONAL traffic? YES → not SSE (one-way)</text>
+<text x="466" y="172" font-size="12" fill="#374151">3 · P2P / media calls in scope? NO → WebSockets ✓</text>
+<text x="466" y="192" font-size="10.5" fill="#6b7280">  real WhatsApp = a plain TLS connection — same principle:</text>
+<text x="466" y="208" font-size="10.5" fill="#6b7280">  a persistent pipe ferrying messages BOTH ways</text>
+<line x1="446" y1="222" x2="856" y2="222" stroke="#c7d2fe" stroke-width="1.5"/>
+<text x="466" y="246" font-size="12" font-weight="700" fill="#15803d">Client → server (requests):</text>
+<text x="466" y="270" font-size="12" fill="#374151">create_chat · send_message · create_attachment</text>
+<text x="466" y="288" font-size="12" fill="#374151">modify_participants (add / remove a member)</text>
+<text x="466" y="314" font-size="12" font-weight="700" fill="#15803d">Server → client (pushes):</text>
+<text x="466" y="338" font-size="12" fill="#374151">new_message · chat_created · participants_changed</text>
+<text x="466" y="364" font-size="11" fill="#6b7280">no standard for describing a WS API →</text>
+<text x="466" y="382" font-size="11" fill="#6b7280">name the commands, say "this is the start", iterate</text>
+<rect x="24" y="428" width="832" height="110" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="40" y="452" font-size="13" font-weight="700" fill="#c2410c">Why not REST? REST cannot push server → client.</text>
+<text x="40" y="474" font-size="11.5" fill="#374151">A chat API is ~half server-initiated events; plain HTTP request/response only covers the client→server half.</text>
+<text x="40" y="494" font-size="11.5" fill="#374151">The new noun that surfaces here: the CLIENT — starts as "the thing that received the message",</text>
+<text x="40" y="512" font-size="11.5" fill="#374151">later becomes the per-device unit of delivery (multi-device extension).</text>
+<text x="40" y="528" font-size="11" fill="#6b7280">WebSockets are STATEFUL → the load-balancer story changes in deep dive 1. That's where senior candidates earn their marks.</text>
+</svg>

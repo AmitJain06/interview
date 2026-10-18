@@ -71,9 +71,21 @@ export const routes: Routes = [
         title: 'Interview App | Uber',
       },
       {
+        path: 'whatsapp',
+        loadComponent: () =>
+          import('./pages/system-design/whatsapp/whatsapp').then((m) => m.Whatsapp),
+        title: 'Interview App | WhatsApp',
+      },
+      {
         path: 'sharding',
         loadComponent: () => import('./pages/system-design/sharding/sharding').then((m) => m.Sharding),
         title: 'Interview App | Sharding',
+      },
+      {
+        path: 'whatsapp-2',
+        loadComponent: () =>
+          import('./pages/system-design/whatsapp-2/whatsapp-2').then((m) => m.Whatsapp2),
+        title: 'Interview App | WhatsApp 2',
       },
     ],
   },
@@ -114,6 +126,12 @@ export const routes: Routes = [
             (m) => m.ProductionIncident,
           ),
         title: 'Interview App | Tell Me About a Major Production Incident',
+      },
+      {
+        path: 'major-setback',
+        loadComponent: () =>
+          import('./pages/behavioral/major-setback/major-setback').then((m) => m.MajorSetback),
+        title: 'Interview App | Recovering From a Major Setback',
       },
       // Further question-answer pages are registered here as questions are added to
       // src/app/pages/behavioral/questions.data.ts, e.g.:

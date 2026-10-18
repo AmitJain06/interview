@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 720" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<defs>
+  <marker id="arrPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#6366f1"/></marker>
+  <marker id="arrGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#15803d"/></marker>
+</defs>
+<rect width="880" height="720" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="32" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">HLD v1 — ONE chat server · 3 clients · createChat → SendMessage → everyone gets it</text>
+<text x="440" y="56" font-size="13" fill="#6b7280" text-anchor="middle">simplest design that satisfies FR1 + FR2 — stateful on purpose; it works exactly while every socket is local</text>
+
+<!-- Clients A B C -->
+<rect x="40" y="84" width="190" height="66" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="135" y="118" font-size="20" font-weight="700" fill="#3730a3" text-anchor="middle">A</text>
+<text x="135" y="138" font-size="11" fill="#6b7280" text-anchor="middle">clientA · WS1</text>
+
+<rect x="345" y="84" width="190" height="66" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="440" y="118" font-size="20" font-weight="700" fill="#3730a3" text-anchor="middle">B</text>
+<text x="440" y="138" font-size="11" fill="#6b7280" text-anchor="middle">clientB · WS2</text>
+<text x="440" y="148" font-size="9.5" fill="#15803d" text-anchor="middle">← ③ chatUpdate · ⑤ newMessage</text>
+
+<rect x="650" y="84" width="190" height="66" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="745" y="118" font-size="20" font-weight="700" fill="#3730a3" text-anchor="middle">C</text>
+<text x="745" y="138" font-size="11" fill="#6b7280" text-anchor="middle">clientC · WS3</text>
+<text x="745" y="148" font-size="9.5" fill="#15803d" text-anchor="middle">← ③ chatUpdate · ⑤ newMessage</text>
+<text x="135" y="148" font-size="9.5" fill="#6366f1" text-anchor="middle">① + ④ requests →</text>
+
+<!-- WebSocket context lines (dashed) -->
+<line x1="135" y1="150" x2="350" y2="230" stroke="#c7d2fe" stroke-width="1.5" stroke-dasharray="6 5"/>
+<line x1="440" y1="150" x2="440" y2="230" stroke="#c7d2fe" stroke-width="1.5" stroke-dasharray="6 5"/>
+<line x1="745" y1="150" x2="530" y2="230" stroke="#c7d2fe" stroke-width="1.5" stroke-dasharray="6 5"/>
+
+<!-- A request arrow: createChat then SendMessage -->
+<line x1="135" y1="156" x2="275" y2="230" stroke="#6366f1" stroke-width="2.5" marker-end="url(#arrPurple)"/>
+<text x="24" y="196" font-size="11" font-weight="700" fill="#3730a3">① createChat(group-1, [B, C])</text>
+<text x="24" y="214" font-size="11" font-weight="700" fill="#3730a3">④ SendMessage("Hi All")</text>
+
+<!-- Pushes to B and C -->
+<line x1="470" y1="230" x2="450" y2="156" stroke="#15803d" stroke-width="2.5" marker-end="url(#arrGreen)"/>
+<line x1="560" y1="230" x2="735" y2="156" stroke="#15803d" stroke-width="2.5" marker-end="url(#arrGreen)"/>
+<text x="520" y="200" font-size="10.5" font-weight="700" fill="#15803d" text-anchor="middle">③ chatUpdate · ⑤ newMessage</text>
+
+<!-- Chat server -->
+<rect x="190" y="230" width="500" height="120" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="440" y="256" font-size="14" font-weight="700" fill="#15803d" text-anchor="middle">chat Server — ONE node (on purpose)</text>
+<text x="440" y="282" font-size="12" fill="#374151" text-anchor="middle">connection map · clientA → WS1 · clientB → WS2 · clientC → WS3</text>
+<text x="440" y="306" font-size="10.5" fill="#6b7280" text-anchor="middle">every socket is LOCAL → fan-out is just a hashmap loop (works, while it works)</text>
+
+<!-- DB write -->
+<line x1="440" y1="350" x2="440" y2="410" stroke="#9ca3af" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrPurple)"/>
+<text x="452" y="392" font-size="10.5" fill="#6b7280">② write chat row + 3 chatParticipant rows</text>
+
+<!-- Database -->
+<rect x="190" y="410" width="500" height="170" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+<text x="440" y="436" font-size="14" font-weight="700" fill="#c2410c" text-anchor="middle">Database (DynamoDB) — key-value lookups</text>
+<text x="250" y="468" font-size="12" font-weight="700" fill="#0f172a">chat</text>
+<text x="250" y="488" font-size="11" fill="#6b7280">id · name · metadata</text>
+<text x="250" y="520" font-size="12" font-weight="700" fill="#0f172a">chatParticipant</text>
+<text x="250" y="540" font-size="11" fill="#6b7280">chatId · participantId  (composite PK)</text>
+<text x="250" y="558" font-size="11" fill="#6b7280">GSI on participantId → "which chats am I in"</text>
+
+<!-- Bottom strip -->
+<rect x="24" y="620" width="832" height="84" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="40" y="642" font-size="12" font-weight="700" fill="#c2410c">Why it works: one box owns every socket → 500 ms delivery (NFR1 ✓) with a loop over the map.</text>
+<text x="40" y="660" font-size="11" fill="#374151">Why it's broken — say it yourself: ZERO durability (NFR2 ✗). Offline users see nothing, FR4 impossible, and a 500 MB video would flood the same pipe (FR3).</text>
+<text x="40" y="682" font-size="11" fill="#6b7280">① createChat → ② DB write → ③ chatUpdate to B &amp; C → ④ SendMessage → ⑤ newMessage to B &amp; C — all over WebSocket</text>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="560" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Requirements — WhatsApp (a fan-out chat at planetary scale)</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">FRs come from "what do I see when I open the app?" · NFRs are quantified · below-the-line items stay below the line</text>
+<rect x="24" y="80" width="410" height="258" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="106" font-size="14" font-weight="700" fill="#15803d">Functional (4 — small on purpose)</text>
+<text x="44" y="130" font-size="12" fill="#374151">FR1 · Start group chats — a group of 2</text>
+<text x="44" y="148" font-size="11" fill="#6b7280">     is exactly a 1:1 chat (one entity)</text>
+<text x="44" y="170" font-size="12" fill="#374151">FR2 · Send + receive messages between users</text>
+<text x="44" y="188" font-size="11" fill="#6b7280">     send once → fan out to EVERY member</text>
+<text x="44" y="210" font-size="12" fill="#374151">FR3 · Media attachments — images, video, audio</text>
+<text x="44" y="228" font-size="11" fill="#6b7280">     uploads can be hundreds of MB</text>
+<text x="44" y="250" font-size="12" fill="#374151">FR4 · Read messages after being offline</text>
+<text x="44" y="268" font-size="11" fill="#6b7280">     the DEVICE was offline, not the person</text>
+<rect x="44" y="286" width="370" height="44" rx="8" fill="#fff" stroke="#86efac"/>
+<text x="56" y="306" font-size="11" font-weight="700" fill="#15803d">Out of scope (say it once, then stop):</text>
+<text x="56" y="320" font-size="10.5" fill="#374151">audio/video calling · presence indicators · spam / contact scraping</text>
+<rect x="446" y="80" width="410" height="258" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="466" y="106" font-size="14" font-weight="700" fill="#3730a3">Non-functional (quantified + in context)</text>
+<text x="466" y="130" font-size="12" fill="#374151">NFR1 · low latency ≈ 500 ms delivery</text>
+<text x="466" y="148" font-size="11" fill="#6b7280">     100 vs 500 ms is imperceptible — real budget</text>
+<text x="466" y="170" font-size="12" fill="#374151">NFR2 · guaranteed delivery — never lose one</text>
+<text x="466" y="188" font-size="11" fill="#6b7280">     write server-side, ack from client to prove it</text>
+<text x="466" y="210" font-size="12" fill="#374151">NFR3 · high throughput — billions of users (~2B)</text>
+<text x="466" y="228" font-size="11" fill="#6b7280">     ~100B+ messages/day; chat server = hot path</text>
+<text x="466" y="250" font-size="12" fill="#374151">NFR4 · data is toxic sludge — don't keep it</text>
+<text x="466" y="268" font-size="11" fill="#6b7280">     E2E-encrypted, ~30-day retention, purge early</text>
+<text x="466" y="290" font-size="12" fill="#374151">NFR5 · fault tolerance — components die always</text>
+<text x="466" y="308" font-size="11" fill="#6b7280">     no single-server failure may take the app down</text>
+<rect x="24" y="350" width="832" height="86" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="374" font-size="13" font-weight="700" fill="#92400e">The numbers that come back later (memorize THEM):</text>
+<text x="40" y="396" font-size="11.5" fill="#78350f">500 ms budget · 30-day purge · 2M connections/server (WhatsApp's number) ⇒ ~1 000 chat servers</text>
+<text x="40" y="414" font-size="11.5" fill="#78350f">100-record DynamoDB transactions ⇒ group chats ≤ 100 · 1B users × 100 msgs/day × 1 KB ≈ 100 TB/day</text>
+<rect x="24" y="450" width="832" height="92" rx="10" fill="#fef2f2" stroke="#fecaca"/>
+<text x="40" y="474" font-size="13" font-weight="700" fill="#991b1b">This is a STATEFUL-CONNECTION + FAN-OUT problem — not a storage problem</text>
+<text x="40" y="496" font-size="11.5" fill="#78350f">· the chat server HOLDS live WebSocket connections → scaling it is the hard part (deep dive 1).</text>
+<text x="40" y="514" font-size="11.5" fill="#78350f">· every message multiplies into N inbox copies → the data model exists to serve that write multiplicity.</text>
+</svg>

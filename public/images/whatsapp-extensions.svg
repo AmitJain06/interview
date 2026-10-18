@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 540" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="540" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Extensions the interviewer may throw at you (multi-device + presence)</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">both are "free" because the base design already has CLIENT tables + pub/sub — that's the tell of a good base</text>
+<rect x="24" y="84" width="404" height="260" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="44" y="108" font-size="13.5" font-weight="700" fill="#3730a3">Multi-device: "a person isn't offline — a device is"</text>
+<text x="44" y="134" font-size="11.5" fill="#374151">· add the Client entity — (userId, clientId)</text>
+<text x="44" y="154" font-size="11.5" fill="#374151">· inbox rows keyed by recipient CLIENT id</text>
+<text x="44" y="174" font-size="11.5" fill="#374151">· pub/sub topics per client, not per user</text>
+<text x="44" y="194" font-size="11.5" fill="#374151">· fan-out: for each participant × each device</text>
+<text x="44" y="216" font-size="11.5" fill="#374151">  (message delivered per-device, acked per-device)</text>
+<text x="44" y="240" font-size="11.5" font-weight="700" fill="#3730a3">the blow-up + the fix</text>
+<text x="44" y="262" font-size="11" fill="#374151">100 people × 5 devices = 500 inbox rows &gt; 100-row transaction</text>
+<text x="44" y="280" font-size="11" fill="#374151">→ cap devices at 2–3 AND shrink group-size accordingly</text>
+<text x="44" y="298" font-size="10.5" fill="#6b7280">percolate the cap through every surface: inbox, topics, groups</text>
+<rect x="456" y="84" width="400" height="260" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="476" y="108" font-size="13.5" font-weight="700" fill="#15803d">Presence — the little green orbs</text>
+<text x="476" y="134" font-size="11.5" fill="#374151">· availability table: userId · status</text>
+<text x="476" y="154" font-size="11.5" fill="#374151">  connect → available · disconnect → unavailable</text>
+<text x="476" y="174" font-size="11.5" fill="#374151">· cheap version: poll that table for my contacts</text>
+<text x="476" y="194" font-size="11.5" fill="#374151">· live version: watchers SUBSCRIBE via pub/sub;</text>
+<text x="476" y="214" font-size="11.5" fill="#374151">  a status change publishes to the watchers' topics</text>
+<text x="476" y="240" font-size="11.5" font-weight="700" fill="#15803d">the hard part is fan-out again</text>
+<text x="476" y="262" font-size="11" fill="#374151">one user disconnecting must NOT notify 10 000 watchers</text>
+<text x="476" y="280" font-size="11" fill="#374151">→ product decides who watches whom, and caps it</text>
+<text x="476" y="298" font-size="10.5" fill="#6b7280">same constraint muscle as group size and device caps</text>
+<rect x="24" y="366" width="832" height="150" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="40" y="390" font-size="13" font-weight="700" fill="#c2410c">Why these feel easy — and what that tells the interviewer</text>
+<text x="40" y="414" font-size="11.5" fill="#374151">· multi-device is literally "change every key from user to client" — the Client entity was ALREADY in the design (v4 offline).</text>
+<text x="40" y="436" font-size="11.5" fill="#374151">· presence just reuses the pub/sub machinery built for routing (deep dive 1b) plus a status table.</text>
+<text x="40" y="458" font-size="11.5" fill="#374151">· extensions that slot in with ~no new components = a base design that chose the RIGHT abstractions.</text>
+<text x="40" y="486" font-size="11" fill="#78350f">name that sentence out loud — it's the senior/staff calibration the interviewer is listening for.</text>
+</svg>

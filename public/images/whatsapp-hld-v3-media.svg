@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 540" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="540" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">HLD v3 — satisfying FR3: media attachments. "rather than that component, use this one."</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">naive = shove bytes through the chat server into DynamoDB (broken twice) → swap to S3 blob storage + pre-signed URLs</text>
+<rect x="24" y="84" width="832" height="118" rx="10" fill="#fef2f2" stroke="#fecaca"/>
+<text x="44" y="108" font-size="13" font-weight="700" fill="#991b1b">NAIVE — attachments table in DynamoDB, blobs streamed through the chat server. Don't ship this.</text>
+<text x="44" y="132" font-size="11.5" fill="#374151">① DynamoDB is a row store, not a BLOB store — videos are hundreds of MB; you'd blow the row-size budget.</text>
+<text x="44" y="152" font-size="11.5" fill="#374151">② the chat server gets saturated by gigabyte uploads while it's also shuttling kilobyte messages —</text>
+<text x="44" y="170" font-size="11.5" fill="#374151">payload disparity is the smell. Two reasons to fail → two reasons to redesign.</text>
+<rect x="24" y="214" width="175" height="96" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="111" y="234" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">Chat server</text>
+<text x="111" y="254" font-size="9.5" fill="#374151" text-anchor="middle">still the orchestrator —</text>
+<text x="111" y="272" font-size="9.5" fill="#374151">but NO LONGER carries</text>
+<text x="111" y="290" font-size="9.5" fill="#374151">the bytes</text>
+<line x1="199" y1="262" x2="246" y2="262" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<text x="200" y="254" font-size="9" fill="#374151">auth</text>
+<rect x="246" y="222" width="210" height="80" rx="12" fill="#fff" stroke="#0ea5e9" stroke-width="2.5"/>
+<text x="351" y="244" font-size="12.5" font-weight="700" fill="#0369a1" text-anchor="middle">S3 blob storage</text>
+<text x="351" y="264" font-size="9.5" fill="#6b7280" text-anchor="middle">multi-GB payloads, durable</text>
+<text x="351" y="282" font-size="9.5" fill="#6b7280" text-anchor="middle">URL-addressable store</text>
+<line x1="199" y1="240" x2="489" y2="128" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+<rect x="489" y="96" width="367" height="56" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="672" y="116" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">pre-signed URL: embedded auth + TTL (~1 h)</text>
+<text x="672" y="136" font-size="10.5" fill="#374151">"you may upload to this exact key, before this expiry"</text>
+<rect x="489" y="222" width="130" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="554" y="244" font-size="11.5" font-weight="700" fill="#0f172a" text-anchor="middle">Sender app</text>
+<text x="554" y="262" font-size="9" fill="#6b7280" text-anchor="middle">① asks chat server</text>
+<text x="554" y="278" font-size="9" fill="#6b7280" text-anchor="middle">for an upload URL</text>
+<text x="554" y="294" font-size="9" fill="#6b7280" text-anchor="middle">③ uploads DIRECTLY</text>
+<line x1="619" y1="276" x2="675" y2="262" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<text x="620" y="292" font-size="9" fill="#374151">direct PUT</text>
+<rect x="660" y="254" width="196" height="48" rx="8" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="758" y="274" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">message now carries the</text>
+<text x="758" y="290" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">S3 URL, not the bytes</text>
+<rect x="24" y="368" width="832" height="60" rx="10" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="44" y="392" font-size="12" font-weight="700" fill="#15803d">Receiving side: recipients get the tiny message → fetch the attachment straight from S3 when rendering it.</text>
+<text x="44" y="414" font-size="11" fill="#6b7280">The heavy transfer never touches the chat server → the chat server keeps doing what it's good at: many small messages, fast.</text>
+<rect x="24" y="442" width="832" height="80" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="44" y="466" font-size="12.5" font-weight="700" fill="#c2410c">You must also design EXPIRY (or users get free Google Drive):</text>
+<text x="44" y="490" font-size="11.5" fill="#374151">· purge media shortly after every recipient has fetched it; keep a ceiling (the video: ~30 days) as a safety net.</text>
+<text x="44" y="508" font-size="11.5" fill="#6b7280">improvement over v2: same chat-server + hashmap drawing, but "the payload goes around the bottleneck, not through it".</text>
+<defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker>
+<marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/></marker>
+</defs>
+</svg>

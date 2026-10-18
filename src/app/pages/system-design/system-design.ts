@@ -55,11 +55,27 @@ export class SystemDesign {
       severity: 'danger',
     },
     {
+      title: 'WhatsApp — Chat App',
+      route: '/system-design/whatsapp',
+      description:
+        'Fan-out billions of messages over stateful WebSocket connections, without ever losing one or storing it longer than 30 days.',
+      difficulty: 'Hard',
+      severity: 'danger',
+    },
+    {
       title: 'Database Sharding',
       route: '/system-design/sharding',
       description: 'Split one database across many nodes so writes, reads, and storage scale horizontally.',
       difficulty: 'Medium',
       severity: 'warn',
+    },
+    {
+      title: 'WhatsApp 2 — Chat App II',
+      route: '/system-design/whatsapp-2',
+      description:
+        'Follow-up session on WhatsApp: the hard parts of the chat design pushed further. Placeholder — content coming soon.',
+      difficulty: 'Hard',
+      severity: 'danger',
     },
   ];
 

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="560" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="36" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">Deep dive 1 — NFR3 breaks the design: from 1 chat server to ~1 000</text>
+<text x="440" y="60" font-size="13" fill="#6b7280" text-anchor="middle">stateful connections change the load-balancer rules — and after the split, servers must TALK to each other</text>
+<rect x="24" y="84" width="832" height="52" rx="10" fill="#fffbeb" stroke="#fde68a"/>
+<text x="40" y="108" font-size="12" font-weight="700" fill="#92400e">Scale math (from the video): ~2B users ÷ ~2M connections per server (WhatsApp's proud real number)</text>
+<text x="40" y="128" font-size="11.5" fill="#78350f">⇒ on the order of 1 000 chat servers. One box cannot hold the users, the connections, or the writes.</text>
+<rect x="24" y="154" width="404" height="196" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="44" y="178" font-size="13" font-weight="700" fill="#991b1b">Layer-7 HTTP LB — wrong for chat</text>
+<text x="44" y="202" font-size="11" fill="#374151">· web servers are STATELESS: LB terminates</text>
+<text x="44" y="220" font-size="11" fill="#374151">  HTTP, forwards to ANY back-end, replies</text>
+<text x="44" y="240" font-size="11" fill="#374151">· a websocket is a LIVE connection — you</text>
+<text x="44" y="258" font-size="11" fill="#374151">  cannot forward "the rest of it" to a</text>
+<text x="44" y="276" font-size="11" fill="#374151">  different box mid-stream</text>
+<text x="44" y="304" font-size="10.5" fill="#6b7280">if a candidate draws this for chat, the interviewer probes</text>
+<rect x="452" y="154" width="404" height="196" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="472" y="178" font-size="13" font-weight="700" fill="#15803d">Layer-4 TCP LB — right for chat</text>
+<text x="472" y="202" font-size="11" fill="#374151">· connection-oriented: client TCP ↔ server</text>
+<text x="472" y="220" font-size="11" fill="#374151">  TCP symmetric pair; the LB is an</text>
+<text x="472" y="240" font-size="11" fill="#374151">  invisible relay ("as if direct-connected")</text>
+<text x="472" y="262" font-size="11" fill="#374151">· pick a server by LEAST CONNECTIONS —</text>
+<text x="472" y="280" font-size="11" fill="#374151">  connections ARE the scarce resource; a</text>
+<text x="472" y="298" font-size="11" fill="#374151">  fresh server fills up fast (great rollout)</text>
+<text x="472" y="322" font-size="10.5" fill="#15803d">this part is expected of SENIOR candidates</text>
+<rect x="24" y="366" width="832" height="170" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="44" y="392" font-size="13.5" font-weight="700" fill="#991b1b">And NOW the routing problem appears (the heart of the interview):</text>
+<text x="44" y="418" font-size="11.5" fill="#374151">· User A connected to chat-server 1 · User B connected to chat-server 2</text>
+<text x="44" y="440" font-size="11.5" fill="#374151">· A sends a message → S1 looks up participants ✓, writes message + inbox ✓</text>
+<text x="44" y="462" font-size="11.5" fill="#374151">· …but B's websocket lives on S2 → S1 cannot push. The chat servers must route to each other.</text>
+<rect x="44" y="484" width="792" height="44" rx="8" fill="#fffbeb" stroke="#fde68a"/>
+<text x="58" y="506" font-size="12" font-weight="700" fill="#92400e">Every candidate option answers ONE question:</text>
+<text x="58" y="522" font-size="11" fill="#374151">"how does the server holding the message reach the server holding the recipient's socket?" → next board, three answers, in order.</text>
+</svg>

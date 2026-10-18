@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 640" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="640" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="30" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">THE FINAL DESIGN — everything on one board (FR1–FR4 + all deep dives)</text>
+<text x="440" y="52" font-size="13" fill="#6b7280" text-anchor="middle">WebSockets → L4 LB → chat-server pool → Redis fast lane · DynamoDB durability · S3 media · 30-day purge</text>
+<rect x="24" y="64" width="832" height="52" rx="9" fill="#fffbeb" stroke="#fde68a"/>
+<text x="36" y="82" font-size="10.5" font-weight="700" fill="#92400e">① send: TX(messages + inbox ≤ 100 rows) → push local socket else Redis topic → owner server → client ACKs → row deleted</text>
+<text x="36" y="98" font-size="10.5" fill="#78350f">② offline: reconnect → drain inbox → deliver → ACK   ③ media: pre-signed URL → S3 direct → URL travels in message   ④ cleanup: cron > 30 days</text>
+<text x="24" y="134" font-size="12" font-weight="700" fill="#0f172a">Devices — one WebSocket/TLS per device</text>
+<rect x="24" y="142" width="112" height="52" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="80" y="164" font-size="10.5" font-weight="700" fill="#0f172a" text-anchor="middle">Client A</text>
+<text x="80" y="180" font-size="9" fill="#6b7280" text-anchor="middle">online</text>
+<rect x="24" y="230" width="112" height="52" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="80" y="252" font-size="10.5" font-weight="700" fill="#0f172a" text-anchor="middle">Client B</text>
+<text x="80" y="268" font-size="9" fill="#6b7280" text-anchor="middle">phone off</text>
+<rect x="24" y="318" width="112" height="52" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="80" y="340" font-size="10.5" font-weight="700" fill="#0f172a" text-anchor="middle">Client C</text>
+<text x="80" y="356" font-size="9" fill="#6b7280" text-anchor="middle">tablet</text>
+<line x1="136" y1="168" x2="160" y2="240" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<line x1="136" y1="256" x2="160" y2="250" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<line x1="136" y1="344" x2="160" y2="262" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<rect x="160" y="214" width="124" height="80" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="222" y="236" font-size="11.5" font-weight="700" fill="#3730a3" text-anchor="middle">L4 TCP LB</text>
+<text x="222" y="254" font-size="9.5" fill="#374151" text-anchor="middle">least-connections</text>
+<text x="222" y="270" font-size="9.5" fill="#374151" text-anchor="middle">connection-aware</text>
+<line x1="284" y1="250" x2="316" y2="250" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<text x="292" y="242" font-size="9" fill="#374151">route</text>
+<rect x="316" y="132" width="224" height="288" rx="12" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 4"/>
+<text x="428" y="150" font-size="11.5" font-weight="700" fill="#0f172a" text-anchor="middle">chat server pool (~1 000)</text>
+<rect x="328" y="158" width="200" height="60" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="428" y="178" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">chat server 1</text>
+<text x="428" y="194" font-size="9" fill="#374151" text-anchor="middle">socket hashmap (clientId → ws)</text>
+<text x="428" y="208" font-size="9" fill="#6b7280" text-anchor="middle">subscribes user topics</text>
+<rect x="328" y="252" width="200" height="60" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="428" y="272" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">chat server 2</text>
+<text x="428" y="288" font-size="9" fill="#374151" text-anchor="middle">socket hashmap (clientId → ws)</text>
+<text x="428" y="302" font-size="9" fill="#6b7280" text-anchor="middle">subscribes user topics</text>
+<rect x="328" y="346" width="200" height="60" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="428" y="366" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">chat server N …</text>
+<text x="428" y="382" font-size="9" fill="#374151" text-anchor="middle">socket hashmap (clientId → ws)</text>
+<text x="428" y="396" font-size="9" fill="#6b7280" text-anchor="middle">subscribes user topics</text>
+<line x1="528" y1="188" x2="600" y2="240" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<line x1="528" y1="282" x2="600" y2="254" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<line x1="528" y1="376" x2="600" y2="266" stroke="#64748b" stroke-width="3" marker-end="url(#a1)"/>
+<text x="556" y="232" font-size="9" fill="#374151">publish → owning server</text>
+<line x1="600" y1="230" x2="528" y2="268" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+<text x="548" y="250" font-size="8.5" fill="#6b7280">subscribe</text>
+<rect x="600" y="214" width="200" height="80" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="700" y="236" font-size="11.5" font-weight="700" fill="#15803d" text-anchor="middle">Redis Pub/Sub</text>
+<text x="700" y="254" font-size="9.5" fill="#374151" text-anchor="middle">topic per user / client</text>
+<text x="700" y="270" font-size="9.5" fill="#6b7280" text-anchor="middle">at-most-once fast lane</text>
+<text x="24" y="448" font-size="12" font-weight="700" fill="#0f172a">Data layer — durability + privacy (deep dive 2)</text>
+<line x1="428" y1="218" x2="189" y2="458" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#a2)"/>
+<text x="240" y="352" font-size="9.5" fill="#374151">TX write (≤ 100 rows)</text>
+<rect x="24" y="458" width="330" height="124" rx="26" fill="#fff" stroke="#0ea5e9" stroke-width="2.5"/>
+<text x="189" y="482" font-size="12" font-weight="700" fill="#0369a1" text-anchor="middle">DynamoDB</text>
+<text x="189" y="502" font-size="9.5" fill="#6b7280" text-anchor="middle">chat · chat_participant (PK + GSI)</text>
+<text x="189" y="520" font-size="9.5" fill="#6b7280" text-anchor="middle">messages (ts index) · inbox (per recipient)</text>
+<text x="189" y="538" font-size="9.5" fill="#6b7280" text-anchor="middle">tx write ≤ 100 ⇒ group ≤ 100 members</text>
+<text x="189" y="558" font-size="9" fill="#047857">inbox row deleted on ACK</text>
+<line x1="428" y1="312" x2="485" y2="458" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#a2)"/>
+<text x="452" y="390" font-size="9.5" fill="#374151">pre-signed URL (TTL 1 h)</text>
+<rect x="390" y="458" width="190" height="124" rx="12" fill="#fff" stroke="#f59e0b" stroke-width="2.5"/>
+<text x="485" y="482" font-size="12" font-weight="700" fill="#b45309" text-anchor="middle">S3 media blobs</text>
+<text x="485" y="502" font-size="9.5" fill="#6b7280" text-anchor="middle">client uploads directly</text>
+<text x="485" y="520" font-size="9.5" fill="#6b7280" text-anchor="middle">URL travels in message</text>
+<text x="485" y="538" font-size="9.5" fill="#6b7280" text-anchor="middle">recipients fetch on render</text>
+<text x="485" y="558" font-size="9" fill="#b45309">purge after delivery (~30 d)</text>
+<line x1="428" y1="406" x2="738" y2="458" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#a2)"/>
+<text x="560" y="430" font-size="9.5" fill="#374151">cron · purge</text>
+<rect x="620" y="458" width="236" height="124" rx="12" fill="#fef2f2" stroke="#fecaca"/>
+<text x="738" y="482" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">Cleanup service (cron)</text>
+<text x="738" y="502" font-size="9.5" fill="#374151" text-anchor="middle">messages: delete &gt; 30 days (ts idx)</text>
+<text x="738" y="520" font-size="9.5" fill="#374151" text-anchor="middle">inbox: delete on ACK / TTL</text>
+<text x="738" y="538" font-size="9.5" fill="#374151" text-anchor="middle">last row gone → delete message</text>
+<text x="738" y="558" font-size="9" fill="#991b1b">data is toxic sludge — purge</text>
+<rect x="24" y="596" width="832" height="38" rx="9" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="36" y="618" font-size="11" font-weight="700" fill="#15803d">One board of truth:</text>
+<text x="150" y="618" font-size="10.5" fill="#374151">v4 covers FR1–FR4 · deep dive 1 adds the L4 LB + Redis routing · deep dive 2 adds S3 media + 30-day purge · extensions re-key topics per client (multi-device).</text>
+<defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker>
+<marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/></marker>
+</defs>
+</svg>

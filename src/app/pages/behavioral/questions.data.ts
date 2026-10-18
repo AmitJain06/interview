@@ -32,4 +32,10 @@ export const questions: BehavioralQuestion[] = [
     category: 'Incident & Ownership',
     description: 'Four-phase P0 walkthrough: a login outage where a blocked telecom DLT registration killed SMS OTP — detected with data, contained with a feature flag, hardened with config and fallbacks.',
   },
+  {
+    title: 'Tell me about a time you recovered from a major setback',
+    route: '/behavioral/major-setback',
+    category: 'Resilience & Ownership',
+    description: 'A layoff used as a resilience story — setback → structured recovery → the short feedback loop — plus honest handling of “are you still in the process?”.',
+  },
 ];

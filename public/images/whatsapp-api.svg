@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 620" width="100%" font-family="Segoe UI, system-ui, Arial, sans-serif">
+<rect width="880" height="620" rx="14" fill="#fff" stroke="#e5e7eb"/>
+<text x="440" y="34" font-size="20" font-weight="700" fill="#1f2937" text-anchor="middle">API — pick the CONNECTION first, then name the COMMANDS</text>
+<text x="440" y="58" font-size="13" fill="#6b7280" text-anchor="middle">redrawn from the video whiteboard · 13:20 transport tree + 15:40 command contract</text>
+
+<!-- 1 · Transport: the WebSocket decision tree -->
+<rect x="24" y="76" width="520" height="330" rx="12" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="44" y="104" font-size="14" font-weight="700" fill="#3730a3">1 · Transport — WebSockets (3 yes/no questions, in order)</text>
+
+<text x="44" y="144" font-size="12.5" fill="#0f172a">1 · Latency sensitive?   →   YES</text>
+<rect x="330" y="128" width="172" height="26" rx="6" fill="#fff" stroke="#fca5a5"/>
+<text x="346" y="146" font-size="12" fill="#b91c1c" text-decoration="line-through">Simple Polling</text>
+<text x="492" y="146" font-size="12" font-weight="700" fill="#b91c1c">✗</text>
+
+<text x="44" y="194" font-size="12.5" fill="#0f172a">2 · Frequent, bi-directional?  →   YES</text>
+<rect x="330" y="178" width="172" height="26" rx="6" fill="#fff" stroke="#fca5a5"/>
+<text x="346" y="196" font-size="12" fill="#b91c1c" text-decoration="line-through">SSE</text>
+<text x="492" y="196" font-size="12" font-weight="700" fill="#b91c1c">✗</text>
+
+<text x="44" y="244" font-size="12.5" fill="#0f172a">3 · Peer-to-peer / audio-video?  →   NO</text>
+<rect x="330" y="228" width="172" height="26" rx="6" fill="#fff" stroke="#fca5a5"/>
+<text x="346" y="246" font-size="12" fill="#b91c1c" text-decoration="line-through">WebRTC</text>
+<text x="492" y="246" font-size="12" font-weight="700" fill="#b91c1c">✗</text>
+
+<line x1="44" y1="272" x2="520" y2="272" stroke="#c7d2fe" stroke-width="1.5"/>
+<rect x="44" y="286" width="456" height="34" rx="8" fill="#15803d"/>
+<text x="272" y="308" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">→  WebSocket ✓  (persistent TLS pipe, messages BOTH ways)</text>
+<text x="44" y="352" font-size="10.5" fill="#6b7280">each ✗ kills the transport whose shape can't serve 500 ms two-way chat · real WhatsApp = plain TLS (same principle, less overhead)</text>
+<text x="44" y="372" font-size="10.5" fill="#6b7280">WebSockets are STATEFUL → the load-balancer story changes in deep dive 1 (L4 TCP, least-connections)</text>
+<text x="44" y="392" font-size="10.5" fill="#6b7280">the CLIENT entity surfaces here: a DEVICE is what connects and receives — "a person isn't offline, a device is"</text>
+
+<!-- 2 · Commands -->
+<rect x="560" y="76" width="296" height="330" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text x="580" y="104" font-size="14" font-weight="700" fill="#15803d">2 · The command contract (FRs)</text>
+<text x="580" y="140" font-size="12" font-weight="700" fill="#15803d">Commands SENT — client → server</text>
+<text x="580" y="164" font-size="12" fill="#374151">createChat   (FR1)</text>
+<text x="580" y="186" font-size="12" fill="#374151">SendMessage   (FR2)</text>
+<text x="580" y="208" font-size="12" fill="#374151">createAttachment   (FR3)</text>
+<text x="580" y="230" font-size="12" fill="#374151">modifyParticipants</text>
+<line x1="580" y1="248" x2="836" y2="248" stroke="#bbf7d0" stroke-width="1.5"/>
+<text x="580" y="272" font-size="12" font-weight="700" fill="#15803d">Commands RECEIVED — server → client</text>
+<text x="580" y="296" font-size="12" fill="#374151">newMessage   (FR2)</text>
+<text x="580" y="318" font-size="12" fill="#374151">chatUpdate   (chat created / members changed)</text>
+<text x="580" y="352" font-size="10.5" fill="#6b7280">no standard to describe a WS API → name the commands,</text>
+<text x="580" y="368" font-size="10.5" fill="#6b7280">say "this is the start", then iterate as the design firms up</text>
+
+<!-- Why not REST -->
+<rect x="24" y="424" width="832" height="120" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="40" y="452" font-size="13" font-weight="700" fill="#c2410c">Why not REST? REST cannot push server → client.</text>
+<text x="40" y="476" font-size="11.5" fill="#374151">A chat API is ~half server-initiated events; plain HTTP request/response only covers the client → server half,</text>
+<text x="40" y="494" font-size="11.5" fill="#374151">so a RESTful API alone can't deliver a message. The WebSocket connection is what lets the server push.</text>
+<text x="40" y="516" font-size="11" fill="#6b7280">whiteboard (13:20): "Latency Sensitive? Yes · Frequent Bi-Directional? Yes · Peer to Peer? No → Websocket" — verbatim</text>
+<text x="40" y="532" font-size="11" fill="#6b7280">command list (15:40): Sent createChat · SendMessage · createAttachment · modifyParticipants · Received newMessage · chatUpdate</text>
+</svg>
