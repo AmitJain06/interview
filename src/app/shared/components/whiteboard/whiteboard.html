@@ -17,7 +17,7 @@
       <button type="button" class="wb-btn" [class.is-active]="toolIs('eraser')" (click)="setTool('eraser')" title="Eraser (E)" aria-label="Eraser">
         <i class="pi pi-eraser"></i>
       </button>
-      <button type="button" class="wb-btn" [class.is-active]="toolIs('pan')" (click)="setTool('pan')" title="Pan (H or hold Space)" aria-label="Pan">
+      <button type="button" class="wb-btn" [class.is-active]="toolIs('pan')" (click)="setTool('pan')" title="Pan (H, Space or right-drag)" aria-label="Pan">
         <i class="pi pi-arrows-alt"></i>
       </button>
     </div>
@@ -212,6 +212,7 @@
             <span>B toggle two-way arrow</span>
             <span>Arrows nudge</span>
             <span>Space+drag pan</span>
+            <span>Right-drag pan</span>
             <span>Scroll zoom</span>
             <span>F fullscreen</span>
             <span>V/P/C/T/E/H tools</span>

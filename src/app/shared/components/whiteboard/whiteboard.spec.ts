@@ -76,6 +76,60 @@ describe('Whiteboard', () => {
     expect((component as any).mode).toBe('idle');
   });
 
+  it('pans the canvas in all directions with right-button drag', () => {
+    const vp = (component as any).doc.viewport;
+    const beforeX = vp.panX;
+    const beforeY = vp.panY;
+    const rect = canvas.getBoundingClientRect();
+    const cx = rect.left + 100;
+    const cy = rect.top + 100;
+
+    const rightDown = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerId: 2,
+      pointerType: 'mouse',
+      button: 2,
+      buttons: 2,
+      isPrimary: true,
+      clientX: cx,
+      clientY: cy,
+    });
+    canvas.dispatchEvent(rightDown);
+    expect((component as any).mode).toBe('pan');
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 2,
+        pointerType: 'mouse',
+        button: 2,
+        buttons: 2,
+        isPrimary: true,
+        clientX: cx + 50,
+        clientY: cy - 30,
+      }),
+    );
+    expect(vp.panX).toBe(beforeX + 50);
+    expect(vp.panY).toBe(beforeY - 30);
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 2,
+        pointerType: 'mouse',
+        button: 2,
+        buttons: 0,
+        isPrimary: true,
+        clientX: cx + 50,
+        clientY: cy - 30,
+      }),
+    );
+    expect((component as any).mode).toBe('idle');
+  });
+
   it('zooms the internal view with the mouse wheel', () => {
     const before = component.zoom();
     const vp = (component as any).doc.viewport;

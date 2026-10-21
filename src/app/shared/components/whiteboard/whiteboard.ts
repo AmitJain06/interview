@@ -429,7 +429,9 @@ export class Whiteboard implements OnDestroy {
   private readonly onPointerDown = (e: PointerEvent): void => {
     if (!this.canvasEl) return;
     if (this.editing()) this.closeEditor(true);
-    if (e.button === 1) e.preventDefault();
+    // Right-button drag pans the canvas in all directions, just like
+    // middle-button, Space or the Pan tool. Suppress the context menu.
+    if (e.button === 2 || e.button === 1) e.preventDefault();
     try {
       this.canvasEl.setPointerCapture(e.pointerId);
     } catch {
@@ -442,7 +444,7 @@ export class Whiteboard implements OnDestroy {
     this.downClient = { x: e.clientX, y: e.clientY };
     this.moved = false;
 
-    if (e.button === 1 || this.spaceDown || this.tool() === 'pan') {
+    if (e.button === 1 || e.button === 2 || this.spaceDown || this.tool() === 'pan') {
       this.mode = 'pan';
       this.panStart = { x: vp.panX, y: vp.panY };
       this.canvasEl.style.cursor = 'grabbing';
@@ -1095,16 +1097,19 @@ export class Whiteboard implements OnDestroy {
 
   onEditorKey(e: KeyboardEvent): void {
     e.stopPropagation();
-    const ed = this.editing();
-    const singleLine = !!ed && (ed.isLabel || this.isTextItem(ed.id));
     if (e.key === 'Escape') {
       e.preventDefault();
       this.closeEditor(false);
       return;
     }
-    if (e.key === 'Enter' && (singleLine || e.ctrlKey || e.metaKey)) {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        // Allow a newline inside multi-line text
+        return;
+      }
       e.preventDefault();
       this.closeEditor(true);
+      return;
     }
   }
 
