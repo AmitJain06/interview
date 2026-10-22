@@ -1,0 +1,15 @@
+<!-- Dijkstra visualization component -->
+<div class="dijkstra-container">
+  <h2>Dijkstra Shortest Path</h2>
+  <div class="controls">
+    <label>Source Node: <select #sourceSelect></select></label>
+  </div>
+  <svg class="graph-svg" width="600" height="400">
+    <!-- Graph nodes and edges rendered here -->
+  </svg>
+  <div class="steps-panel">
+    <h3>Step {{ currentStep }}</h3>
+    <button class="prev-step" (click="prevStep()">Prev</button>
+    <button class="next-step" (click="nextStep()">Next</button>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+.dijkstra-container {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.controls {
+  margin-bottom: 1rem;
+  label {
+    margin-right: 0.5rem;
+  }
+}
+
+.graph-svg {
+  border: 1px solid #ccc;
+  min-height: 400px;
+  width: 100%;
+}
+
+.steps-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  button {
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.node-circle {
+  fill: #3b82f6;
+  stroke: #1e40af;
+  stroke-width: 2;
+}
+
+.node-text {
+  font-size: 12px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #1e293b;
+}
+
+.node-circle.unvisited {
+  fill: #e2e8f0;
+  stroke: #cbd5e1;
+}
+
+.step-label {
+  font-weight: 500;
+  color: #0f172a;
+}
