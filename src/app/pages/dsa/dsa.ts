@@ -38,7 +38,13 @@ export class DSA {
       difficulty: 'Medium',
       severity: 'warn',
     },
-    // Future algorithms will be added here
+    {
+      title: "Dijkstra's Algorithm",
+      route: '/dsa/dijkstra',
+      description: 'Find shortest paths in weighted graphs with non-negative edges',
+      difficulty: 'Medium',
+      severity: 'warn',
+    },
   ];
 
   protected readonly onIndexPage = toSignal(

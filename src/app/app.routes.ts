@@ -106,6 +106,12 @@ export const routes: Routes = [
           import('./pages/dsa/backtracking/backtracking').then((m) => m.Backtracking),
         title: 'Interview App | Backtracking',
       },
+      {
+        path: 'dijkstra',
+        loadComponent: () =>
+          import('./pages/dsa/dijkstra/dijkstra').then((m) => m.Dijkstra),
+        title: 'Interview App | Dijkstra\'s Algorithm',
+      },
     ],
   },
   {

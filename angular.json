@@ -49,6 +49,18 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.svg",
+                "input": "src/app/pages/dsa/dijkstra"
+              },
+              {
+                "glob": "**/*.md",
+                "input": "src/app/pages/dsa/dijkstra"
+              },
+              {
+                "glob": "**/*.py",
+                "input": "src/app/pages/dsa/dijkstra"
               }
             ],
             "styles": [
@@ -65,7 +77,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",`n                    "maximumError": "16kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
                 }
               ],
               "outputHashing": "all"
